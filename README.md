@@ -2,7 +2,7 @@
 
 ## Inventory & Agricultural Resources
 
-**Responsible Member:** Dinali
+**Responsible Member:** IT24103140 - Nawarathna N.H.D.S
 
 ### Component Overview
 
