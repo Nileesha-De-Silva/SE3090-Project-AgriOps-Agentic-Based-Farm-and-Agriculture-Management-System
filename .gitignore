@@ -1,0 +1,127 @@
+# OS / editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+build/
+out/
+artifacts/
+
+# .NET
+*.user
+*.suo
+*.cache
+*.db
+*.db-shm
+*.db-wal
+*.pdb
+*.aps
+*.tmp
+*.pid
+*.dll
+*.exe
+project.lock.json
+*.nuget.props
+*.nuget.targets
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Visual Studio
+.vs/
+*.csproj.user
+*.userprefs
+*.orig
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Pip / Poetry / Pyenv
+pip-wheel-metadata/
+poetry.lock
+poetry.toml
+.Python
+
+# Node / frontend
+node_modules/
+.npm/
+.pnpm-store/
+.parcel-cache/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Frontend build outputs
+frontend-web/dist/
+frontend-web/build/
+
+# Flutter / Dart
+.mobile-configuration
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local secrets
+secrets/
+*.pem
+*.key
+*.crt
+
+# Test results
+TestResults/
+coverage.xml
+htmlcov/
+
+# Generated docs
+Documentations/generated/
+
+# Temporary files
+tmp/
+temp/
+
+# Git merge backup files
+*.rej
+*.bak
+
+# Optional: keep lockfiles tracked
+!package-lock.json
+!yarn.lock
+!pnpm-lock.yaml
+!pubspec.lock
