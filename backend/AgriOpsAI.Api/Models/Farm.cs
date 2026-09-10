@@ -8,7 +8,7 @@ public class Farm
     public decimal TotalArea {get; set;}
     public Guid OwnerId {get; set;}
     public DateTime CreatedAt {get; set;} = DateTime.UtcNow;
-    public DateTime UpdateAt {get; set;} = DateTime.UtcNow;
+    public DateTime UpdatedAt {get; set;} = DateTime.UtcNow;
 
     public ICollection<Field> Fields {get; set;} = new List<Field>();
 }
