@@ -12,8 +12,8 @@ public class CropSeason
     public DateTime TargetEndDate {get;set;}
     public CropSeasonStatus Status {get;set;} = CropSeasonStatus.planned;
 
-    public Field Field {get;set;} = null!;
-    public Crop Crop {get;set;} = null!;
+    public Field? Field {get;set;} = null!;
+    public Crop? Crop {get;set;} = null!;
     public ICollection<Planting> Plantings {get;set;} = new List<Planting>();
     public ICollection<Harvest> Harvests {get;set;} = new List<Harvest>(); 
 }

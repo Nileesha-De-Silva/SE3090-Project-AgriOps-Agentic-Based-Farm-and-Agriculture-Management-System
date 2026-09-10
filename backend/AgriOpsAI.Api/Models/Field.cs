@@ -12,7 +12,7 @@ public class Field
     public DateTime CreatedAt {get;set;} = DateTime.UtcNow;
     public DateTime UpdatedAt {get;set;} = DateTime.UtcNow;
 
-    public Farm Farm {get; set;} = null!;
+    public Farm? Farm {get; set;} = null!;
     public ICollection<CropSeason> CropSeasons {get;set;} = new List<CropSeason>();
     public ICollection<SoilRecord> SoilRecords {get;set;} = new List<SoilRecord>();
 }
