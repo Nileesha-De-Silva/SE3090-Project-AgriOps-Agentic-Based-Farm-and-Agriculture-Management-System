@@ -75,13 +75,23 @@ public class CropController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCrop(Guid id)
-    {
-        var crop = await _context.Crops.FindAsync(id);
-        if (crop == null) return NotFound();
+public async Task<IActionResult> DeleteCrop(Guid id)
+{
+    var crop = await _context.Crops.FindAsync(id);
+    if (crop == null) return NotFound();
 
+    try
+    {
         _context.Crops.Remove(crop);
         await _context.SaveChangesAsync();
         return NoContent();
     }
+    catch (DbUpdateException)
+    {
+        return Conflict(new
+        {
+            message = "This crop cannot be deleted because it is still referenced by one or more crop seasons."
+        });
+    }
+}
 }
