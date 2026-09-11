@@ -9,6 +9,6 @@ public class Harvest
     public string? QualityGrade {get;set;}
     public Guid RecordedByUserId {get;set;}
 
-    public CropSeason CropSeason {get;set;} = null!;
+    public CropSeason? CropSeason {get;set;} = null!;
 
 }

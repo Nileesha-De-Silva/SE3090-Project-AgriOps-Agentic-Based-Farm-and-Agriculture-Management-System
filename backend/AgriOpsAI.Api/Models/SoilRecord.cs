@@ -11,6 +11,6 @@ public class SoilRecord
     public decimal PotassiumLevel {get;set;}
     public string? Notes {get;set;}
 
-    public Field Field {get;set;} = null!;
+    public Field? Field {get;set;} = null!;
 
 }
