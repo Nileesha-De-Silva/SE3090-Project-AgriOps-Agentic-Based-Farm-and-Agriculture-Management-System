@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AgriOpsAI.Api.Data;
 using AgriOpsAI.Api.Models;
+using AgriOpsAI.Api.DTOs;
 
 namespace AgriOpsAI.Api.Controllers;
 
@@ -16,56 +17,75 @@ public class CropSeasonController : ControllerBase
         _context = context;
     }
 
+    private static CropSeasonDto ToDto(CropSeason cs) => new()
+    {
+        Id = cs.Id,
+        FieldId = cs.FieldId,
+        CropId = cs.CropId,
+        SeasonName = cs.SeasonName,
+        StartDate = cs.StartDate,
+        TargetEndDate = cs.TargetEndDate,
+        Status = cs.Status
+    };
+
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CropSeason>>> GetCropSeasons([FromQuery] Guid? fieldId, [FromQuery] string? status)
+    public async Task<ActionResult<IEnumerable<CropSeasonDto>>> GetCropSeasons([FromQuery] Guid? fieldId, [FromQuery] string? status)
     {
         var query = _context.CropSeasons.AsQueryable();
 
-        if (fieldId.HasValue)
-            query = query.Where(cs => cs.FieldId == fieldId.Value);
+        if (fieldId.HasValue) query = query.Where(cs => cs.FieldId == fieldId.Value);
 
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<CropSeasonStatus>(status, true, out var parsedStatus))
             query = query.Where(cs => cs.Status == parsedStatus);
 
-        return await query.ToListAsync();
+        var seasons = await query.ToListAsync();
+        return seasons.Select(ToDto).ToList();
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<CropSeason>> GetCropSeason(Guid id)
+    public async Task<ActionResult<CropSeasonDto>> GetCropSeason(Guid id)
     {
         var cropSeason = await _context.CropSeasons.FindAsync(id);
         if (cropSeason == null) return NotFound();
-        return cropSeason;
+        return ToDto(cropSeason);
     }
 
     [HttpPost]
-    public async Task<ActionResult<CropSeason>> CreateCropSeason(CropSeason cropSeason)
+    public async Task<ActionResult<CropSeasonDto>> CreateCropSeason(CreateCropSeasonDto dto)
     {
-        var fieldExists = await _context.Fields.AnyAsync(f => f.Id == cropSeason.FieldId);
-        if (!fieldExists) return BadRequest($"Field with id {cropSeason.FieldId} does not exist.");
+        var fieldExists = await _context.Fields.AnyAsync(f => f.Id == dto.FieldId);
+        if (!fieldExists) return BadRequest($"Field with id {dto.FieldId} does not exist.");
 
-        var cropExists = await _context.Crops.AnyAsync(c => c.Id == cropSeason.CropId);
-        if (!cropExists) return BadRequest($"Crop with id {cropSeason.CropId} does not exist.");
+        var cropExists = await _context.Crops.AnyAsync(c => c.Id == dto.CropId);
+        if (!cropExists) return BadRequest($"Crop with id {dto.CropId} does not exist.");
 
-        cropSeason.Id = Guid.NewGuid();
+        var cropSeason = new CropSeason
+        {
+            Id = Guid.NewGuid(),
+            FieldId = dto.FieldId,
+            CropId = dto.CropId,
+            SeasonName = dto.SeasonName,
+            StartDate = dto.StartDate,
+            TargetEndDate = dto.TargetEndDate,
+            Status = dto.Status
+        };
+
         _context.CropSeasons.Add(cropSeason);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetCropSeason), new { id = cropSeason.Id }, cropSeason);
+        return CreatedAtAction(nameof(GetCropSeason), new { id = cropSeason.Id }, ToDto(cropSeason));
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCropSeason(Guid id, CropSeason cropSeason)
+    public async Task<IActionResult> UpdateCropSeason(Guid id, UpdateCropSeasonDto dto)
     {
-        if (id != cropSeason.Id) return BadRequest();
+        var cropSeason = await _context.CropSeasons.FindAsync(id);
+        if (cropSeason == null) return NotFound();
 
-        var existing = await _context.CropSeasons.FindAsync(id);
-        if (existing == null) return NotFound();
-
-        existing.SeasonName = cropSeason.SeasonName;
-        existing.StartDate = cropSeason.StartDate;
-        existing.TargetEndDate = cropSeason.TargetEndDate;
-        existing.Status = cropSeason.Status;
+        cropSeason.SeasonName = dto.SeasonName;
+        cropSeason.StartDate = dto.StartDate;
+        cropSeason.TargetEndDate = dto.TargetEndDate;
+        cropSeason.Status = dto.Status;
 
         await _context.SaveChangesAsync();
         return NoContent();

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AgriOpsAI.Api.Data;
 using AgriOpsAI.Api.Models;
+using AgriOpsAI.Api.DTOs;
 
 namespace AgriOpsAI.Api.Controllers;
 
@@ -16,49 +17,61 @@ public class PlantingController : ControllerBase
         _context = context;
     }
 
-    // GET: api/cropseason/{cropSeasonId}/planting
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Planting>>> GetPlantings(Guid cropSeasonId)
+    private static PlantingDto ToDto(Planting p) => new()
     {
-        return await _context.Plantings
+        Id = p.Id,
+        CropSeasonId = p.CropSeasonId,
+        PlantingDate = p.PlantingDate,
+        InitialQuantity = p.InitialQuantity,
+        PlantingMethod = p.PlantingMethod,
+        Notes = p.Notes
+    };
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<PlantingDto>>> GetPlantings(Guid cropSeasonId)
+    {
+        var plantings = await _context.Plantings
             .Where(p => p.CropSeasonId == cropSeasonId)
             .ToListAsync();
+        return plantings.Select(ToDto).ToList();
     }
 
-    // GET: api/cropseason/{cropSeasonId}/planting/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<Planting>> GetPlanting(Guid cropSeasonId, Guid id)
+    public async Task<ActionResult<PlantingDto>> GetPlanting(Guid cropSeasonId, Guid id)
     {
         var planting = await _context.Plantings
             .FirstOrDefaultAsync(p => p.Id == id && p.CropSeasonId == cropSeasonId);
-
         if (planting == null) return NotFound();
-        return planting;
+        return ToDto(planting);
     }
 
-    // POST: api/cropseason/{cropSeasonId}/planting
     [HttpPost]
-    public async Task<ActionResult<Planting>> CreatePlanting(Guid cropSeasonId, Planting planting)
+    public async Task<ActionResult<PlantingDto>> CreatePlanting(Guid cropSeasonId, CreatePlantingDto dto)
     {
         var seasonExists = await _context.CropSeasons.AnyAsync(cs => cs.Id == cropSeasonId);
         if (!seasonExists) return BadRequest($"CropSeason with id {cropSeasonId} does not exist.");
 
-        planting.Id = Guid.NewGuid();
-        planting.CropSeasonId = cropSeasonId; // enforced from the URL, not trusted from the body
+        var planting = new Planting
+        {
+            Id = Guid.NewGuid(),
+            CropSeasonId = cropSeasonId,
+            PlantingDate = dto.PlantingDate,
+            InitialQuantity = dto.InitialQuantity,
+            PlantingMethod = dto.PlantingMethod,
+            Notes = dto.Notes
+        };
 
         _context.Plantings.Add(planting);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetPlanting), new { cropSeasonId, id = planting.Id }, planting);
+        return CreatedAtAction(nameof(GetPlanting), new { cropSeasonId, id = planting.Id }, ToDto(planting));
     }
 
-    // DELETE: api/cropseason/{cropSeasonId}/planting/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePlanting(Guid cropSeasonId, Guid id)
     {
         var planting = await _context.Plantings
             .FirstOrDefaultAsync(p => p.Id == id && p.CropSeasonId == cropSeasonId);
-
         if (planting == null) return NotFound();
 
         _context.Plantings.Remove(planting);

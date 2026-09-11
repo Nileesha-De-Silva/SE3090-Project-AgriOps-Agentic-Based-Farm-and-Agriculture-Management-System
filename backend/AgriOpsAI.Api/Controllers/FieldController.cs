@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AgriOpsAI.Api.Data;
 using AgriOpsAI.Api.Models;
+using AgriOpsAI.Api.DTOs;
 
 namespace AgriOpsAI.Api.Controllers;
 
@@ -16,61 +17,71 @@ public class FieldController : ControllerBase
         _context = context;
     }
 
+    private static FieldDto ToDto(Field f) => new()
+    {
+        Id = f.Id,
+        FarmId = f.FarmId,
+        FieldName = f.FieldName,
+        AreaSize = f.AreaSize,
+        SoilType = f.SoilType,
+        BoundaryCoordinates = f.BoundaryCoordinates,
+        CreatedAt = f.CreatedAt,
+        UpdatedAt = f.UpdatedAt
+    };
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Field>>> GetFields([FromQuery] Guid? farmId)
+    public async Task<ActionResult<IEnumerable<FieldDto>>> GetFields([FromQuery] Guid? farmId)
     {
         var query = _context.Fields.AsQueryable();
+        if (farmId.HasValue) query = query.Where(f => f.FarmId == farmId.Value);
 
-        if (farmId.HasValue)
-        {
-            query = query.Where(f => f.FarmId == farmId.Value);
-        }
-
-        return await query.ToListAsync();
+        var fields = await query.ToListAsync();
+        return fields.Select(ToDto).ToList();
     }
 
-
     [HttpGet("{id}")]
-    public async Task<ActionResult<Field>> GetField(Guid id)
+    public async Task<ActionResult<FieldDto>> GetField(Guid id)
     {
         var field = await _context.Fields.FindAsync(id);
         if (field == null) return NotFound();
-        return field;
+        return ToDto(field);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Field>> CreateField(Field field)
+    public async Task<ActionResult<FieldDto>> CreateField(CreateFieldDto dto)
     {
-        var farmExists = await _context.Farms.AnyAsync(f => f.Id == field.FarmId);
-        if (!farmExists)
-        {
-            return BadRequest($"Farm with id {field.FarmId} does not exist.");
-        }
+        var farmExists = await _context.Farms.AnyAsync(f => f.Id == dto.FarmId);
+        if (!farmExists) return BadRequest($"Farm with id {dto.FarmId} does not exist.");
 
-        field.Id = Guid.NewGuid();
-        field.CreatedAt = DateTime.UtcNow;
-        field.UpdatedAt = DateTime.UtcNow;
+        var field = new Field
+        {
+            Id = Guid.NewGuid(),
+            FarmId = dto.FarmId,
+            FieldName = dto.FieldName,
+            AreaSize = dto.AreaSize,
+            SoilType = dto.SoilType,
+            BoundaryCoordinates = dto.BoundaryCoordinates,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
         _context.Fields.Add(field);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetField), new { id = field.Id }, field);
+        return CreatedAtAction(nameof(GetField), new { id = field.Id }, ToDto(field));
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateField(Guid id, Field field)
+    public async Task<IActionResult> UpdateField(Guid id, UpdateFieldDto dto)
     {
-        if (id != field.Id) return BadRequest();
+        var field = await _context.Fields.FindAsync(id);
+        if (field == null) return NotFound();
 
-        var existingField = await _context.Fields.FindAsync(id);
-        if (existingField == null) return NotFound();
-
-        existingField.FieldName = field.FieldName;
-        existingField.AreaSize = field.AreaSize;
-        existingField.SoilType = field.SoilType;
-        existingField.BoundaryCoordinates = field.BoundaryCoordinates;
-        existingField.UpdatedAt = DateTime.UtcNow;
+        field.FieldName = dto.FieldName;
+        field.AreaSize = dto.AreaSize;
+        field.SoilType = dto.SoilType;
+        field.BoundaryCoordinates = dto.BoundaryCoordinates;
+        field.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return NoContent();
@@ -86,5 +97,4 @@ public class FieldController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
-
 }

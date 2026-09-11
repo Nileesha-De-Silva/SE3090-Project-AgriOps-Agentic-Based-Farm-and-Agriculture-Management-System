@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AgriOpsAI.Api.Data;
 using AgriOpsAI.Api.Models;
+using AgriOpsAI.Api.DTOs;
 
 namespace AgriOpsAI.Api.Controllers;
 
@@ -16,69 +17,77 @@ public class HarvestController : ControllerBase
         _context = context;
     }
 
-    // GET: api/cropseason/{cropSeasonId}/harvest
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Harvest>>> GetHarvests(Guid cropSeasonId)
+    private static HarvestDto ToDto(Harvest h) => new()
     {
-        return await _context.Harvests
+        Id = h.Id,
+        CropSeasonId = h.CropSeasonId,
+        HarvestDate = h.HarvestDate,
+        YieldAmount = h.YieldAmount,
+        QualityGrade = h.QualityGrade,
+        RecordedByUserId = h.RecordedByUserId
+    };
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<HarvestDto>>> GetHarvests(Guid cropSeasonId)
+    {
+        var harvests = await _context.Harvests
             .Where(h => h.CropSeasonId == cropSeasonId)
             .ToListAsync();
+        return harvests.Select(ToDto).ToList();
     }
 
-    // GET: api/cropseason/{cropSeasonId}/harvest/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<Harvest>> GetHarvest(Guid cropSeasonId, Guid id)
+    public async Task<ActionResult<HarvestDto>> GetHarvest(Guid cropSeasonId, Guid id)
     {
         var harvest = await _context.Harvests
             .FirstOrDefaultAsync(h => h.Id == id && h.CropSeasonId == cropSeasonId);
-
         if (harvest == null) return NotFound();
-        return harvest;
+        return ToDto(harvest);
     }
 
-    // POST: api/cropseason/{cropSeasonId}/harvest
     [HttpPost]
-    public async Task<ActionResult<Harvest>> CreateHarvest(Guid cropSeasonId, Harvest harvest)
+    public async Task<ActionResult<HarvestDto>> CreateHarvest(Guid cropSeasonId, CreateHarvestDto dto)
     {
         var seasonExists = await _context.CropSeasons.AnyAsync(cs => cs.Id == cropSeasonId);
         if (!seasonExists) return BadRequest($"CropSeason with id {cropSeasonId} does not exist.");
 
-        harvest.Id = Guid.NewGuid();
-        harvest.CropSeasonId = cropSeasonId; // enforced from the URL, not trusted from the body
+        var harvest = new Harvest
+        {
+            Id = Guid.NewGuid(),
+            CropSeasonId = cropSeasonId,
+            HarvestDate = dto.HarvestDate,
+            YieldAmount = dto.YieldAmount,
+            QualityGrade = dto.QualityGrade,
+            RecordedByUserId = dto.RecordedByUserId
+        };
 
         _context.Harvests.Add(harvest);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetHarvest), new { cropSeasonId, id = harvest.Id }, harvest);
+        return CreatedAtAction(nameof(GetHarvest), new { cropSeasonId, id = harvest.Id }, ToDto(harvest));
     }
 
-    // PUT: api/cropseason/{cropSeasonId}/harvest/{id}
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateHarvest(Guid cropSeasonId, Guid id, Harvest harvest)
+    public async Task<IActionResult> UpdateHarvest(Guid cropSeasonId, Guid id, UpdateHarvestDto dto)
     {
-        if (id != harvest.Id) return BadRequest();
-
-        var existing = await _context.Harvests
+        var harvest = await _context.Harvests
             .FirstOrDefaultAsync(h => h.Id == id && h.CropSeasonId == cropSeasonId);
+        if (harvest == null) return NotFound();
 
-        if (existing == null) return NotFound();
-
-        existing.HarvestDate = harvest.HarvestDate;
-        existing.YieldAmount = harvest.YieldAmount;
-        existing.QualityGrade = harvest.QualityGrade;
-        existing.RecordedByUserId = harvest.RecordedByUserId;
+        harvest.HarvestDate = dto.HarvestDate;
+        harvest.YieldAmount = dto.YieldAmount;
+        harvest.QualityGrade = dto.QualityGrade;
+        harvest.RecordedByUserId = dto.RecordedByUserId;
 
         await _context.SaveChangesAsync();
         return NoContent();
     }
 
-    // DELETE: api/cropseason/{cropSeasonId}/harvest/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteHarvest(Guid cropSeasonId, Guid id)
     {
         var harvest = await _context.Harvests
             .FirstOrDefaultAsync(h => h.Id == id && h.CropSeasonId == cropSeasonId);
-
         if (harvest == null) return NotFound();
 
         _context.Harvests.Remove(harvest);

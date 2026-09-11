@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AgriOpsAI.Api.Data;
 using AgriOpsAI.Api.Models;
+using AgriOpsAI.Api.DTOs;
 
 namespace AgriOpsAI.Api.Controllers;
 
@@ -16,41 +17,58 @@ public class CropController : ControllerBase
         _context = context;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Crop>>> GetCrops()
+    private static CropDto ToDto(Crop c) => new()
     {
-        return await _context.Crops.ToListAsync();
+        Id = c.Id,
+        CropName = c.CropName,
+        Variety = c.Variety,
+        OptimalGrowthDurationDays = c.OptimalGrowthDurationDays,
+        Description = c.Description
+    };
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<CropDto>>> GetCrops()
+    {
+        var crops = await _context.Crops.ToListAsync();
+        return crops.Select(ToDto).ToList();
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Crop>> GetCrop(Guid id)
+    public async Task<ActionResult<CropDto>> GetCrop(Guid id)
     {
         var crop = await _context.Crops.FindAsync(id);
         if (crop == null) return NotFound();
-        return crop;
+        return ToDto(crop);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Crop>> CreateCrop(Crop crop)
+    public async Task<ActionResult<CropDto>> CreateCrop(CreateCropDto dto)
     {
-        crop.Id = Guid.NewGuid();
+        var crop = new Crop
+        {
+            Id = Guid.NewGuid(),
+            CropName = dto.CropName,
+            Variety = dto.Variety,
+            OptimalGrowthDurationDays = dto.OptimalGrowthDurationDays,
+            Description = dto.Description
+        };
+
         _context.Crops.Add(crop);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetCrop), new { id = crop.Id }, crop);
+
+        return CreatedAtAction(nameof(GetCrop), new { id = crop.Id }, ToDto(crop));
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCrop(Guid id, Crop crop)
+    public async Task<IActionResult> UpdateCrop(Guid id, UpdateCropDto dto)
     {
-        if (id != crop.Id) return BadRequest();
+        var crop = await _context.Crops.FindAsync(id);
+        if (crop == null) return NotFound();
 
-        var existingCrop = await _context.Crops.FindAsync(id);
-        if (existingCrop == null) return NotFound();
-
-        existingCrop.CropName = crop.CropName;
-        existingCrop.Variety = crop.Variety;
-        existingCrop.OptimalGrowthDurationDays = crop.OptimalGrowthDurationDays;
-        existingCrop.Description = crop.Description;
+        crop.CropName = dto.CropName;
+        crop.Variety = dto.Variety;
+        crop.OptimalGrowthDurationDays = dto.OptimalGrowthDurationDays;
+        crop.Description = dto.Description;
 
         await _context.SaveChangesAsync();
         return NoContent();
@@ -62,8 +80,6 @@ public class CropController : ControllerBase
         var crop = await _context.Crops.FindAsync(id);
         if (crop == null) return NotFound();
 
-        // Restrict delete behavior means EF/Postgres will block this
-        // if any CropSeason still references it — that's intentional.
         _context.Crops.Remove(crop);
         await _context.SaveChangesAsync();
         return NoContent();
