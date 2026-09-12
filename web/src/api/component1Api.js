@@ -99,6 +99,36 @@ export async function createCropSeason(data) {
   return handleResponse(res);
 }
 
+// ---------- Plantings ----------
+export async function getPlantings(cropSeasonId) {
+  const res = await fetch(`${BASE_URL}/cropseason/${cropSeasonId}/planting`);
+  return handleResponse(res);
+}
+
+export async function createPlanting(cropSeasonId, data) {
+  const res = await fetch(`${BASE_URL}/cropseason/${cropSeasonId}/planting`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
+// ---------- Harvests ----------
+export async function getHarvests(cropSeasonId) {
+  const res = await fetch(`${BASE_URL}/cropseason/${cropSeasonId}/harvest`);
+  return handleResponse(res);
+}
+
+export async function createHarvest(cropSeasonId, data) {
+  const res = await fetch(`${BASE_URL}/cropseason/${cropSeasonId}/harvest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
 // ---------- Soil Records ----------
 export async function getSoilRecords(fieldId) {
   const res = await fetch(`${BASE_URL}/field/${fieldId}/soilrecord`);
