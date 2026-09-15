@@ -2,8 +2,16 @@ import uuid
 from fastapi import FastAPI
 from pydantic import BaseModel
 from app.graph import planning_graph
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(title="Farm Planning Agent")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class PlanRequest(BaseModel):

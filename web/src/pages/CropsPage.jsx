@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 import { getCrops, createCrop } from "../api/component1Api";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorBanner from "../components/ErrorBanner";
+import "./CropsPage.css";
 
 export default function CropsPage() {
   const [crops, setCrops] = useState([]);
@@ -52,70 +57,111 @@ export default function CropsPage() {
     }
   }
 
-  if (loading) return <p>Loading crops...</p>;
+  if (loading) {
+    return (
+      <div className="crops-page">
+        <LoadingSpinner label="Loading crops..." />
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1>Crop Catalog</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <div className="crops-page">
+      <div className="crops-page-header">
+        <h1>Crop Catalog</h1>
+        <Button variant={showForm ? "secondary" : "primary"} onClick={() => setShowForm(!showForm)}>
+          {showForm ? "Cancel" : "+ New Crop"}
+        </Button>
+      </div>
 
-      <button onClick={() => setShowForm(!showForm)}>
-        {showForm ? "Cancel" : "+ New Crop"}
-      </button>
-
-      {showForm && (
-        <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
-          <div>
-            <label>Crop Name</label>
-            <input
-              type="text"
-              value={formData.cropName}
-              onChange={(e) => setFormData({ ...formData, cropName: e.target.value })}
-              placeholder="e.g. Tomato"
-              required
-            />
-          </div>
-          <div>
-            <label>Variety</label>
-            <input
-              type="text"
-              value={formData.variety}
-              onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
-              placeholder="e.g. Roma"
-              required
-            />
-          </div>
-          <div>
-            <label>Optimal Growth Duration (days)</label>
-            <input
-              type="number"
-              value={formData.optimalGrowthDurationDays}
-              onChange={(e) => setFormData({ ...formData, optimalGrowthDurationDays: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Description (optional)</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-          </div>
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Creating..." : "Create Crop"}
-          </button>
-        </form>
+      {error && (
+        <div className="crops-page-error">
+          <ErrorBanner message={error} onDismiss={() => setError(null)} />
+        </div>
       )}
 
-      <ul style={{ marginTop: "1.5rem" }}>
-        {crops.map((crop) => (
-          <li key={crop.id}>
-            <strong>{crop.cropName}</strong> ({crop.variety}) — {crop.optimalGrowthDurationDays} days
-            {crop.description && <span> — {crop.description}</span>}
-          </li>
-        ))}
-      </ul>
-      {crops.length === 0 && <p>No crops yet — add one above.</p>}
+      {showForm && (
+        <Card className="crop-form-card">
+          <h2>New Crop</h2>
+          <form onSubmit={handleSubmit} className="crop-form">
+            <div className="crop-form-field">
+              <label htmlFor="crop-name">Crop Name</label>
+              <input
+                id="crop-name"
+                type="text"
+                value={formData.cropName}
+                onChange={(e) => setFormData({ ...formData, cropName: e.target.value })}
+                placeholder="e.g. Tomato"
+                required
+              />
+            </div>
+            <div className="crop-form-field">
+              <label htmlFor="crop-variety">Variety</label>
+              <input
+                id="crop-variety"
+                type="text"
+                value={formData.variety}
+                onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
+                placeholder="e.g. Roma"
+                required
+              />
+            </div>
+            <div className="crop-form-field">
+              <label htmlFor="crop-duration">Optimal Growth Duration (days)</label>
+              <input
+                id="crop-duration"
+                type="number"
+                value={formData.optimalGrowthDurationDays}
+                onChange={(e) =>
+                  setFormData({ ...formData, optimalGrowthDurationDays: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className="crop-form-field">
+              <label htmlFor="crop-description">Description (optional)</label>
+              <textarea
+                id="crop-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+            <div className="crop-form-actions">
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Creating..." : "Create Crop"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      {crops.length === 0 ? (
+        <Card>
+          <div className="crops-empty-state">
+            <span className="crops-empty-state-icon" aria-hidden="true">
+              🌾
+            </span>
+            <h3>No crops yet</h3>
+            <p>Add one above to start building out your crop catalog.</p>
+          </div>
+        </Card>
+      ) : (
+        <div className="crops-grid">
+          {crops.map((crop) => (
+            <Card key={crop.id}>
+              <h3 className="crop-card-name">{crop.cropName}</h3>
+              <p className="crop-card-variety">{crop.variety}</p>
+              <div className="crop-card-stat">
+                <span className="crop-card-stat-label">Growth duration</span>
+                <span className="crop-card-stat-value">
+                  {crop.optimalGrowthDurationDays} days
+                </span>
+              </div>
+              {crop.description && <p className="crop-card-description">{crop.description}</p>}
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

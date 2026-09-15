@@ -7,6 +7,36 @@ import {
   createPlanting,
   createHarvest,
 } from "../api/component1Api";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import Badge from "../components/Badge";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorBanner from "../components/ErrorBanner";
+import "./CropSeasonDetailPage.css";
+
+const GROWTH_STAGE_VARIANTS = {
+  Germination: "info",
+  Vegetative: "info",
+  Flowering: "success",
+  Fruiting: "success",
+  NotPlanted: "neutral",
+};
+
+const STATUS_VARIANTS = {
+  Planned: "neutral",
+  Active: "info",
+  InProgress: "info",
+  Completed: "success",
+  Harvested: "success",
+};
+
+function growthStageVariant(stage) {
+  return GROWTH_STAGE_VARIANTS[stage] || "neutral";
+}
+
+function statusVariant(status) {
+  return STATUS_VARIANTS[status] || "neutral";
+}
 
 export default function CropSeasonDetailPage() {
   const { id } = useParams();
@@ -98,142 +128,253 @@ export default function CropSeasonDetailPage() {
     }
   }
 
-  if (loading) return <p>Loading crop season...</p>;
-  if (!season) return <p>Crop season not found.</p>;
+  if (loading) {
+    return (
+      <div className="crop-season-page">
+        <LoadingSpinner label="Loading crop season..." />
+      </div>
+    );
+  }
+
+  if (!season) {
+    return (
+      <div className="crop-season-page">
+        <Card>
+          <div className="crop-season-not-found">
+            <p>Crop season not found.</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <Link to={`/fields/${season.fieldId}`}>← Back to Field</Link>
-      <h1>{season.seasonName}</h1>
-      <p>
-        Status: {season.status} — Growth Stage: <strong>{season.currentGrowthStage}</strong>
-      </p>
-      <p>
-        {new Date(season.startDate).toLocaleDateString()} → {new Date(season.targetEndDate).toLocaleDateString()}
-      </p>
+    <div className="crop-season-page">
+      <Link to={`/fields/${season.fieldId}`} className="crop-season-back-link">
+        <span aria-hidden="true">←</span> Back to Field
+      </Link>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <Card className="crop-season-header-card">
+        <div className="crop-season-header-top">
+          <h1>{season.seasonName}</h1>
+          <div className="crop-season-header-badges">
+            <Badge variant={statusVariant(season.status)}>{season.status}</Badge>
+            {season.currentGrowthStage && (
+              <Badge variant={growthStageVariant(season.currentGrowthStage)}>
+                {season.currentGrowthStage}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <p className="crop-season-dates">
+          {new Date(season.startDate).toLocaleDateString()} →{" "}
+          {new Date(season.targetEndDate).toLocaleDateString()}
+        </p>
+      </Card>
+
+      {error && (
+        <div className="crop-season-error">
+          <ErrorBanner message={error} onDismiss={() => setError(null)} />
+        </div>
+      )}
 
       {/* Plantings */}
-      <h2 style={{ marginTop: "2rem" }}>Plantings</h2>
-      <button onClick={() => setShowPlantingForm(!showPlantingForm)}>
-        {showPlantingForm ? "Cancel" : "+ Log Planting"}
-      </button>
+      <div className="crop-season-section">
+        <div className="crop-season-section-header">
+          <h2>Plantings</h2>
+          <Button
+            variant={showPlantingForm ? "secondary" : "primary"}
+            onClick={() => setShowPlantingForm(!showPlantingForm)}
+          >
+            {showPlantingForm ? "Cancel" : "+ Log Planting"}
+          </Button>
+        </div>
 
-      {showPlantingForm && (
-        <form onSubmit={handlePlantingSubmit} style={{ marginTop: "1rem" }}>
-          <div>
-            <label>Planting Date</label>
-            <input
-              type="date"
-              value={plantingData.plantingDate}
-              onChange={(e) => setPlantingData({ ...plantingData, plantingDate: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Initial Quantity</label>
-            <input
-              type="number"
-              step="0.01"
-              value={plantingData.initialQuantity}
-              onChange={(e) => setPlantingData({ ...plantingData, initialQuantity: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Planting Method (optional)</label>
-            <input
-              type="text"
-              value={plantingData.plantingMethod}
-              onChange={(e) => setPlantingData({ ...plantingData, plantingMethod: e.target.value })}
-            />
-          </div>
-          <div>
-            <label>Notes (optional)</label>
-            <input
-              type="text"
-              value={plantingData.notes}
-              onChange={(e) => setPlantingData({ ...plantingData, notes: e.target.value })}
-            />
-          </div>
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Saving..." : "Save Planting"}
-          </button>
-        </form>
-      )}
+        {showPlantingForm && (
+          <Card className="log-form-card">
+            <h3>Log Planting</h3>
+            <form onSubmit={handlePlantingSubmit} className="log-form">
+              <div className="log-form-field">
+                <label htmlFor="planting-date">Planting Date</label>
+                <input
+                  id="planting-date"
+                  type="date"
+                  value={plantingData.plantingDate}
+                  onChange={(e) =>
+                    setPlantingData({ ...plantingData, plantingDate: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="log-form-field">
+                <label htmlFor="planting-quantity">Initial Quantity</label>
+                <input
+                  id="planting-quantity"
+                  type="number"
+                  step="0.01"
+                  value={plantingData.initialQuantity}
+                  onChange={(e) =>
+                    setPlantingData({ ...plantingData, initialQuantity: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="log-form-field">
+                <label htmlFor="planting-method">Planting Method (optional)</label>
+                <input
+                  id="planting-method"
+                  type="text"
+                  value={plantingData.plantingMethod}
+                  onChange={(e) =>
+                    setPlantingData({ ...plantingData, plantingMethod: e.target.value })
+                  }
+                />
+              </div>
+              <div className="log-form-field">
+                <label htmlFor="planting-notes">Notes (optional)</label>
+                <input
+                  id="planting-notes"
+                  type="text"
+                  value={plantingData.notes}
+                  onChange={(e) => setPlantingData({ ...plantingData, notes: e.target.value })}
+                />
+              </div>
+              <div className="log-form-actions">
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Saving..." : "Save Planting"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        )}
 
-      <ul style={{ marginTop: "1rem" }}>
-        {plantings.map((p) => (
-          <li key={p.id}>
-            {new Date(p.plantingDate).toLocaleDateString()} — Qty: {p.initialQuantity}
-            {p.plantingMethod && ` — ${p.plantingMethod}`}
-          </li>
-        ))}
-      </ul>
-      {plantings.length === 0 && <p>No plantings logged yet.</p>}
+        {plantings.length === 0 ? (
+          <Card>
+            <div className="empty-state">
+              <span className="empty-state-icon" aria-hidden="true">
+                🌱
+              </span>
+              <h3>No plantings logged yet</h3>
+              <p>Log a planting above to start tracking this season.</p>
+            </div>
+          </Card>
+        ) : (
+          <div className="entry-list">
+            {plantings.map((p) => (
+              <Card key={p.id}>
+                <div className="entry-card-top">
+                  <p className="entry-date">{new Date(p.plantingDate).toLocaleDateString()}</p>
+                  <p className="entry-detail">
+                    Qty: {p.initialQuantity}
+                    {p.plantingMethod && ` — ${p.plantingMethod}`}
+                  </p>
+                </div>
+                {p.notes && <p className="entry-notes">{p.notes}</p>}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Harvests */}
-      <h2 style={{ marginTop: "2rem" }}>Harvests</h2>
-      <button onClick={() => setShowHarvestForm(!showHarvestForm)}>
-        {showHarvestForm ? "Cancel" : "+ Log Harvest"}
-      </button>
+      <div className="crop-season-section">
+        <div className="crop-season-section-header">
+          <h2>Harvests</h2>
+          <Button
+            variant={showHarvestForm ? "secondary" : "primary"}
+            onClick={() => setShowHarvestForm(!showHarvestForm)}
+          >
+            {showHarvestForm ? "Cancel" : "+ Log Harvest"}
+          </Button>
+        </div>
 
-      {showHarvestForm && (
-        <form onSubmit={handleHarvestSubmit} style={{ marginTop: "1rem" }}>
-          <div>
-            <label>Harvest Date</label>
-            <input
-              type="date"
-              value={harvestData.harvestDate}
-              onChange={(e) => setHarvestData({ ...harvestData, harvestDate: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Yield Amount</label>
-            <input
-              type="number"
-              step="0.01"
-              value={harvestData.yieldAmount}
-              onChange={(e) => setHarvestData({ ...harvestData, yieldAmount: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Quality Grade (optional)</label>
-            <input
-              type="text"
-              value={harvestData.qualityGrade}
-              onChange={(e) => setHarvestData({ ...harvestData, qualityGrade: e.target.value })}
-              placeholder="e.g. A, B, C"
-            />
-          </div>
-          <div>
-            <label>Recorded By (User ID)</label>
-            <input
-              type="text"
-              value={harvestData.recordedByUserId}
-              onChange={(e) => setHarvestData({ ...harvestData, recordedByUserId: e.target.value })}
-              placeholder="temporary until auth exists"
-              required
-            />
-          </div>
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Saving..." : "Save Harvest"}
-          </button>
-        </form>
-      )}
+        {showHarvestForm && (
+          <Card className="log-form-card">
+            <h3>Log Harvest</h3>
+            <form onSubmit={handleHarvestSubmit} className="log-form">
+              <div className="log-form-field">
+                <label htmlFor="harvest-date">Harvest Date</label>
+                <input
+                  id="harvest-date"
+                  type="date"
+                  value={harvestData.harvestDate}
+                  onChange={(e) => setHarvestData({ ...harvestData, harvestDate: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="log-form-field">
+                <label htmlFor="harvest-yield">Yield Amount</label>
+                <input
+                  id="harvest-yield"
+                  type="number"
+                  step="0.01"
+                  value={harvestData.yieldAmount}
+                  onChange={(e) =>
+                    setHarvestData({ ...harvestData, yieldAmount: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="log-form-field">
+                <label htmlFor="harvest-grade">Quality Grade (optional)</label>
+                <input
+                  id="harvest-grade"
+                  type="text"
+                  value={harvestData.qualityGrade}
+                  onChange={(e) =>
+                    setHarvestData({ ...harvestData, qualityGrade: e.target.value })
+                  }
+                  placeholder="e.g. A, B, C"
+                />
+              </div>
+              <div className="log-form-field">
+                <label htmlFor="harvest-recorded-by">Recorded By (User ID)</label>
+                <input
+                  id="harvest-recorded-by"
+                  type="text"
+                  value={harvestData.recordedByUserId}
+                  onChange={(e) =>
+                    setHarvestData({ ...harvestData, recordedByUserId: e.target.value })
+                  }
+                  placeholder="temporary until auth exists"
+                  required
+                />
+              </div>
+              <div className="log-form-actions">
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Saving..." : "Save Harvest"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        )}
 
-      <ul style={{ marginTop: "1rem" }}>
-        {harvests.map((h) => (
-          <li key={h.id}>
-            {new Date(h.harvestDate).toLocaleDateString()} — Yield: {h.yieldAmount}
-            {h.qualityGrade && ` — Grade: ${h.qualityGrade}`}
-          </li>
-        ))}
-      </ul>
-      {harvests.length === 0 && <p>No harvests logged yet.</p>}
+        {harvests.length === 0 ? (
+          <Card>
+            <div className="empty-state">
+              <span className="empty-state-icon" aria-hidden="true">
+                🧺
+              </span>
+              <h3>No harvests logged yet</h3>
+              <p>Log a harvest above once this season is ready.</p>
+            </div>
+          </Card>
+        ) : (
+          <div className="entry-list">
+            {harvests.map((h) => (
+              <Card key={h.id}>
+                <div className="entry-card-top">
+                  <p className="entry-date">{new Date(h.harvestDate).toLocaleDateString()}</p>
+                  <p className="entry-detail">
+                    Yield: {h.yieldAmount}
+                    {h.qualityGrade && ` — Grade: ${h.qualityGrade}`}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

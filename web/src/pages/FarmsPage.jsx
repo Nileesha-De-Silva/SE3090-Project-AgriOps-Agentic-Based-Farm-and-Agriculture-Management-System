@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getFarms, createFarm } from "../api/component1Api";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import Badge from "../components/Badge";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorBanner from "../components/ErrorBanner";
+import "./FarmsPage.css";
 
 export default function FarmsPage() {
   const [farms, setFarms] = useState([]);
@@ -48,74 +54,107 @@ export default function FarmsPage() {
     }
   }
 
-  if (loading) return <p>Loading farms...</p>;
+  if (loading) {
+    return (
+      <div className="farms-page">
+        <LoadingSpinner label="Loading farms..." />
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1>Farms</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <div className="farms-page">
+      <div className="farms-page-header">
+        <h1>Farms</h1>
+        <Button variant={showForm ? "secondary" : "primary"} onClick={() => setShowForm(!showForm)}>
+          {showForm ? "Cancel" : "+ New Farm"}
+        </Button>
+      </div>
 
-      <button onClick={() => setShowForm(!showForm)}>
-        {showForm ? "Cancel" : "+ New Farm"}
-      </button>
-
-      {showForm && (
-        <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
-          <div>
-            <label>Name</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Location</label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Total Area (acres)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.totalArea}
-              onChange={(e) => setFormData({ ...formData, totalArea: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Owner ID</label>
-            <input
-              type="text"
-              value={formData.ownerId}
-              onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
-              placeholder="temporary until auth exists"
-              required
-            />
-          </div>
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Creating..." : "Create Farm"}
-          </button>
-        </form>
+      {error && (
+        <div className="farms-page-error">
+          <ErrorBanner message={error} onDismiss={() => setError(null)} />
+        </div>
       )}
 
-      <ul style={{ marginTop: "1.5rem" }}>
-        {farms.map((farm) => (
-          <li key={farm.id}>
-            <Link to={`/farms/${farm.id}`}>
-              {farm.name} — {farm.location} ({farm.totalArea} acres)
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {showForm && (
+        <Card className="farm-form-card">
+          <h2>New Farm</h2>
+          <form onSubmit={handleSubmit} className="farm-form">
+            <div className="farm-form-field">
+              <label htmlFor="farm-name">Name</label>
+              <input
+                id="farm-name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="farm-form-field">
+              <label htmlFor="farm-location">Location</label>
+              <input
+                id="farm-location"
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                required
+              />
+            </div>
+            <div className="farm-form-field">
+              <label htmlFor="farm-area">Total Area (acres)</label>
+              <input
+                id="farm-area"
+                type="number"
+                step="0.01"
+                value={formData.totalArea}
+                onChange={(e) => setFormData({ ...formData, totalArea: e.target.value })}
+                required
+              />
+            </div>
+            <div className="farm-form-field">
+              <label htmlFor="farm-owner">Owner ID</label>
+              <input
+                id="farm-owner"
+                type="text"
+                value={formData.ownerId}
+                onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
+                placeholder="temporary until auth exists"
+                required
+              />
+            </div>
+            <div className="farm-form-actions">
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Creating..." : "Create Farm"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
 
-      {farms.length === 0 && !loading && <p>No farms yet — create one above.</p>}
+      {farms.length === 0 ? (
+        <Card>
+          <div className="farms-empty-state">
+            <span className="farms-empty-state-icon" aria-hidden="true">
+              🌱
+            </span>
+            <h3>No farms yet</h3>
+            <p>Create your first farm above to start tracking crops and fields.</p>
+          </div>
+        </Card>
+      ) : (
+        <div className="farms-grid">
+          {farms.map((farm) => (
+            <Link key={farm.id} to={`/farms/${farm.id}`} className="farm-card-link">
+              <Card>
+                <h3 className="farm-card-name">{farm.name}</h3>
+                <p className="farm-card-location">{farm.location}</p>
+                <Badge variant="info">{farm.totalArea} acres</Badge>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,170 @@
+@import "../styles/theme.css";
+
+.farm-detail-page {
+  padding: var(--space-xl);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.farm-detail-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  margin-bottom: var(--space-lg);
+  transition: color var(--transition-fast);
+}
+
+.farm-detail-back-link:hover {
+  color: var(--color-primary);
+}
+
+.farm-detail-header {
+  margin-bottom: var(--space-xl);
+}
+
+.farm-detail-header h1 {
+  margin: 0 0 var(--space-xs) 0;
+  color: var(--color-text);
+}
+
+.farm-detail-header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.farm-detail-error {
+  margin-bottom: var(--space-lg);
+}
+
+.farm-detail-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.farm-detail-section-header h2 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.field-form-card {
+  margin-bottom: var(--space-xl);
+}
+
+.field-form-card h3 {
+  margin: 0 0 var(--space-lg) 0;
+  font-size: 1.0625rem;
+  color: var(--color-text);
+}
+
+.field-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.field-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.field-form-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.field-form-field input {
+  font-family: var(--font-family-base);
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  transition: border-color var(--transition-fast);
+}
+
+.field-form-field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.field-form-field input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.field-form-actions {
+  margin-top: var(--space-xs);
+}
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-lg);
+}
+
+.field-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+  transition: border-color var(--transition-fast);
+}
+
+.field-card-link:hover {
+  border-color: var(--color-secondary);
+}
+
+.field-card-name {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.field-card-area {
+  margin: 0 0 var(--space-md) 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.fields-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-text-muted);
+}
+
+.fields-empty-state-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: var(--space-xs);
+}
+
+.fields-empty-state h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.0625rem;
+}
+
+.fields-empty-state p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.farm-not-found {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-text-muted);
+}
