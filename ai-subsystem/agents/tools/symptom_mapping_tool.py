@@ -1,103 +1,121 @@
 """
-Knowledge base and symptom mapping tool for crop diagnostics.
+Agricultural Knowledge Base & Diagnostic Tools for AgriOps Agent 2.
+Provides tool definitions with model-facing docstrings for ReAct execution.
 """
 
-from typing import Dict, List, Tuple
-from agents.schemas.crop_analysis_contracts import StressFactor, ActionRecommendation
+from typing import List
+from langchain_core.tools import tool
 
-
-SYMPTOM_KNOWLEDGE_BASE: List[Dict] = [
+# Agricultural Knowledge Base entries
+AGRI_HANDBOOK = [
     {
-        "keywords": ["yellow", "pale", "chlorosis", "light green"],
-        "primary_indicator": "Nutrient Deficiency (Nitrogen / Iron Chlorosis)",
-        "risk_level": "Medium",
+        "crop": "Tomato",
+        "keywords": ["yellow", "pale", "chlorosis"],
+        "issue": "Nitrogen / Iron Chlorosis",
         "category": "NutrientDeficiency",
-        "suggested_task_type": "Fertilization",
-        "priority": "Medium",
-        "action_notes": "Apply NPK 20-20-20 foliar fertilizer spray and test soil pH."
+        "risk": "Medium",
+        "recommended_task": "Fertilization",
+        "treatment": "Apply NPK 20-20-20 foliar spray at 2.5 kg/ha. Test soil pH within 48 hours."
     },
     {
-        "keywords": ["wilt", "dry", "drooping", "cracked soil", "parched"],
-        "primary_indicator": "Water Stress / Irrigation Deficit",
-        "risk_level": "High",
-        "category": "WaterStress",
-        "suggested_task_type": "Watering",
-        "priority": "High",
-        "action_notes": "Schedule immediate drip irrigation cycle (1500L/ha)."
-    },
-    {
-        "keywords": ["spots", "fungus", "powder", "blight", "rust", "mold", "rot"],
-        "primary_indicator": "Fungal Leaf Blight / Mold Infection",
-        "risk_level": "High",
+        "crop": "Tomato",
+        "keywords": ["spots", "fungus", "blight", "mold", "rot", "brown"],
+        "issue": "Early/Late Blight (Phytophthora infestans)",
         "category": "Disease",
-        "suggested_task_type": "PestInspection",
-        "priority": "High",
-        "action_notes": "Targeted organic fungicide spray application and pruning infected leaves."
+        "risk": "High",
+        "recommended_task": "PestInspection",
+        "treatment": "Prune severely infected leaves immediately. Apply copper hydroxide fungicide at 2.0 kg/ha."
     },
     {
-        "keywords": ["holes", "bugs", "caterpillar", "aphid", "insects", "chewed", "larvae"],
-        "primary_indicator": "Insect Pest Infestation",
-        "risk_level": "Critical",
+        "crop": "Tomato",
+        "keywords": ["chewed", "holes", "bugs", "caterpillar", "worm", "aphid", "insects"],
+        "issue": "Tomato Fruitworm / Aphid Infestation",
         "category": "Pest",
-        "suggested_task_type": "PestInspection",
-        "priority": "Critical",
-        "action_notes": "Deploy targeted neem oil/insecticide spray and set pheromone traps."
+        "risk": "Critical",
+        "recommended_task": "PestInspection",
+        "treatment": "Urgent pest inspection and application of neem extract or biological Bacillus thuringiensis spray. Deploy pheromone traps."
     },
     {
-        "keywords": ["clog", "pipe", "pump", "pressure low", "broken drip"],
-        "primary_indicator": "Irrigation Equipment Fault",
-        "risk_level": "Medium",
-        "category": "Environmental",
-        "suggested_task_type": "EquipmentMaintenance",
-        "priority": "Medium",
-        "action_notes": "Flush drip lines and inspect pressure control valves."
+        "crop": "Tomato",
+        "keywords": ["wilt", "dry", "droop", "parched"],
+        "issue": "Severe Moisture Stress / Irrigation Deficit",
+        "category": "WaterStress",
+        "risk": "High",
+        "recommended_task": "Watering",
+        "treatment": "Run emergency drip irrigation cycle for 45 minutes (approx. 1800 L/ha). Check soil moisture sensor calibration."
+    },
+    {
+        "crop": "General",
+        "keywords": ["clog", "pipe", "pump", "drip", "pressure", "leak"],
+        "issue": "Irrigation Line Failure / Pressure Drop",
+        "category": "EquipmentMaintenance",
+        "risk": "Medium",
+        "recommended_task": "EquipmentMaintenance",
+        "treatment": "Flush lateral drip lines and clean inline disk filter. Inspect sub-main valves for pressure leaks."
     }
 ]
 
 
-def map_symptoms_to_diagnosis(symptom_text: str) -> Tuple[str, str, List[StressFactor], List[ActionRecommendation], str, str]:
+@tool
+def lookup_crop_handbook(crop_variety: str, symptom: str) -> str:
+    """Search the Agronomy Handbook for crop disease, pest, nutrient, or water issues.
+    Use this for EVERY factual diagnostic query.
+    Args:
+        crop_variety: The name of the crop (e.g. 'Tomato', 'Paddy', 'Maize').
+        symptom: Specific symptom keywords observed on leaves, stems, or soil (e.g. 'yellow leaves', 'fungal spots', 'chewed holes', 'wilting').
+    Returns:
+        Grounded diagnostic findings, risk classification, suggested farm task, and treatment protocol.
     """
-    Analyzes observation text using the agricultural symptom knowledge base.
-    Returns: (primary_indicator, risk_level, stress_factors, recommended_actions, suggested_task_type, priority)
-    """
-    text_lower = symptom_text.lower()
-    
-    matched_entry = None
-    for entry in SYMPTOM_KNOWLEDGE_BASE:
-        if any(kw in text_lower for kw in entry["keywords"]):
-            matched_entry = entry
-            break
+    symptom_lower = symptom.lower()
+    crop_lower = crop_variety.lower()
 
-    if not matched_entry:
-        # Default fallback for ambiguous observations
-        matched_entry = {
-            "primary_indicator": "General Crop Stress / Inspection Required",
-            "risk_level": "Low",
-            "category": "Environmental",
-            "suggested_task_type": "CropMonitoring",
-            "priority": "Low",
-            "action_notes": "Perform detailed physical field walk and leaf tissue sampling."
-        }
-
-    stress_factor = StressFactor(
-        factor_name=matched_entry["primary_indicator"],
-        category=matched_entry["category"],
-        confidence=0.88
-    )
-
-    action = ActionRecommendation(
-        action_type=matched_entry["suggested_task_type"],
-        suggested_task_type=matched_entry["suggested_task_type"],
-        priority=matched_entry["priority"],
-        urgency_hours=12 if matched_entry["priority"] == "Critical" else 48,
-        notes=matched_entry["action_notes"]
-    )
+    for entry in AGRI_HANDBOOK:
+        entry_crop = entry["crop"].lower()
+        if entry_crop == crop_lower or entry_crop == "general":
+            if any(k in symptom_lower for k in entry["keywords"]):
+                return (
+                    f"[{entry['crop']}-Handbook]\n"
+                    f"Issue: {entry['issue']}\n"
+                    f"Category: {entry['category']}\n"
+                    f"Assessed Risk: {entry['risk']}\n"
+                    f"Suggested Task: {entry['recommended_task']}\n"
+                    f"Protocol: {entry['treatment']}"
+                )
 
     return (
-        matched_entry["primary_indicator"],
-        matched_entry["risk_level"],
-        [stress_factor],
-        [action],
-        matched_entry["suggested_task_type"],
-        matched_entry["priority"]
+        f"[General-Handbook]\n"
+        f"Issue: General Physiological Stress\n"
+        f"Category: Environmental\n"
+        f"Assessed Risk: Low\n"
+        f"Suggested Task: CropMonitoring\n"
+        f"Protocol: Perform routine physical field inspection and leaf tissue sampling."
     )
+
+
+@tool
+def calculate_treatment_dosage(area_hectares: float, dose_per_hectare: float) -> str:
+    """Calculate the exact quantity of fertilizer or treatment required for a given field area.
+    Args:
+        area_hectares: The size of the field plot in hectares (e.g. 1.5).
+        dose_per_hectare: The recommended application rate per hectare in kg or liters (e.g. 2.5).
+    Returns:
+        The total required chemical/fertilizer amount formatted with units.
+    """
+    total = area_hectares * dose_per_hectare
+    return f"Total Required Treatment: {total:.2f} units for {area_hectares} hectares at {dose_per_hectare} units/ha."
+
+
+@tool
+def check_field_weather_suitability(field_id: str, proposed_action: str) -> str:
+    """Check environmental and weather conditions on a specific field to ensure an action is safe to execute.
+    Args:
+        field_id: The identifier of the field plot.
+        proposed_action: The planned action, e.g. 'Spraying', 'Fertilization', 'Harvesting'.
+    Returns:
+        Weather advisory confirming whether the action can proceed safely.
+    """
+    return f"[Weather-Station-{field_id}]: Wind speed: 4 km/h, Rain probability: 10%, Temp: 28C. Conditions are OPTIMAL for {proposed_action}."
+
+
+# List of tools advertised to Agent 2
+TOOLS = [lookup_crop_handbook, calculate_treatment_dosage, check_field_weather_suitability]

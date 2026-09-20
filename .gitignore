@@ -62,6 +62,9 @@ venv/
 env/
 ENV/
 .python-version
+ai-subsystem/checkpoints/
+.langchain.db
+.cache/
 
 # Pip / Poetry / Pyenv
 pip-wheel-metadata/
@@ -82,6 +85,15 @@ coverage/
 # Frontend build outputs
 frontend-web/dist/
 frontend-web/build/
+frontend-web/dist-ssr/
+.vite/
+frontend-web/.vite/
+
+# Node logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Flutter / Dart
 .mobile-configuration
@@ -93,16 +105,45 @@ build/
 .flutter-plugins
 .flutter-plugins-dependencies
 
+# Android-specific machine & build files
+**/android/local.properties
+**/android/.gradle/
+**/android/app/build/
+**/android/captures/
+.externalNativeBuild/
+.cxx/
+
+# iOS-specific build & dependency files
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.framework
+*.ipa
+*.dSYM.zip
+
 # Environment files
 .env
 .env.*
+.env.local
+.env.*.local
 !.env.example
+*.local.json
 
-# Local secrets
+# Local database files
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Local secrets & certificates
 secrets/
 *.pem
 *.key
 *.crt
+*.keystore
+*.jks
+*.p12
 
 # Test results
 TestResults/

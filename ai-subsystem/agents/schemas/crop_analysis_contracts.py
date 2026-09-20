@@ -1,49 +1,87 @@
-from datetime import datetime, timezone
-from typing import List, Optional
-from uuid import uuid4
+"""
+AI Contracts and Request/Response Schemas for AgriOps Agent 2.
+Data models and contracts for diagnostic analysis and manager approval workflow.
+"""
+
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
-def _get_utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+# ---------------------------------------------------------------------------
+# API Request Models
+# ---------------------------------------------------------------------------
+
+class AskRequest(BaseModel):
+    """Input payload to trigger Agent 2 diagnostic workflow."""
+    field_id: str = Field(..., description="ID of the field being inspected")
+    crop_variety: str = Field(..., description="Crop name, e.g. Tomato, Paddy")
+    growth_stage: str = Field(default="Vegetative", description="Growth stage, e.g. Seedling, Vegetative, Flowering")
+    observation: str = Field(..., description="Observed symptom notes on leaves, soil, or equipment")
+    image_url: Optional[str] = Field(default="", description="URL to photo evidence")
+    thread_id: str = Field(default="demo", description="Thread ID for stateful checkpointer memory")
+    submitted_by_user_id: str = Field(default="worker-01", description="User ID submitting observation")
+    max_iterations: int = Field(5, ge=1, le=10, description="Iteration cap enforced at API edge")
 
 
-class CropSymptomInput(BaseModel):
-    field_id: str = Field(description="ID of the field being inspected")
-    crop_variety: str = Field(description="Type of crop, e.g., Tomato, Paddy, Maize, Tea")
-    growth_stage: str = Field(default="Vegetative", description="Growth stage")
-    symptom_description: str = Field(description="Text description of observed symptoms")
-    image_url: Optional[str] = Field(default="", description="URL of photo evidence")
-    submitted_by_user_id: str = Field(description="User ID of inspector")
+class ResumeRequest(BaseModel):
+    """Payload to resume a paused workflow (Human-in-the-Loop decision)."""
+    thread_id: str = Field(..., description="Thread ID of the paused execution")
+    decision: Literal["approve", "deny"] = Field(..., description="Human manager's decision: 'approve' or 'deny'")
+    manager_user_id: str = Field(default="manager-01", description="User ID of approving farm manager")
+    comments: Optional[str] = Field(default=None, description="Optional manager remarks")
 
 
-class StressFactor(BaseModel):
-    factor_name: str
-    category: str
-    confidence: float
+# ---------------------------------------------------------------------------
+# API Response Models
+# ---------------------------------------------------------------------------
+
+class Step(BaseModel):
+    """Record of an individual tool call execution step."""
+    step: int
+    tool: str
+    args: Dict[str, Any]
+    result: str
 
 
-class ActionRecommendation(BaseModel):
-    action_type: str
-    suggested_task_type: str
-    priority: str
-    notes: str
-    urgency_hours: int = 24
+class GraphResponse(BaseModel):
+    """Machine-readable response returned by Agent 2 FastAPI service.
+    status is the field a caller branches on: render an answer, or render an approval screen.
+    """
+    status: Literal["completed", "awaiting_approval"]
+    answer: Optional[str] = None
+    interrupt: Optional[Dict[str, Any]] = None
+    nodes: List[str] = Field(default_factory=list, description="Nodes that ran, in order (the trajectory).")
+    thread_id: str
+    total_tokens: int = 0
+    messages: int = 0
+    seconds: float = 0.0
 
 
-class CropAnalysisReport(BaseModel):
-    field_id: str
-    crop_variety: str
-    growth_stage: str
-    primary_indicator: str
-    risk_level: str
-    suggested_task_type: str
-    priority: str
-    submitted_by_user_id: str
-    reasoning_summary: str
-    assessment_id: str = Field(default_factory=lambda: str(uuid4()))
-    workflow_id: str = Field(default_factory=lambda: str(uuid4()))
-    stress_factors: List[StressFactor] = Field(default_factory=list)
-    recommended_actions: List[ActionRecommendation] = Field(default_factory=list)
-    status: str = Field(default="PendingApproval")
-    created_at: str = Field(default_factory=_get_utc_now_iso)
+# ---------------------------------------------------------------------------
+# Structured Output Models for Diagnostic Evaluation
+# ---------------------------------------------------------------------------
+
+class DiagnosisGrade(BaseModel):
+    """Model used by the self-correcting grader node to judge diagnostic sufficiency."""
+    is_confident: bool = Field(
+        ...,
+        description="True only if the retrieved handbook documents contain enough specific information to diagnose the crop. False if a query rewrite is needed."
+    )
+    deciding_passage: str = Field(
+        default="",
+        description="The exact passage from the handbook that justifies the grade."
+    )
+
+
+class StructuredDiagnosis(BaseModel):
+    """Model used to extract typed diagnosis and task recommendation from the model."""
+    primary_indicator: str = Field(..., description="Main diagnosed issue or pest/disease identity")
+    category: str = Field(..., description="Pest, Disease, NutrientDeficiency, WaterStress, Environmental")
+    risk_level: Literal["Low", "Medium", "High", "Critical"] = Field(..., description="Assessed risk level")
+    suggested_task_type: Literal[
+        "Watering", "Fertilization", "Weeding", "PestInspection",
+        "CropMonitoring", "Harvesting", "EquipmentMaintenance"
+    ] = Field(..., description="Standardized C# backend task type")
+    priority: Literal["Low", "Medium", "High", "Critical"] = Field(..., description="Task priority")
+    recommended_protocol: str = Field(..., description="Clear actionable treatment instructions")
+    confidence_score: float = Field(default=0.90, ge=0.0, le=1.0)
