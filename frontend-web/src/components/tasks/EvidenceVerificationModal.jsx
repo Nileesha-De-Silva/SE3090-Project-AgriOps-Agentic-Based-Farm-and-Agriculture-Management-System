@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { verifyTaskEvidence } from '../../store/slices/taskSlice';
-import { X, CheckCircle2, XCircle, FileText, Image as ImageIcon, MapPin, UserCheck, Calendar } from 'lucide-react';
+import { X, CheckCircle2, XCircle, FileText, Image as ImageIcon } from 'lucide-react';
 
 export default function EvidenceVerificationModal({ task, onClose }) {
   const dispatch = useDispatch();

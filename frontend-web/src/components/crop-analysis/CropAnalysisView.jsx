@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { runAgentAnalysis, clearActiveResult } from '../../store/slices/cropAnalysisSlice';
+import { runAgentAnalysis } from '../../store/slices/cropAnalysisSlice';
 import { 
   Sparkles, 
-  Send, 
   RefreshCw, 
   ShieldAlert, 
-  CheckCircle2, 
   Cpu, 
-  MapPin, 
-  Flame, 
   FileText,
   Activity,
   ArrowRight

@@ -6,10 +6,8 @@ import {
   Inbox, 
   Sparkles, 
   Users, 
-  Calendar, 
   FileCheck2, 
-  Activity,
-  Layers
+  Activity
 } from 'lucide-react';
 
 export default function Sidebar() {
