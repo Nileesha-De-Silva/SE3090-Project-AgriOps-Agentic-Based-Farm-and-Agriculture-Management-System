@@ -1,0 +1,140 @@
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { addTask } from '../../store/slices/taskSlice';
+import { X, PlusCircle } from 'lucide-react';
+
+export default function CreateTaskModal({ onClose }) {
+  const dispatch = useDispatch();
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    taskType: 'PestInspection',
+    priority: 'Medium',
+    fieldId: 'field-north-plot-1',
+    cropVariety: 'Tomato',
+    estimatedHours: 2.0,
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.title) return;
+    dispatch(addTask(formData));
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900">Schedule Field Task</h3>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">Task Title *</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Copper Hydroxide Foliar Spray"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Task Type</label>
+              <select
+                value={formData.taskType}
+                onChange={(e) => setFormData({ ...formData, taskType: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+              >
+                <option value="PestInspection">Pest Inspection</option>
+                <option value="PesticideApplication">Pesticide Application</option>
+                <option value="CropMonitoring">Crop Monitoring</option>
+                <option value="Irrigation">Irrigation</option>
+                <option value="Harvesting">Harvesting</option>
+                <option value="Pruning">Pruning</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Priority</label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Field Plot ID</label>
+              <input
+                type="text"
+                value={formData.fieldId}
+                onChange={(e) => setFormData({ ...formData, fieldId: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Estimated Hours</label>
+              <input
+                type="number"
+                step="0.5"
+                min="0.5"
+                value={formData.estimatedHours}
+                onChange={(e) => setFormData({ ...formData, estimatedHours: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">Instructions / Description</label>
+            <textarea
+              rows="3"
+              placeholder="Provide field instructions or safety equipment requirements..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            ></textarea>
+          </div>
+
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm transition-colors"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Schedule Task</span>
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  );
+}
