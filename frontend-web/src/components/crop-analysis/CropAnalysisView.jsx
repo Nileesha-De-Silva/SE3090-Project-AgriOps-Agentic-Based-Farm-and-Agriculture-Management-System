@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { runAgentAnalysis } from '../../store/slices/cropAnalysisSlice';
 import { 
@@ -214,14 +214,14 @@ export default function CropAnalysisView() {
                 </label>
                 <div className="flex flex-wrap items-center gap-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
                   {activeAnalysisResult.nodes?.map((node, index) => (
-                    <React.Fragment key={node}>
+                    <Fragment key={node}>
                       <span className="font-mono font-semibold px-2 py-0.5 rounded bg-white text-slate-800 border border-slate-200 shadow-2xs">
                         {node}
                       </span>
                       {index < activeAnalysisResult.nodes.length - 1 && (
                         <ArrowRight className="w-3 h-3 text-slate-400" />
                       )}
-                    </React.Fragment>
+                    </Fragment>
                   ))}
                 </div>
               </div>
