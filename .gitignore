@@ -166,3 +166,69 @@ temp/
 !yarn.lock
 !pnpm-lock.yaml
 !pubspec.lock
+
+# ==============================================================================
+# AgriOps Component 2 Extensions (AI Subsystem, Multi-tab Web, Uploads & Security)
+# ==============================================================================
+
+# Large AI Model Weights & Checkpoints (Prevents GitHub 100MB limit errors)
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+*.h5
+
+# Vector Databases & Embedding Caches
+chroma/
+chroma_db/
+faiss_index/
+vectorstore/
+vectorstores/
+*.lance/
+
+# LangChain / LangGraph Agent Tracing & State Cache
+.langchain/
+.langgraph/
+.langsmith/
+
+# Jupyter & Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Python Test Coverage DB Files
+.coverage
+.coverage.*
+
+# Agronomic Evidence & Test Image Uploads
+uploads/
+**/uploads/
+evidence_uploads/
+temp_images/
+
+# Backend (.NET) Local Overrides & Developer Certificates
+appsettings.Local.json
+appsettings.*.local.json
+**/secrets.json
+publish/
+**/publish/
+*.pfx
+*.sln.docstates
+
+# Cloud Credentials & Mobile Services
+service-account*.json
+*credentials*.json
+client_secret*.json
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+
+# Frontend & Build Caches
+.eslintcache
+.turbo/
+bun.lockb
+dist/
+
+# AI Agent & Workspace Caches
+.cursor/
+.gemini/
+*.patch
+
