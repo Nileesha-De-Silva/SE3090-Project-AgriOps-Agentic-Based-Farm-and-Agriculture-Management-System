@@ -1,0 +1,188 @@
+@import "../styles/theme.css";
+
+.crop-season-page {
+  padding: var(--space-xl);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.crop-season-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  margin-bottom: var(--space-lg);
+  transition: color var(--transition-fast);
+}
+
+.crop-season-back-link:hover {
+  color: var(--color-primary);
+}
+
+.crop-season-header-card {
+  margin-bottom: var(--space-xl);
+}
+
+.crop-season-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-sm);
+}
+
+.crop-season-header-top h1 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.crop-season-header-badges {
+  display: flex;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.crop-season-dates {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.crop-season-error {
+  margin-bottom: var(--space-lg);
+}
+
+.crop-season-section {
+  margin-bottom: var(--space-2xl);
+}
+
+.crop-season-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.crop-season-section-header h2 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.log-form-card {
+  margin-bottom: var(--space-xl);
+}
+
+.log-form-card h3 {
+  margin: 0 0 var(--space-lg) 0;
+  font-size: 1.0625rem;
+  color: var(--color-text);
+}
+
+.log-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.log-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.log-form-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.log-form-field input {
+  font-family: var(--font-family-base);
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  transition: border-color var(--transition-fast);
+}
+
+.log-form-field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.log-form-actions {
+  margin-top: var(--space-xs);
+}
+
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.entry-card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.entry-date {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.9375rem;
+}
+
+.entry-detail {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.entry-notes {
+  margin: var(--space-sm) 0 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-text-muted);
+}
+
+.empty-state-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: var(--space-xs);
+}
+
+.empty-state h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.0625rem;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.crop-season-not-found {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-text-muted);
+}

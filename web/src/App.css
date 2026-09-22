@@ -1,0 +1,12 @@
+@import "./styles/theme.css";
+
+.app-shell {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.app-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}

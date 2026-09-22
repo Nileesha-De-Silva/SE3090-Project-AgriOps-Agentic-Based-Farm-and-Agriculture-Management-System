@@ -1,173 +1,129 @@
-# AgriOps Agent - Component 2
+# AgriOps AI – Agentic-Based Agriculture Farm Management Platform
 
-AgriOps is an agriculture operations platform focused on crop analysis, task coordination, and field workforce management. This workspace brings together an AI-powered crop analysis subsystem, a backend API, a web frontend, a mobile app, and supporting documentation.
+> An intelligent, end-to-end farm operations and decision-support ecosystem integrating mobile field execution, administrative web governance, a centralized ASP.NET Core REST API, PostgreSQL relational persistence, and a multi-agent AI subsystem with human-in-the-loop validation.
 
-## Project Overview
+---
 
-The project is organized into a few key areas:
+## 📌 Project Overview
 
-- `ai-subsystem/` — AI and analysis logic for crop diagnostics and symptom interpretation
-- `backend/` — .NET ASP.NET Core application exposing APIs for crop analysis, tasks, and worker operations
-- `frontend-web/` — web frontend for viewing and managing crop analysis and tasks
-- `mobile-app/` — mobile application codebase for field workers and operators
-- `Documentations/` — project documentation and design notes
-- `snippts/` — supporting code snippets or examples
+**AgriOps AI** (SE3090) is an intelligent farm management platform designed to automate agricultural workflows, optimize field workforce utilization, track inventory lifecycles, and deliver actionable, weather-aware operational recommendations. 
 
-## Repository Structure
+Rather than functioning as a conversational chatbot, the platform implements **deterministic, multi-step agentic AI workflows** that ingest real-time field data and third-party meteorological telemetry, execute allow-listed tool calls, pass safety checks, and enforce mandatory human approval for high-impact farm decisions.
+
+---
+
+## 🏛️ System Architecture
+
+AgriOps AI links two client applications with a centralized backend and multi-agent AI system:
+
+* **Flutter Mobile Application:** Designed for **Farmers** and **Field Workers** to register farms, record planting activities, track daily tasks, log observations, and capture field evidence.
+
+* **React Web Dashboard:** Designed for **Farm Managers** and **Agronomists/Administrators** to supervise field layouts, assign tasks, track inventory thresholds, monitor agent executions, and approve/reject AI recommendations.
+
+* **ASP.NET Core Web API:** Centralized REST backend managing business logic, role-based authorization, external API integrations, and PostgreSQL persistence via Entity Framework Core.
+
+* **PostgreSQL Database:** Normalized relational database storing system entities, transactional task histories, and immutable agent audit logs.
+
+* **Multi-Agent AI Subsystem:** An orchestration layer featuring specialized agents operating with allow-listed tools, deterministic safety validators, and execution tracking.
+
+## 👥 Role-Based Access Control (RBAC)
+
+| Role | Interface | Core Permissions & Capabilities |
+
+| :--- | :--- | :--- |
+| **Farmer** | Flutter Mobile | Register farms/fields, add crops, log planting, upload crop images, report problems, view weather & AI suggestions. |
+
+| **Farm Worker** | Flutter Mobile | View daily task schedules, update task status, upload completion evidence photos, record harvest data. |
+
+| **Farm Manager** | React Web | Oversee multiple farms, plan crop seasons, balance worker workloads, review and approve high-impact AI actions. |
+
+| **Administrator / Agronomist** | React Web | Manage user access, configure farming rules & thresholds, monitor stock levels, audit agent decision logs. |
+
+---
+
+## 🧩 Four Core Application Components
+
+### 1. Component 1: Farm & Crop Management
+
+The structural and botanical backbone of the platform.
+
+* **Key Entities:** `Farm`, `Field`, `Crop`, `CropSeason`, `Planting`, `Harvest`, `SoilRecord`.
+
+* **Features:** Multi-field spatial mapping with GPS boundary coordinates, crop lifecycle tracking (Germination to Harvest),
+
+* soil chemistry logging (pH, NPK levels), and harvest yield recording.
+
+
+### 2. Component 2: Farm Task & Worker Management
+
+Handles workforce dispatching, labor load-balancing, and verified execution pipelines.
+
+* **Key Entities:** `Worker`, `WorkerSkill`, `FarmTask`, `TaskAssignment`, `TaskSchedule`, `TaskHistory`.
+
+* **Features:** Multi-step operational status pipeline (`Created` → `Assigned` → `In Progress` → `Pending Verification` with
+
+* photo evidence → `Manager Approved`), skill-based task matching, and cyclical task scheduling.
+
+
+### 3. Component 3: Inventory & Agricultural Resources
+
+Manages the internal agricultural supply chain and material usage.
+
+* **Key Entities:** `InventoryItem`, `InventoryTransaction`, `Supplier`, `PurchaseRequest`.
+
+* **Features:** Continuous stock level monitoring against safety thresholds, automatic material deductions upon task completion,
+* and AI-assisted purchase request generation.
+
+
+### 4. Component 4: AI Monitoring, Recommendations & Analytics
+
+The administrative intelligence layer managing agent execution state and high-level reporting.
+
+* **Key Entities:** `AIWorkflow`, `AgentExecution`, `ToolCall`, `ValidationResult`, `Approval`, `WeatherRecord`.
+
+* **Features:** End-to-end execution state persistence, human-in-the-loop review queues, live meteorological caching, and
+
+* analytics tracking recommendation acceptance rates and agent latency.
+
+---
+
+## 🤖 The Multi-Agent AI Subsystem
+
+AgriOps AI implements 4 distinct domain agents designed with explicit input/output contracts, least-privilege tool execution, and deterministic safeguards:
+
+* **Agent 1 – Farm Planning Agent (Master Orchestrator):** Ingests farm parameters and constructs a sequential 8-step farming plan (weather review, soil evaluation, activity sequencing, and resource checks).
+
+* **Agent 2 – Crop Analysis Agent (Diagnostic Support):** Ingests uploaded crop images and field notes to detect environmental or nutrient stress markers (e.g., chlorosis) without making unsafe, speculative disease diagnoses.
+
+* **Agent 3 – Weather & Resource Planning Agent (Tool Execution Engine):** Interacts securely with external weather APIs and database services using allow-listed tools (`getWeatherForecast`, `getInventory`, `calculateResourceRequirement`) to proactively adjust farming schedules (e.g., postponing irrigation before forecasted heavy rain).
+
+* **Agent 4 – Validation & Safety Agent (Deterministic Gatekeeper):** Validates all proposed actions against hard-coded agricultural rules, resource thresholds, and chemical dosage limits. Halts and routes valid plans to the React dashboard for human approval before any database state mutation occurs.
+
+---
+
+## 🗄️ Database Schema & Relational Design
+
+The system relies on a normalized PostgreSQL schema with strong relational constraints and audit logging:
 
 ```text
-AgriOps Agent-Component2/
-├── ai-subsystem/
-│   ├── agents/
-│   ├── tests/
-│   └── ...
-├── backend/
-│   ├── AgriOps.sln
-│   └── src/
-│       ├── AgriOps.Api/
-│       ├── AgriOps.Core/
-│       └── AgriOps.Infrastructure/
-├── Documentations/
-├── frontend-web/
-│   └── src/
-├── mobile-app/
-│   └── lib/
-├── snippts/
-└── README.md
-```
+Users ──< Roles
+  └──< Workers ──< WorkerSkills
 
-## Components
+Farms ──< Fields ──< CropSeasons ──< Plantings
+                         │        ──< CropObservations
+                         │        ──< Harvests
+                         └──< SoilRecords
 
-### AI Subsystem
+FarmTasks ──< TaskAssignments
+    │     ──< TaskSchedules
+    └──< TaskHistory
 
-The AI subsystem is intended to support crop analysis workflows through intelligent agents and tools. The current structure includes:
+InventoryItems ──< InventoryTransactions
+       │       ──< PurchaseRequests >── Suppliers
 
-- `ai-subsystem/agents/` for agent logic
-- `ai-subsystem/tests/` for validation and regression tests
-- prompt and schema definitions for crop analysis contracts
+AIWorkflows ──< AgentExecutions ──< ToolCalls
+     │      ──< ValidationResults
+     └──< Approvals
 
-This area is designed to process crop symptoms, map them to likely issues, and provide analysis outputs used by the application.
-
-### Backend
-
-The backend is a .NET solution under `backend/` and uses ASP.NET Core. It includes:
-
-- `AgriOps.Api` — API application and controller layer
-- `AgriOps.Core` — domain entities, interfaces, and core business logic
-- `AgriOps.Infrastructure` — persistence and service implementations
-
-The API is set up to expose endpoints for:
-
-- crop analysis
-- task management
-- worker operations
-
-### Frontend Web
-
-The frontend web app under `frontend-web/` contains components, services, and Redux-like slices for:
-
-- crop analysis approvals and inboxes
-- task management and kanban board UI
-- evidence verification modal
-- assignment flows
-
-### Mobile App
-
-The mobile app under `mobile-app/` is organized as a Flutter/Dart-style feature structure with:
-
-- `lib/src/bloc/` for state management patterns
-- `lib/src/services/` for API/service layer access
-- `lib/src/views/` for screens and UI views
-
-## Tech Stack
-
-This workspace currently includes a mix of technologies:
-
-- .NET 8 / ASP.NET Core for the backend API
-- Python for AI subsystem logic and agent workflows
-- JavaScript / React-style web frontend
-- Dart / Flutter-style mobile app
-- SQL-backed infrastructure patterns through the .NET project structure
-
-## Prerequisites
-
-Before running the project, ensure the following tools are installed:
-
-- .NET SDK
-- Python 3.10+
-- Node.js and npm (for frontend tooling)
-- Flutter SDK (if working on the mobile app)
-
-## Getting Started
-
-### 1. Backend
-
-From the repository root:
-
-```bash
-cd backend
-
-dotnet restore
-
-dotnet build AgriOps.sln
-
-dotnet run --project src/AgriOps.Api/AgriOps.Api.csproj
-```
-
-The API runs with Swagger enabled in development mode for local testing.
-
-### 2. AI Subsystem
-
-From the repository root:
-
-```bash
-cd ai-subsystem
-
-python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# or .venv\Scripts\activate  # Windows
-
-pip install -r requirements.txt
-```
-
-If a dedicated requirements file is not present yet, install the packages needed for the crop analysis workflow as the project evolves.
-
-### 3. Frontend Web
-
-From the repository root:
-
-```bash
-cd frontend-web
-
-npm install
-npm start
-```
-
-### 4. Mobile App
-
-From the repository root:
-
-```bash
-cd mobile-app
-
-flutter pub get
-flutter run
-```
-
-## Development Notes
-
-- The backend and frontend are intended to work together through the API layer.
-- The AI subsystem likely acts as a decision-support component for crop analysis workflows.
-- The project is still structured as a multi-component workspace, so the exact integration points may evolve as features are finalized.
-
-## Suggested Next Steps
-
-1. Confirm the API contracts for crop analysis and task operations.
-2. Add a shared data model or contract layer between backend and frontend.
-3. Integrate the AI subsystem into the backend service flow.
-4. Complete the mobile app wiring to the same API endpoints.
-5. Add environment configuration and deployment guidance.
-
-## License
-
-This project does not yet declare a license in the repository. Add one if you plan to distribute or publish the codebase.
+WeatherRecords
+AuditLogs
