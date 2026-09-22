@@ -371,6 +371,7 @@ def human_gate(state: Agent2State) -> dict:
             f"Approve creation?"
         ),
         "field_id": state["field_id"],
+        "primary_indicator": state.get("primary_indicator", ""),
         "risk_level": state["risk_level"],
         "suggested_task_type": state["suggested_task_type"],
         "protocol": state["recommended_protocol"],
@@ -480,18 +481,21 @@ def run_agent2_workflow(inputs: Any, thread_id: str = "demo") -> GraphResponse:
             else:
                 nodes_ran.append(node)
 
+    state_vals = AGENT2_APP.get_state(config).values or {}
+
     if paused is not None:
         return GraphResponse(
             status="awaiting_approval",
+            answer=state_vals.get("final_answer", ""),
             interrupt=paused,
             nodes=nodes_ran,
             thread_id=thread_id,
+            total_tokens=state_vals.get("total_tokens", 0),
         )
 
-    values = AGENT2_APP.get_state(config).values
-    final = values.get("final_answer", "")
-    tokens = values.get("total_tokens", 0)
-    msg_count = len(values.get("messages", []))
+    final = state_vals.get("final_answer", "")
+    tokens = state_vals.get("total_tokens", 0)
+    msg_count = len(state_vals.get("messages", []))
 
     return GraphResponse(
         status="completed",

@@ -14,7 +14,7 @@ export const aiApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 90000,
 });
 
 // Mock Initial Fallback Data for offline demo / decoupled development
