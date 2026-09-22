@@ -1,15 +1,234 @@
-# Build results
-bin/
-obj/
-*.user
-*.suo
-
-# VS Code / Visual Studio
-.vs/
-.vscode/
-
-# OS files
+# OS / editor files
 .DS_Store
 Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-frontend-web/
+# Logs
+*.log
+logs/
+
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+build/
+out/
+artifacts/
+
+# .NET
+*.user
+*.suo
+*.cache
+*.db
+*.db-shm
+*.db-wal
+*.pdb
+*.aps
+*.tmp
+*.pid
+*.dll
+*.exe
+project.lock.json
+*.nuget.props
+*.nuget.targets
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Visual Studio
+.vs/
+*.csproj.user
+*.userprefs
+*.orig
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+ENV/
+.python-version
+ai-subsystem/checkpoints/
+.langchain.db
+.cache/
+
+# Pip / Poetry / Pyenv
+pip-wheel-metadata/
+poetry.lock
+poetry.toml
+.Python
+
+# Node / frontend
+node_modules/
+.npm/
+.pnpm-store/
+.parcel-cache/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Frontend build outputs
+frontend-web/dist/
+frontend-web/build/
+frontend-web/dist-ssr/
+.vite/
+frontend-web/.vite/
+
+# Node logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Flutter / Dart
+.mobile-configuration
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android-specific machine & build files
+**/android/local.properties
+**/android/.gradle/
+**/android/app/build/
+**/android/captures/
+.externalNativeBuild/
+.cxx/
+
+# iOS-specific build & dependency files
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.framework
+*.ipa
+*.dSYM.zip
+
+# Environment files
+.env
+.env.*
+.env.local
+.env.*.local
+!.env.example
+*.local.json
+
+# Local database files
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Local secrets & certificates
+secrets/
+*.pem
+*.key
+*.crt
+*.keystore
+*.jks
+*.p12
+
+# Test results
+TestResults/
+coverage.xml
+htmlcov/
+
+# Generated docs
+Documentations/generated/
+
+# Temporary files
+tmp/
+temp/
+
+# Git merge backup files
+*.rej
+*.bak
+
+# Optional: keep lockfiles tracked
+!package-lock.json
+!yarn.lock
+!pnpm-lock.yaml
+!pubspec.lock
+
+# ==============================================================================
+# AgriOps Component 2 Extensions (AI Subsystem, Multi-tab Web, Uploads & Security)
+# ==============================================================================
+
+# Large AI Model Weights & Checkpoints (Prevents GitHub 100MB limit errors)
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+*.h5
+
+# Vector Databases & Embedding Caches
+chroma/
+chroma_db/
+faiss_index/
+vectorstore/
+vectorstores/
+*.lance/
+
+# LangChain / LangGraph Agent Tracing & State Cache
+.langchain/
+.langgraph/
+.langsmith/
+
+# Jupyter & Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Python Test Coverage DB Files
+.coverage
+.coverage.*
+
+# Agronomic Evidence & Test Image Uploads
+uploads/
+**/uploads/
+evidence_uploads/
+temp_images/
+
+# Backend (.NET) Local Overrides & Developer Certificates
+appsettings.Local.json
+appsettings.*.local.json
+**/secrets.json
+publish/
+**/publish/
+*.pfx
+*.sln.docstates
+
+# Cloud Credentials & Mobile Services
+service-account*.json
+*credentials*.json
+client_secret*.json
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+
+# Frontend & Build Caches
+.eslintcache
+.turbo/
+bun.lockb
+dist/
+
+# AI Agent & Workspace Caches
+.cursor/
+.gemini/
+*.patch
+
