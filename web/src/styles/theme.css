@@ -1,0 +1,62 @@
+/*
+ * AgriOps AI — shared design tokens
+ * Plain CSS custom properties, consumed by all components in
+ * web/src/components/. Keep this file as the single source of truth
+ * for color, spacing, radius, and transition values.
+ */
+
+:root {
+  /* ---- Brand green ---- */
+  --color-primary: #4a7c59;         /* natural, mid-tone green — primary actions */
+  --color-primary-hover: #3d6849;   /* darker shade for primary hover/active */
+  --color-secondary: #7fa88b;       /* soft secondary green — accents, hover states */
+  --color-secondary-hover: #6d9679;
+
+  /* ---- Backgrounds ---- */
+  --color-bg: #f7f8f5;              /* app / page background, off-white */
+  --color-bg-alt: #ffffff;          /* card / surface background, white */
+  --color-bg-light-green: #e7f0e9;  /* subtle green background — badges, highlighted rows */
+
+  /* ---- Text ---- */
+  --color-text: #2b2e2a;            /* dark charcoal — primary text */
+  --color-text-muted: #6b7268;      /* secondary / helper text */
+  --color-text-on-primary: #ffffff; /* text on solid green surfaces */
+
+  /* ---- Borders & shadows ---- */
+  --color-border: #dde3dc;
+  --color-border-strong: #c3ccc2;
+  --shadow-card: 0 1px 3px rgba(43, 46, 42, 0.08), 0 1px 2px rgba(43, 46, 42, 0.06);
+
+  /* ---- Status colors (used by Badge, ErrorBanner, etc.) ---- */
+  --color-success: #4a7c59;
+  --color-success-bg: #e7f0e9;
+  --color-info: #4a6b7c;
+  --color-info-bg: #e6edf0;
+  --color-neutral: #6b7268;
+  --color-neutral-bg: #ececea;
+  --color-error: #a13d3d;
+  --color-error-bg: #fbe9e9;
+  --color-warning: #92650c;         /* amber — used sparingly, e.g. approval-pending states */
+  --color-warning-bg: #f9ecd3;
+
+  /* ---- Spacing scale ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* ---- Motion ---- */
+  --transition-fast: 150ms ease;
+
+  /* ---- Type ---- */
+  --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+}
