@@ -4,7 +4,14 @@ from app.state import PlanningState
 from app import backend_client
 from app.config import GEMINI_API_KEY
 
-llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", google_api_key=GEMINI_API_KEY)
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3.6-flash",
+    google_api_key=GEMINI_API_KEY,
+    max_output_tokens=512,
+    thinking_level="low",   # cuts down the reasoning overhead for this simple task
+    max_retries=2,          # now that we know 504s are transient, a couple retries makes sense
+    timeout=30,
+)
 
 
 def _log(state: PlanningState, message: str) -> None:
