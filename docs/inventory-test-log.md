@@ -31,6 +31,13 @@ Mark PASS only when the actual result matches the expected result.
 | INV-010 | Delete unused test item | DELETE /api/inventory/1265cf75-9cec-4d4c-9461-10b2f1d9b0e2 | HTTP 204 with no response body | HTTP 204; no response body | PASS |
 | INV-011 | Retrieve deleted item | GET /api/inventory/1265cf75-9cec-4d4c-9461-10b2f1d9b0e2 | HTTP 404 with item-not-found message | HTTP 404; Inventory item not found. | PASS |
 | INV-012 | Repeat deletion | DELETE /api/inventory/1265cf75-9cec-4d4c-9461-10b2f1d9b0e2 | HTTP 404 with item-not-found message | HTTP 404; Inventory item not found. | PASS |
+
+
+| INV-013 | Receive stock | Receive 100 for item e527020a-3fd5-44c8-bfa6-30048e594e04 | HTTP 201; stock becomes 100 | HTTP 201; GET confirmed stock 100 | PASS |
+| INV-014 | Use available stock | Use 20 from the same item | HTTP 201; stock becomes 80 | HTTP 201; GET confirmed stock 80 | PASS |
+| INV-015 | Reject excessive usage | Use 100 when stock is 80 | HTTP 409; stock remains 80 | HTTP 409; insufficient-stock message; GET confirmed stock 80 | PASS |
+
+
 ## Execution record
 
 For each test run, record:
@@ -88,3 +95,9 @@ POST /api/inventory
 - Record the negative-cost request's actual response.
 - Record the excess-decimal request's actual response.
 - Confirm invalid requests do not create additional records.
+
+### Stock movement tests — 24 September 2026
+
+- Test item: e527020a-3fd5-44c8-bfa6-30048e594e04.
+- Results verified manually in Swagger.
+- Concurrent requests and transaction-history contents have not yet been tested.

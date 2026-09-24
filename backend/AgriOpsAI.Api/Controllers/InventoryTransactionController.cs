@@ -1,0 +1,64 @@
+using System.ComponentModel.DataAnnotations;
+using AgriOpsAI.Api.DTOs;
+using AgriOpsAI.Api.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AgriOpsAI.Api.Controllers;
+
+[ApiController]
+[Route("api/inventory/{inventoryItemId:guid}/transactions")]
+public class InventoryTransactionController : ControllerBase
+{
+    private readonly InventoryTransactionService _service;
+
+    public InventoryTransactionController(
+        InventoryTransactionService service)
+    {
+        _service = service;
+    }
+
+    [HttpPost]
+    [ProducesResponseType(
+        typeof(InventoryTransactionDto),
+        StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<InventoryTransactionDto>> Create(
+        Guid inventoryItemId,
+        [FromBody] CreateInventoryTransactionDto dto)
+    {
+        try
+        {
+            var transaction = await _service.CreateAsync(
+                inventoryItemId,
+                dto);
+
+            if (transaction is null)
+            {
+                return NotFound(new
+                {
+                    message = "Inventory item not found."
+                });
+            }
+
+            return StatusCode(
+                StatusCodes.Status201Created,
+                transaction);
+        }
+        catch (ValidationException exception)
+        {
+            return BadRequest(new
+            {
+                message = exception.Message
+            });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new
+            {
+                message = exception.Message
+            });
+        }
+    }
+}
