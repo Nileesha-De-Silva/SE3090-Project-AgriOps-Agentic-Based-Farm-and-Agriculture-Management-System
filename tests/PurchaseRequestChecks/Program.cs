@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text.Json;
 using AgriOpsAI.Api.Controllers;
 using AgriOpsAI.Api.Data;
 using AgriOpsAI.Api.DTOs;
@@ -124,6 +125,30 @@ try
     Check(!await db.ReorderRecommendations.AnyAsync(r => r.InventoryItemId == itemId), "Rejected proposal persisted");
     Pass("Proposal authorization, validation, missing/unavailable/unlinked supplier rejection");
 
+    await Call(HttpMethod.Get, "/api/inventory-agent/access", null, HttpStatusCode.Unauthorized);
+    await Call(HttpMethod.Get, "/api/inventory-agent/access", null, HttpStatusCode.Forbidden, agent);
+    var identity = await (await Call(HttpMethod.Get, "/api/inventory-agent/access", null, HttpStatusCode.OK, manager))
+        .Content.ReadFromJsonAsync<JsonElement>();
+    Check(identity.GetProperty("subject").GetString() == "test-manager", "Caller identity mismatch");
+    await Call(HttpMethod.Get, $"/api/inventory-agent/items/{itemId}/context", null, HttpStatusCode.Unauthorized);
+    var evidence = await (await Call(HttpMethod.Get, $"/api/inventory-agent/items/{itemId}/context", null, HttpStatusCode.OK, agent))
+        .Content.ReadFromJsonAsync<JsonElement>();
+    Check(evidence.GetProperty("item").GetProperty("id").GetGuid() == itemId &&
+        evidence.GetProperty("offers").GetArrayLength() == 1 && evidence.GetProperty("incomingQuantity").GetDecimal() == 0,
+        "Agent context evidence mismatch");
+    object ObservedPayload(string stock) => new
+    {
+        agentRunId = Guid.NewGuid(), model = "python-contract-test", inventoryItemId = itemId, supplierId,
+        recommendedQuantity = "5", reason = "Verify Python decimal string contract",
+        observation = new { currentStock = stock, minimumStockLevel = "10", unitPrice = "12.50",
+            leadTimeDays = 3, incomingQuantity = "0", unitOfMeasurement = "kg" }
+    };
+    await Call(HttpMethod.Post, route, ObservedPayload("99"), HttpStatusCode.Conflict, agent);
+    var observed = await (await Call(HttpMethod.Post, route, ObservedPayload("0"), HttpStatusCode.Created, agent))
+        .Content.ReadFromJsonAsync<ReorderRecommendationDto>();
+    await Decide(observed!.Id, false);
+    Pass("Manager access verification, authenticated agent context, Python decimal contract and stale evidence rejection");
+
     var input = Input();
     var proposed = await Propose(input);
     Check(proposed.Status == "Pending" && proposed.PurchaseRequestId is null && await PurchaseCount() == 0,
@@ -174,6 +199,9 @@ try
     var purchase = await db.PurchaseRequests.AsNoTracking().SingleAsync(r => r.Id == approved.PurchaseRequestId);
     Check(purchase.RequestedQuantity == 5 && purchase.SupplierId == supplierId && purchase.Status == "Approved" && purchase.ApprovedAt is not null,
         "Purchase request differs from approved recommendation");
+    var incomingEvidence = await (await Call(HttpMethod.Get, $"/api/inventory-agent/items/{itemId}/context", null, HttpStatusCode.OK, agent))
+        .Content.ReadFromJsonAsync<JsonElement>();
+    Check(incomingEvidence.GetProperty("incomingQuantity").GetDecimal() == 5, "Agent context omitted approved incoming purchase");
     await Call(HttpMethod.Get, $"/api/purchase-requests/{purchase.Id}", null, HttpStatusCode.OK, manager);
     await Decide(proposed.Id, false, HttpStatusCode.Conflict);
     Pass("Approval creates exactly one matching purchase request and records manager audit");
@@ -225,7 +253,7 @@ try
     Check(await db.InventoryItems.Where(i => i.Id == itemId).Select(i => i.CurrentStock).SingleAsync() == 0 &&
         !await db.InventoryTransactions.AnyAsync(t => t.InventoryItemId == itemId), "Workflow changed stock");
     Pass("Old bypass routes removed, missing decision returns 404, stock/history unchanged");
-    Console.WriteLine($"RESULT: {passed}/10 groups passed. No LLM was called; proposals are labelled synthetic fixtures.");
+    Console.WriteLine($"RESULT: {passed}/11 groups passed. No LLM was called; proposals are labelled synthetic fixtures.");
 }
 finally
 {
