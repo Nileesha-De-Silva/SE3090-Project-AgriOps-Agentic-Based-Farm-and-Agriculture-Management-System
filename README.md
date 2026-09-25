@@ -62,15 +62,105 @@ No database migration is required.
 
 Run `pwsh -File scripts/test-supplier-items.ps1` with the local API running to
 verify the feature. The script creates and removes temporary test records.
-Purchase-request management is the next development step.
+### Recommendation approval and purchase requests
 
-### Agentic AI Contribution
+The required sequence is:
 
-The Resource / Inventory Agent analyzes low-stock situations and farm requirements to recommend:
+```text
+Inventory agent reads live stock and suppliers
+  -> proposes a recommendation (Pending, stored in PostgreSQL)
+  -> manager reviews quantity, supplier, price, lead time and reason
+     -> Reject: recommendation becomes Rejected; no purchase request
+     -> Approve: recommendation becomes Approved + one purchase request
+  -> Receive transaction only when goods actually arrive
+```
 
-- Which item should be reordered
-- Recommended reorder quantity
-- Suitable supplier
-- Reason for the recommendation
+The AI agent runtime is not implemented yet. The backend now supports its
+proposal/approval contract. Test proposals are explicitly synthetic fixtures.
 
-High-impact actions such as creating a purchase request require manager approval.
+| Endpoint | Caller | Purpose |
+|---|---|---|
+| POST /api/reorder-recommendations | InventoryAgent | Submit a proposal; never creates a purchase request |
+| GET /api/reorder-recommendations | Manager or InventoryAgent | List durable recommendations |
+| GET /api/reorder-recommendations/{id} | Manager or InventoryAgent | Read one recommendation |
+| POST /api/reorder-recommendations/{id}/approve | Manager | Approve and create one linked purchase request atomically |
+| POST /api/reorder-recommendations/{id}/reject | Manager | Reject without creating a purchase request |
+| GET /api/purchase-requests | Manager | List resulting requests, newest first |
+| GET /api/purchase-requests/{id} | Manager | Retrieve one resulting request |
+
+Direct purchase-request POST and purchase-request approve/reject routes have been
+removed. The approval target is the recommendation. Earlier database rows are
+preserved as legacy records; no approvals or links are invented for them.
+
+A proposal requires `agentRunId`, `model`, `inventoryItemId`, `supplierId`,
+`recommendedQuantity`, and `reason`. Quantity must be positive, at most
+99999999.99, with at most two decimal places. Reason is required, up to 500
+characters. The item must be below its minimum and have an available supplier
+link. Stock, minimum, unit, price and lead time are captured by the server.
+Estimated cost is computed using decimal arithmetic and rounded to two places.
+
+The same run/item and identical payload returns the original proposal. Changed
+payload for that run or another pending proposal for the item returns 409.
+The agent must reuse its run ID on retries. Run IDs are correlation identifiers,
+not authorization credentials.
+
+Manager decision bodies are `{ "note": "Reviewed" }` or `{}`. Actor subject,
+issuer and decision time come from the authenticated manager and server. Approval
+revalidates stock, minimum, unit, availability, price and lead time. Changed data
+returns 409, leaving the proposal Pending so it can be rejected and regenerated.
+Repeating the same decision returns the existing result; the opposite decision
+returns 409. Row locking, a single transaction and a unique purchase link prevent
+retries/concurrent approval from producing duplicate requests.
+
+Created purchase requests start Approved because their recommendation has already
+been approved. No second approval is needed. Decisions never change stock, record
+receipts or send supplier orders. Receiving and purchase fulfilment remain separate
+work. One approved recommendation creates one request; netting outstanding requests
+against new recommendations is a future agent/fulfilment rule.
+
+### Identity integration
+
+The API validates bearer JWT signatures, trusted issuer, audience and expiry.
+Configure through environment variables or development user secrets:
+
+| Setting | Value |
+|---|---|
+| Authentication__Authority | Team identity provider HTTPS authority URL with OIDC discovery/signing keys |
+| Authentication__Audience | Audience registered for this API |
+| Authentication__RoleClaimType | Role claim name; default `role` |
+| Authentication__ManagerRole | Human manager role; default `Manager` |
+| Authentication__AgentRole | Separate agent service-account role; default `InventoryAgent` |
+
+For user secrets, use colon-separated keys, e.g. `Authentication:Authority`.
+Both identities need a nonempty `sub` and a trusted `iss`. A principal with both
+roles cannot submit or approve recommendations. Give the agent its own identity;
+never pass a manager token to the model or agent tools. Recommendation reads are
+shared across these two roles in the current single-farm prototype; multi-farm
+ownership filtering is not implemented. Existing stock/supplier endpoints retain
+their current access model and are not all production-authorized yet.
+
+No login screen, account provisioning or token issuance is provided here. Without
+team identity-provider settings, protected calls cannot be exercised with real
+team tokens. Tests use ephemeral keys confined to their test host.
+
+### Migration and verification
+
+From the repository root:
+
+```powershell
+dotnet ef database update --project backend/AgriOpsAI.Api
+dotnet run --project tests/PurchaseRequestChecks
+```
+
+The additive `AddReorderRecommendations` migration creates recommendation storage
+and constraints without altering existing purchase requests. It has been applied
+to the local development database. The test project uses the real application
+pipeline and configured development database, creates isolated temporary records,
+and removes only its generated IDs. It tests the manager gate without an LLM call.
+See `docs/purchase-request-test-log.md` for results and remaining checks.
+
+### Agent implementation references and next steps
+
+Read `docs/agent-reference-plan.md` before building the agent. It records the exact
+course sources inspected, unavailable OneDrive sources, the approved workflow,
+planned tool permissions, and staged implementation/evaluation requirements.
