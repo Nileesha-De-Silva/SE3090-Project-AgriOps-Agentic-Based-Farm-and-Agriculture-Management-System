@@ -51,6 +51,17 @@ public class ReorderRecommendationService(AgriOpsDbContext context)
         var link = await LockLink(dto.SupplierId!.Value, item.Id);
         if (link is null || !link.IsAvailable)
             throw new InvalidOperationException("An available supplier-item link is required.");
+        if (dto.Observation is { } observed)
+        {
+            Validator.ValidateObject(observed, new ValidationContext(observed), true);
+            var incoming = await context.PurchaseRequests.Where(r => r.InventoryItemId == item.Id &&
+                (r.Status == "Approved" || r.Status == "Pending"))
+                .SumAsync(r => (decimal?)r.RequestedQuantity) ?? 0;
+            if (observed.CurrentStock != item.CurrentStock || observed.MinimumStockLevel != item.MinimumStockLevel ||
+                observed.UnitOfMeasurement != item.UnitOfMeasurement || observed.UnitPrice != link.UnitPrice ||
+                observed.LeadTimeDays != link.LeadTimeDays || observed.IncomingQuantity != incoming)
+                throw new InvalidOperationException("Agent evidence changed during analysis. Start a fresh analysis.");
+        }
         var recommendation = new ReorderRecommendation
         {
             Id = Guid.NewGuid(), AgentRunId = dto.AgentRunId!.Value, Model = dto.Model.Trim(),

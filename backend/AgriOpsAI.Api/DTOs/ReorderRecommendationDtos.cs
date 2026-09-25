@@ -11,6 +11,17 @@ public class CreateReorderRecommendationDto
     [Required, Range(typeof(decimal), "0.01", "99999999.99")]
     public decimal? RecommendedQuantity { get; set; }
     [Required, StringLength(500)] public string Reason { get; set; } = string.Empty;
+    public ReorderObservationDto? Observation { get; set; }
+}
+
+public class ReorderObservationDto
+{
+    [Required] public decimal? CurrentStock { get; set; }
+    [Required] public decimal? MinimumStockLevel { get; set; }
+    [Required] public decimal? UnitPrice { get; set; }
+    [Required] public int? LeadTimeDays { get; set; }
+    [Required] public decimal? IncomingQuantity { get; set; }
+    [Required, StringLength(30)] public string UnitOfMeasurement { get; set; } = string.Empty;
 }
 
 public class RecommendationDecisionDto
