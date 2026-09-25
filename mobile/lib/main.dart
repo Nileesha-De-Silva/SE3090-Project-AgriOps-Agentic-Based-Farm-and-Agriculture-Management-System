@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'widgets/app_theme.dart';
-import 'screens/farms_screen.dart';
+import 'screens/main_navigation_screen.dart';
 
 void main() {
   runApp(const AgriOpsApp());
@@ -14,7 +14,7 @@ class AgriOpsApp extends StatelessWidget {
     return MaterialApp(
       title: 'AgriOps AI',
       theme: AppTheme.theme,
-      home: const FarmsScreen(),
+      home: const MainNavigationScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

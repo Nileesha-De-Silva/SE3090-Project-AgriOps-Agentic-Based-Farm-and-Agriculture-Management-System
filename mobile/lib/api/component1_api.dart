@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api_config.dart';
 import '../models/farm.dart';
 import '../models/field.dart';
 import '../models/crop.dart';
 import '../models/crop_season.dart';
 
 class Component1Api {
-  static const String baseUrl = 'http://192.168.1.15:5289/api';
+  static String get baseUrl => ApiConfig.baseUrl;
 
   static Future<Map<String, dynamic>> _handleResponse(http.Response response) async {
     if (response.statusCode >= 200 && response.statusCode < 300) {

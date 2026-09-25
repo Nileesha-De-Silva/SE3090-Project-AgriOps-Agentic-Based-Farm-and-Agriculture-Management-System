@@ -4,6 +4,9 @@ Thumbs.db
 Desktop.ini
 .vscode/
 .idea/
+*.iml
+*.ipr
+*.iws
 *.swp
 *.swo
 *~
@@ -65,6 +68,7 @@ ENV/
 ai-subsystem/checkpoints/
 .langchain.db
 .cache/
+.uv/
 
 # Pip / Poetry / Pyenv
 pip-wheel-metadata/
@@ -104,18 +108,28 @@ pnpm-debug.log*
 build/
 .flutter-plugins
 .flutter-plugins-dependencies
+.widget_preview/
 
-# Android-specific machine & build files
+# Android-specific machine, build & signing files
 **/android/local.properties
+**/android/key.properties
 **/android/.gradle/
 **/android/app/build/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
 **/android/captures/
 .externalNativeBuild/
 .cxx/
+*.apk
+*.aab
+*.ap_
 
 # iOS-specific build & dependency files
 **/ios/Pods/
 **/ios/.symlinks/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/ephemeral/
 **/ios/Flutter/Flutter.framework
 **/ios/Flutter/Flutter.podspec
 **/ios/Flutter/Generated.xcconfig
