@@ -12,7 +12,7 @@ Mark PASS only after executing the test and recording the result.
 | SUP-005 | PUT existing supplier with changed contact details | 200; values persisted; ID and CreatedAt unchanged | Pending | NOT RECORDED |
 | SUP-006 | GET/PUT/DELETE nonexistent supplier ID | 404; Supplier not found. | Pending | NOT RECORDED |
 | SUP-007 | DELETE unused supplier, then GET its ID | 204, then 404 | Pending | NOT RECORDED |
-| SUP-008 | DELETE supplier with linked items or purchase requests | 409; supplier and relationships remain | Linked-item case returned 409; link remained retrievable. Purchase-request case untested | PARTIAL |
+| SUP-008 | DELETE supplier with linked items or purchase requests | Deletion rejected; supplier and relationships remain | Linked-item HTTP case returned 409; purchase-request-only service case rejected deletion in PurchaseRequestChecks | PASS — HTTP purchase-request-only case pending |
 
 ## Example create request
 
@@ -40,7 +40,7 @@ details; omitted optional fields are cleared. Optional fields may be null.
 - SUP-005: PASS — updated details persisted, omitted email cleared, and persisted CreatedAt was unchanged.
 - SUP-006: PASS — GET, PUT and DELETE of the deleted test ID each returned 404.
 - SUP-007: PASS — deletion returned 204; subsequent GET returned 404.
-- SUP-008: PARTIAL — subsequent supplier-item verification confirmed linked-item deletion protection; purchase-request case remains untested.
+- SUP-008: Linked-item HTTP protection verified; subsequent PurchaseRequestChecks verified purchase-request-only protection at the service level. See purchase-request-test-log.md.
 
 ## Supplier-item verification — 25 September 2026
 
