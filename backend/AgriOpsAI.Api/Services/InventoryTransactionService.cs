@@ -16,6 +16,57 @@ public class InventoryTransactionService
 
     }
 
+
+
+    public async Task<List<InventoryTransactionDto>?> GetHistoryAsync(
+    Guid inventoryItemId)
+          {
+            var itemExists = await _context.InventoryItems
+                .AnyAsync(item => item.Id == inventoryItemId);
+
+            if (!itemExists)
+            {
+                return null;
+            }
+
+            return await _context.InventoryTransactions
+                .AsNoTracking()
+                .Where(transaction =>
+                    transaction.InventoryItemId == inventoryItemId)
+                .OrderByDescending(transaction => transaction.TransactionDate)
+                .ThenByDescending(transaction => transaction.Id)
+                .Select(transaction => new InventoryTransactionDto
+                {
+                    Id = transaction.Id,
+                    InventoryItemId = transaction.InventoryItemId,
+                    TransactionType = transaction.TransactionType,
+                    Quantity = transaction.Quantity,
+                    TransactionDate = transaction.TransactionDate,
+                    Notes = transaction.Notes,
+                    CreatedAt = transaction.CreatedAt
+                })
+                .ToListAsync();
+            }
+
+
+    public async Task<InventoryTransactionDto?> GetByIdAsync(
+    Guid transactionId)
+    {
+    return await _context.InventoryTransactions
+        .AsNoTracking()
+        .Where(transaction => transaction.Id == transactionId)
+        .Select(transaction => new InventoryTransactionDto
+        {
+            Id = transaction.Id,
+            InventoryItemId = transaction.InventoryItemId,
+            TransactionType = transaction.TransactionType,
+            Quantity = transaction.Quantity,
+            TransactionDate = transaction.TransactionDate,
+            Notes = transaction.Notes,
+            CreatedAt = transaction.CreatedAt
+        })
+        .SingleOrDefaultAsync();
+    }
     public async Task<InventoryTransactionDto?> CreateAsync(
       Guid inventoryItemId,
       CreateInventoryTransactionDto dto)

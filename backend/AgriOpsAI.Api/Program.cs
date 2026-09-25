@@ -17,6 +17,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<InventoryService>();
 builder.Services.AddScoped<InventoryTransactionService>();
+builder.Services.AddScoped<SupplierService>();
+builder.Services.AddScoped<SupplierItemService>();
 
 var app = builder.Build();
 

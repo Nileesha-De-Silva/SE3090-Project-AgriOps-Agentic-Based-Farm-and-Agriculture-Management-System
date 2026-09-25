@@ -17,6 +17,50 @@ public class InventoryTransactionController : ControllerBase
         _service = service;
     }
 
+    [HttpGet]
+    [ProducesResponseType(
+      typeof(List<InventoryTransactionDto>),
+      StatusCodes.Status200OK )]
+
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<InventoryTransactionDto>>> GetHistory(
+      Guid inventoryItemId)
+  {
+     var history = await _service.GetHistoryAsync(inventoryItemId);
+
+     if(history is null)
+    {
+        return NotFound(new
+        {
+          message = "Inventory item not found."
+        });
+    }
+
+    return Ok(history);
+
+  }
+
+    [HttpGet("/api/transactions/{transactionId:guid}")]
+    [ProducesResponseType(
+        typeof(InventoryTransactionDto),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<InventoryTransactionDto>> GetById(
+    Guid transactionId)
+    {
+    var transaction = await _service.GetByIdAsync(transactionId);
+
+    if (transaction is null)
+    {
+        return NotFound(new
+        {
+            message = "Inventory transaction not found."
+        });
+    }
+
+    return Ok(transaction);
+}
+
     [HttpPost]
     [ProducesResponseType(
         typeof(InventoryTransactionDto),

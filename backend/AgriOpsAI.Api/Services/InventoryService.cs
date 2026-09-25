@@ -26,6 +26,19 @@ public class InventoryService
         return items.Select(ToDto).ToList();
     }
 
+    public async Task<List<InventoryItemDto>> GetLowStockAsync()
+    {
+        var items = await _context.InventoryItems
+            .AsNoTracking()
+            .Where(item => item.CurrentStock < item.MinimumStockLevel)
+            .OrderByDescending(item => item.MinimumStockLevel - item.CurrentStock)
+            .ThenBy(item => item.Name)
+            .ThenBy(item => item.Id)
+            .ToListAsync();
+
+        return items.Select(ToDto).ToList();
+    }
+
     public async Task<InventoryItemDto?> GetByIdAsync(Guid id)
     {
         var item = await _context.InventoryItems

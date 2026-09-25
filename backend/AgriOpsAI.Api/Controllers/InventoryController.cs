@@ -23,6 +23,13 @@ public class InventoryController : ControllerBase
         return Ok(items);
     }
 
+    [HttpGet("low-stock")]
+    [ProducesResponseType(typeof(List<InventoryItemDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<InventoryItemDto>>> GetLowStock()
+    {
+        return Ok(await _service.GetLowStockAsync());
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<InventoryItemDto>> GetById(Guid id)
     {
