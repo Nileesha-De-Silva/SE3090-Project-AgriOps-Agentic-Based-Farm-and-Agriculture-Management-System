@@ -1,0 +1,211 @@
+@import "../styles/theme.css";
+
+.agent-planner-page {
+  padding: var(--space-xl);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.agent-planner-page h1 {
+  margin: 0 0 var(--space-xs) 0;
+  color: var(--color-text);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.agent-planner-intro {
+  margin: 0 0 var(--space-xl) 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.agent-planner-error {
+  margin-bottom: var(--space-lg);
+}
+
+.planner-form-card {
+  margin-bottom: var(--space-xl);
+}
+
+.planner-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.planner-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.planner-form-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.planner-form-field select {
+  font-family: var(--font-family-base);
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  transition: border-color var(--transition-fast);
+}
+
+.planner-form-field select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.planner-form-field select:disabled {
+  color: var(--color-text-muted);
+  background-color: var(--color-neutral-bg);
+  cursor: not-allowed;
+}
+
+.planner-form-actions {
+  margin-top: var(--space-xs);
+}
+
+.planner-loading-card {
+  margin-bottom: var(--space-xl);
+}
+
+.plan-result-card {
+  margin-bottom: var(--space-lg);
+}
+
+.plan-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+
+.plan-result-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.plan-result-badges {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.plan-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+}
+
+.plan-task-item:last-child {
+  border-bottom: none;
+}
+
+.plan-task-checkbox {
+  flex-shrink: 0;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
+}
+
+.plan-task-item.plan-task-done {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.plan-empty-tasks {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.agent-trace-section {
+  margin-bottom: var(--space-xl);
+}
+
+.agent-trace-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.agent-trace-toggle:hover {
+  color: var(--color-primary);
+}
+
+.agent-trace-caret {
+  display: inline-block;
+  transition: transform var(--transition-fast);
+}
+
+.agent-trace-caret.agent-trace-caret-open {
+  transform: rotate(90deg);
+}
+
+.agent-trace-card {
+  margin-top: var(--space-sm);
+}
+
+.agent-trace-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agent-trace-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.agent-trace-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.agent-trace-timestamp {
+  flex-shrink: 0;
+  min-width: 130px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.agent-trace-step {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}

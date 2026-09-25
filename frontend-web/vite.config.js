@@ -9,7 +9,7 @@ export default defineConfig({
     proxy: {
       // Proxy backend ASP.NET Core API
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5286',
         changeOrigin: true,
         secure: false,
       },
@@ -18,6 +18,12 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ai/, ''),
+      },
+      // Proxy Python Agent 1 FastAPI service
+      '/agent1': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/agent1/, ''),
       },
     },
   },

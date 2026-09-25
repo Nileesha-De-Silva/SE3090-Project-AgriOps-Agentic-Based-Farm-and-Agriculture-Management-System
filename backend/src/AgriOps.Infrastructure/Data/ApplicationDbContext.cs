@@ -19,6 +19,15 @@ public class ApplicationDbContext : DbContext
     public DbSet<TaskSchedule> TaskSchedules => Set<TaskSchedule>();
     public DbSet<TaskHistory> TaskHistories => Set<TaskHistory>();
 
+    // Component 1 Entities
+    public DbSet<Farm> Farms => Set<Farm>();
+    public DbSet<Field> Fields => Set<Field>();
+    public DbSet<Crop> Crops => Set<Crop>();
+    public DbSet<CropSeason> CropSeasons => Set<CropSeason>();
+    public DbSet<Planting> Plantings => Set<Planting>();
+    public DbSet<Harvest> Harvests => Set<Harvest>();
+    public DbSet<SoilRecord> SoilRecords => Set<SoilRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -121,6 +130,57 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.ProposedTaskType).HasMaxLength(100);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
             entity.HasIndex(e => e.WorkflowId);
+        });
+
+        // Component 1 Relationships & Configurations
+        modelBuilder.Entity<Field>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(f => f.Farm)
+                .WithMany(farm => farm.Fields)
+                .HasForeignKey(f => f.FarmId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CropSeason>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(cs => cs.Field)
+                .WithMany(f => f.CropSeasons)
+                .HasForeignKey(cs => cs.FieldId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(cs => cs.Crop)
+                .WithMany(c => c.CropSeasons)
+                .HasForeignKey(cs => cs.CropId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SoilRecord>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(sr => sr.Field)
+                .WithMany(f => f.SoilRecords)
+                .HasForeignKey(sr => sr.FieldId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Planting>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(p => p.CropSeason)
+                .WithMany(cs => cs.Plantings)
+                .HasForeignKey(p => p.CropSeasonId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Harvest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(h => h.CropSeason)
+                .WithMany(cs => cs.Harvests)
+                .HasForeignKey(h => h.CropSeasonId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

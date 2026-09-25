@@ -1,0 +1,155 @@
+@import "../styles/theme.css";
+
+.crops-page {
+  padding: var(--space-xl);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.crops-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.crops-page-header h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.crops-page-error {
+  margin-bottom: var(--space-lg);
+}
+
+.crop-form-card {
+  margin-bottom: var(--space-xl);
+}
+
+.crop-form-card h2 {
+  margin: 0 0 var(--space-lg) 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.crop-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.crop-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.crop-form-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.crop-form-field input,
+.crop-form-field textarea {
+  font-family: var(--font-family-base);
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  transition: border-color var(--transition-fast);
+}
+
+.crop-form-field input:focus,
+.crop-form-field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.crop-form-field textarea {
+  resize: vertical;
+  min-height: 72px;
+  font-family: var(--font-family-base);
+}
+
+.crop-form-actions {
+  margin-top: var(--space-xs);
+}
+
+.crops-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-lg);
+}
+
+.crop-card-name {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.crop-card-variety {
+  margin: 0 0 var(--space-md) 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.crop-card-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--space-sm);
+}
+
+.crop-card-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+.crop-card-stat-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.crop-card-description {
+  margin: var(--space-sm) 0 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.crops-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-text-muted);
+}
+
+.crops-empty-state-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: var(--space-xs);
+}
+
+.crops-empty-state h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.0625rem;
+}
+
+.crops-empty-state p {
+  margin: 0;
+  font-size: 0.9375rem;
+}

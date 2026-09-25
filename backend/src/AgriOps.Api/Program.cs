@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using AgriOps.Core.Interfaces;
 using AgriOps.Infrastructure.Data;
 using AgriOps.Infrastructure.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,22 +26,26 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost:5000")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
 // 4. Add API Controllers & Swagger
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = "AgriOps Agent Component 2 API",
+        Title = "AgriOps Platform API",
         Version = "v1",
-        Description = "REST API for Farm Task Management, Worker Coordination, and AI Crop Analysis"
+        Description = "Centralized REST API for Farm & Crop Management, Workforce Coordination, and AI Crop Analysis"
     });
 });
 

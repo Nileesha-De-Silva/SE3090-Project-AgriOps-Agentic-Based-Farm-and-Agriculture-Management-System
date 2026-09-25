@@ -8,7 +8,10 @@ import {
   FileCheck2, 
   Activity,
   X,
-  ChevronLeft
+  ChevronLeft,
+  MapPin,
+  Sprout,
+  Bot
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -20,6 +23,28 @@ export default function Sidebar({
   const pendingApprovals = useSelector((state) => state.cropAnalysis.pendingApprovals);
   const tasks = useSelector((state) => state.tasks.items);
   const verificationCount = tasks.filter((t) => t.status === 'PendingVerification').length;
+
+  const farmNavItems = [
+    {
+      name: 'Farms & Land',
+      path: '/farms',
+      icon: MapPin,
+      badge: null,
+    },
+    {
+      name: 'Crops & Seasons',
+      path: '/crops',
+      icon: Sprout,
+      badge: null,
+    },
+    {
+      name: 'Farm Planner',
+      path: '/agent-planner',
+      icon: Bot,
+      badge: 'Agent 1',
+      badgeColor: 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-200',
+    },
+  ];
 
   const navItems = [
     {
@@ -53,10 +78,10 @@ export default function Sidebar({
 
   const renderNav = (isMobile = false) => (
     <div className="space-y-6">
-      {/* Navigation Group */}
+      {/* Farm & Crop Management Group */}
       <div>
         <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
-          <span>Operations & Tasks</span>
+          <span>Farm Management</span>
           {!isMobile && onToggleDesktop && (
             <button
               type="button"
@@ -68,6 +93,50 @@ export default function Sidebar({
               <ChevronLeft className="w-4 h-4" />
             </button>
           )}
+        </div>
+        <nav className="space-y-1.5">
+          {farmNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => {
+                  if (isMobile && onCloseMobile) {
+                    onCloseMobile();
+                  }
+                }}
+                className={({ isActive }) =>
+                  `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
+                      : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
+                  }`
+                }
+              >
+                <div className="flex items-center space-x-3">
+                  <Icon className="w-4 h-4 transition-colors" />
+                  <span>{item.name}</span>
+                </div>
+                {item.badge !== null && item.badge !== undefined && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      item.badgeColor || 'bg-white/20 text-white'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Operations & Tasks Navigation Group */}
+      <div>
+        <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+          <span>Operations & Tasks</span>
         </div>
         <nav className="space-y-1.5">
           {navItems.map((item) => {
