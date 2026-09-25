@@ -50,7 +50,8 @@ public class SupplierService(AgriOpsDbContext context)
         var supplier = await context.Suppliers.FindAsync(id);
         if (supplier is null) return false;
         if (await context.SupplierItems.AnyAsync(link => link.SupplierId == id)
-            || await context.PurchaseRequests.AnyAsync(request => request.SupplierId == id))
+            || await context.PurchaseRequests.AnyAsync(request => request.SupplierId == id)
+            || await context.ReorderRecommendations.AnyAsync(r => r.SupplierId == id))
         {
             throw new InvalidOperationException("Cannot delete a supplier with linked items or purchase requests.");
         }

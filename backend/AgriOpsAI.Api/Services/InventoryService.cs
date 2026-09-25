@@ -126,7 +126,8 @@ public class InventoryService
             || await _context.SupplierItems
                 .AnyAsync(supplierItem => supplierItem.InventoryItemId == id)
             || await _context.PurchaseRequests
-                .AnyAsync(request => request.InventoryItemId == id);
+                .AnyAsync(request => request.InventoryItemId == id)
+            || await _context.ReorderRecommendations.AnyAsync(r => r.InventoryItemId == id);
 
         if (item.CurrentStock != 0 || hasRelatedRecords)
         {
@@ -172,7 +173,7 @@ public class InventoryService
         if (item.CurrentStock != 0 ||
             hasTransactions ||
             hasSupplierLinks ||
-            hasPurchaseRequests)
+            hasPurchaseRequests || await _context.ReorderRecommendations.AnyAsync(r => r.InventoryItemId == id))
         {
             throw new InvalidOperationException(
                 "Cannot delete an item that has stock or related records.");

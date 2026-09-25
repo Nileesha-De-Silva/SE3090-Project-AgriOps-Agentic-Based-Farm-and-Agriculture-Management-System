@@ -15,10 +15,36 @@ public class AgriOpsDbContext : DbContext
     public DbSet<Supplier> Suppliers { get; set; }
     public DbSet<SupplierItem> SupplierItems { get; set; }
     public DbSet<PurchaseRequest> PurchaseRequests { get; set; }
+    public DbSet<ReorderRecommendation> ReorderRecommendations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 { 
     base.OnModelCreating(modelBuilder);
+
+    modelBuilder.Entity<ReorderRecommendation>(entity =>
+    {
+        entity.HasOne<InventoryItem>().WithMany().HasForeignKey(r => r.InventoryItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+        entity.HasOne<Supplier>().WithMany().HasForeignKey(r => r.SupplierId)
+            .OnDelete(DeleteBehavior.Restrict);
+        entity.HasOne(r => r.PurchaseRequest).WithOne().HasForeignKey<ReorderRecommendation>(r => r.PurchaseRequestId)
+            .OnDelete(DeleteBehavior.Restrict);
+        entity.HasIndex(r => new { r.AgentRunId, r.InventoryItemId }).IsUnique();
+        entity.HasIndex(r => r.InventoryItemId).IsUnique().HasFilter("\"Status\" = 'Pending'");
+        entity.Property(r => r.Model).HasMaxLength(100);
+        entity.Property(r => r.ProposedBy).HasMaxLength(200);
+        entity.Property(r => r.ProposedByIssuer).HasMaxLength(500);
+        entity.Property(r => r.DecidedBy).HasMaxLength(200);
+        entity.Property(r => r.DecidedByIssuer).HasMaxLength(500);
+        entity.Property(r => r.Reason).HasMaxLength(500);
+        entity.Property(r => r.DecisionNote).HasMaxLength(500);
+        entity.Property(r => r.Status).HasMaxLength(20);
+        entity.Property(r => r.UnitOfMeasurement).HasMaxLength(30);
+        entity.Property(r => r.RecommendedQuantity).HasPrecision(10, 2);
+        entity.Property(r => r.StockAtProposal).HasPrecision(10, 2);
+        entity.Property(r => r.MinimumStockAtProposal).HasPrecision(10, 2);
+        entity.Property(r => r.UnitPrice).HasPrecision(10, 2);
+    });
 
     modelBuilder.Entity<SupplierItem>()
         .HasIndex(si => new { si.SupplierId, si.InventoryItemId })
