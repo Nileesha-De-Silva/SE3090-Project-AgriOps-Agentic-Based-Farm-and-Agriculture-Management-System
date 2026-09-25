@@ -25,7 +25,9 @@ names explicitly identify synthetic test data.
 | REC-009 | Injected failure after purchase SQL, before commit, leaves recommendation Pending and creates no purchase | PASS |
 | REC-010 | Direct purchase creation/approval routes unavailable; missing recommendation 404; stock/history unchanged | PASS |
 
-Final result: **10/10 verification groups passed**. No LLM was called.
+| REC-011 | Manager access, role-protected agent context, Python decimal strings and stale observation rejection | PASS |
+
+Final result: **11/11 verification groups passed**. No LLM was called.
 
 The additive migration was applied to the local development database. Temporary
 test records are removed by run-specific IDs. No existing user records were deleted

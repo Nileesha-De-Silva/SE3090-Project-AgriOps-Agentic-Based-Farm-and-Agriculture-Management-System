@@ -75,8 +75,10 @@ Inventory agent reads live stock and suppliers
   -> Receive transaction only when goods actually arrive
 ```
 
-The AI agent runtime is not implemented yet. The backend now supports its
-proposal/approval contract. Test proposals are explicitly synthetic fixtures.
+The Python inventory agent is implemented in `agents/inventory-agent`, matching
+the farm-planning agent app structure. It uses Gemini structured supplier selection,
+LangGraph and durable SQLite human approval checkpoints. Automated tests use
+synthetic model fixtures; real model and team identity integration remain unverified.
 
 | Endpoint | Caller | Purpose |
 |---|---|---|
@@ -115,8 +117,9 @@ retries/concurrent approval from producing duplicate requests.
 Created purchase requests start Approved because their recommendation has already
 been approved. No second approval is needed. Decisions never change stock, record
 receipts or send supplier orders. Receiving and purchase fulfilment remain separate
-work. One approved recommendation creates one request; netting outstanding requests
-against new recommendations is a future agent/fulfilment rule.
+work. One approved recommendation creates one request. The agent subtracts
+Pending/Approved purchase quantities from shortage; fulfilment must still link
+receipts to orders so delivered quantities stop counting as incoming.
 
 ### Identity integration
 
@@ -161,6 +164,8 @@ See `docs/purchase-request-test-log.md` for results and remaining checks.
 
 ### Agent implementation references and next steps
 
-Read `docs/agent-reference-plan.md` before building the agent. It records the exact
-course sources inspected, unavailable OneDrive sources, the approved workflow,
-planned tool permissions, and staged implementation/evaluation requirements.
+See [agent setup and API examples](agents/inventory-agent/README.md),
+[course reference plan](docs/agent-reference-plan.md) and
+[agent test results](docs/inventory-agent-test-log.md). Supplier lead times currently
+represent configured estimates. Historical comparison needs actual sent/received
+dates for each supplier and product; it is the next procurement lifecycle addition.
