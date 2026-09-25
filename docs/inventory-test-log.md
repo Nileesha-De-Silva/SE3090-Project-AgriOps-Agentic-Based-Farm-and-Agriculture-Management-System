@@ -53,6 +53,11 @@ History uses GET on the same route.
 | INV-018 | GET history for stock-test item | HTTP 200; recorded movements newest first | HTTP 200; visible entries were Use 20, Use 20, Receive 100 in descending time order | PASS |
 | INV-019 | Check stock against recorded movements | 100 − 20 − 20 = 60 | GET returned currentStock 60 | PASS |
 
+
+| INV-016 | View item transaction history | GET /api/inventory/e527020a-3fd5-44c8-bfa6-30048e594e04/transactions | HTTP 200; movements newest first | HTTP 200; recorded receipts and usage returned newest first | PASS |
+| INV-017 | Retrieve an existing transaction | GET /api/transactions/{existing transaction ID} | HTTP 200 with matching transaction | HTTP 200 with matching transaction; confirmed manually | PASS |
+| INV-018 | Retrieve a nonexistent transaction | GET /api/transactions/11111111-1111-1111-1111-111111111111 | HTTP 404; Inventory transaction not found. | ENTER ACTUAL RESULT | NOT RECORDED |
+
 ## Execution notes and corrections
 
 ### Inventory tests — 23–24 September 2026
