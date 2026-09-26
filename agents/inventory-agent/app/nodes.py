@@ -1,5 +1,6 @@
 """Explicit LangGraph nodes, matching the farm-planning agent's organization."""
 import json
+import httpx
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -8,6 +9,31 @@ from pydantic import ValidationError
 
 from app.backend_client import BackendError
 from app.state import ContextEvidence, InventoryState, SupplierChoice
+
+
+def model_error_code(exc):
+    """Inspect structured exception attributes, never return provider text or URLs."""
+    seen = set()
+    while exc is not None and id(exc) not in seen:
+        seen.add(id(exc))
+        code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+        if isinstance(code, int):
+            if code in {401, 403}:
+                return "model_auth_or_permission_denied"
+            if code == 400:
+                return "model_bad_request"
+            if code == 404:
+                return "model_not_found_or_unavailable"
+            if code == 429:
+                return "model_quota_or_rate_limit"
+            if code >= 500:
+                return "model_provider_unavailable"
+        if isinstance(exc, (TimeoutError, httpx.TimeoutException)):
+            return "model_timeout"
+        if isinstance(exc, httpx.TransportError):
+            return "model_connection_failed"
+        exc = exc.__cause__ or exc.__context__
+    return "model_call_failed"
 
 
 def event(state, step, outcome, **details):
@@ -69,6 +95,7 @@ class InventoryNodes:
             "previous_validation_error": state.get("error"),
         }
         tokens = 0
+        phase = "call"
         try:
             if self.model is None:
                 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -89,18 +116,20 @@ class InventoryNodes:
             metadata = getattr(result.get("raw"), "usage_metadata", None) or {}
             tokens = max(0, int(metadata.get("total_tokens", 0) or 0))
             parsed = result.get("parsed")
+            phase = "parse"
             if result.get("parsing_error") or parsed is None:
                 raise ValueError("invalid structured output")
             choice = SupplierChoice.model_validate(parsed)
             candidate = choice.model_dump(mode="json")
             error = None
-        except Exception:
+        except Exception as exc:
             # Raw provider errors can contain request data; never return or checkpoint credentials/errors verbatim.
-            candidate, error = None, "model_call_or_schema_failed"
+            candidate = None
+            error = "model_response_schema_invalid" if phase == "parse" else model_error_code(exc)
         return {"candidate": candidate, "model_attempts": attempt,
                 "total_tokens": state.get("total_tokens", 0) + tokens, "error": error,
                 "trace": event(state, "choose_supplier", "ok" if candidate else "failed",
-                               attempt=attempt, tokens=tokens, model=self.settings.chat_model)}
+                               attempt=attempt, tokens=tokens, model=self.settings.chat_model, error=error)}
 
     def validate_proposal(self, state: InventoryState):
         candidate = state.get("candidate")
@@ -108,8 +137,10 @@ class InventoryNodes:
                          if candidate and o["supplierId"] == candidate.get("supplier_id")), None)
         reason = candidate.get("reason", "").strip() if candidate else ""
         if not selected or not reason:
+            error = state.get("error") if candidate is None else None
+            error = error or "model_supplier_or_reason_invalid"
             return {"status": "retry_model" if state["model_attempts"] < self.settings.max_model_attempts else "failed",
-                    "error": "model_supplier_or_reason_invalid", "trace": event(state, "validate_proposal", "rejected")}
+                    "error": error, "trace": event(state, "validate_proposal", "rejected", error=error)}
         item = state["context"]["item"]
         payload = {
             "agentRunId": state["run_id"], "model": self.settings.chat_model,

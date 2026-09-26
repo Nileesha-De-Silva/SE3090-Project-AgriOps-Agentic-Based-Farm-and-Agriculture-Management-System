@@ -46,6 +46,38 @@ Neither token is sent to Gemini. Keep `.env` and `data/` out of Git.
 Use one worker: the local prototype serializes graph calls and stores checkpoints
 in SQLite. `/health` reports configuration presence, not provider connectivity.
 
+## Test Gemini without backend authentication
+
+Run the standalone script before integrating team tokens. It needs only
+`GEMINI_API_KEY` and `CHAT_MODEL` in this directory's `.env`; leave
+`BACKEND_AGENT_TOKEN` blank. Use a Gemini text model available to your project
+that supports structured output. No backend server, Manager token or database
+is needed. From this directory with dependencies installed:
+
+```powershell
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+# Edit .env locally with your Gemini key and model ID, then run:
+.\.venv\Scripts\python.exe test_gemini.py
+```
+
+This makes a real provider call with synthetic fertilizer and two supplier offers.
+It reuses the agent's production prompt, decimal calculations and supplier-ID
+validation. The sample shortage is 50 target minus 5 stock minus 10 incoming =
+35 kg. One offer costs 120/unit with an estimated seven-day lead time; the other
+costs 150/unit with an estimated two-day lead time. There is no required winning
+supplier: inspect the model's explanation of the price/delivery tradeoff.
+
+Successful output has `status: validated_sample`, `savedToBackend: false`, supplier
+selection, estimated cost, evidence, model attempts and reported token count.
+This is an unsaved demonstration, not a Pending or Approved recommendation.
+The script makes at most two model attempts with the default 30-second timeout
+per attempt. Calls use your project's quota/billing. It does not create SQLite
+checkpoints or call backend routes. Production API authentication stays required.
+
+Exit code 2 means missing/invalid configuration; 1 means selection failed after
+bounded attempts. Check key, model access, quota and network connectivity. Provider
+error text is suppressed to avoid exposing credentials. Do not commit the real key.
+
 ## Request and review
 
 Example assumes `$managerToken` already contains a valid team-issued token and
