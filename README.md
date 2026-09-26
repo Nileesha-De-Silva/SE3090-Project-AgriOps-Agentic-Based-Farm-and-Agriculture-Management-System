@@ -169,3 +169,13 @@ See [agent setup and API examples](agents/inventory-agent/README.md),
 [agent test results](docs/inventory-agent-test-log.md). Supplier lead times currently
 represent configured estimates. Historical comparison needs actual sent/received
 dates for each supplier and product; it is the next procurement lifecycle addition.
+
+### Frontend preview
+
+A browser-only inventory demo is now available in `web`. Run `npm ci` and
+`npm run dev` from that directory. It includes stock search/movements, supplier
+offers, sample recommendation decisions and demo purchase requests. No Android
+Studio, Gemini key or backend authentication is needed. All records are synthetic
+and reset on refresh. See [frontend setup](web/README.md) and
+[frontend verification](docs/frontend-test-log.md). Real API integration will follow
+the team's authentication decision.
