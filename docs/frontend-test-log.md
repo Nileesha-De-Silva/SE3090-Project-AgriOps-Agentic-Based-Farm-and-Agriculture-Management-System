@@ -1,5 +1,19 @@
 # Frontend verification — 26 September 2026
 
+## Update — 27 September 2026
+
+The later Live API / Ask Agent slice adds eight API tests (27 frontend cases
+total) and one Python test (35 total). Those additions, current lint/build and
+live browser checks are pending manual execution. The results below apply to
+the preceding demand-planning version. See [live setup](live-frontend-setup.md).
+
+The user supplied passing lint, 19/19 tests and production build output for the
+decimal-input and demand-plan version. Vite transformed 23 modules and built in
+200 ms. These supersede the earlier 13-test inventory-edit results. See
+[demand verification](demand-planning-test-log.md) for backend and agent results.
+The new browser walkthrough remains pending. Earlier results below are retained
+as historical evidence, not a fresh browser verification of the current changes.
+
 Scope: browser-only React demo. No authentication, backend, Gemini or database calls.
 
 ## Automated results

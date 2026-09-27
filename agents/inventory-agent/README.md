@@ -14,7 +14,11 @@ and human interrupt -> observe the manager's backend decision.
 The manager approves the recommendation through .NET, which atomically creates
 one purchase request. Python cannot approve, create purchases or change stock.
 Supplier selection is model-generated; quantities and costs use decimal arithmetic.
-The caller supplies target stock explicitly; minimum stock is only the trigger.
+Omit `target_stock` to use demand planning: average weekly usage from 28 days,
+30-day demand, supplier delivery time and a configurable safety buffer (default
+seven days). Items younger than 28 days or with no recorded usage require a
+positive `weekly_estimate`. An explicit `target_stock` retains the legacy
+minimum-stock trigger for existing clients and the sample Gemini smoke test.
 Quantity is target minus current stock minus outstanding purchase quantities.
 
 ## Run locally (PowerShell)
@@ -81,19 +85,29 @@ error text is suppressed to avoid exposing credentials. Do not commit the real k
 ## Request and review
 
 Example assumes `$managerToken` already contains a valid team-issued token and
-`$itemId` identifies an existing low-stock item with available supplier offers:
+`$itemId` identifies an existing item with available supplier offers:
 
 ```powershell
 $headers = @{ Authorization = "Bearer $managerToken" }
 $runId = [guid]::NewGuid().ToString()
-$body = @{ request_id = $runId; inventory_item_id = $itemId; target_stock = 50 } | ConvertTo-Json
+$body = @{ request_id = $runId; inventory_item_id = $itemId; weekly_estimate = 14; safety_days = 7 } | ConvertTo-Json
 $result = Invoke-RestMethod http://localhost:8003/recommend -Method Post -Headers $headers -ContentType application/json -Body $body
 $result
 ```
 
-Reuse the request ID and identical input on retries. Inspect `evidence`, `trace`,
+The weekly estimate is used only when history is insufficient. When usable
+history exists, recorded usage takes precedence. Omit `target_stock` for this
+mode. The backend must have the `AddDemandSnapshots` migration applied.
+
+Reuse the request ID and identical input on retries. Inspect `evidence`, `demandPlans`, `demand`, `trace`,
 `quantity` and `recommendation`; `awaiting_approval` means the backend saved a
 Pending proposal. A different input with the same request ID returns 409.
+
+An optional `message` (up to 500 characters) supplies manager price/delivery
+preferences. It is passed as bounded data to supplier selection, not as tool
+instructions. It cannot change the selected item, numeric planning inputs or
+approval rules. Changing the message requires a new request ID. The frontend
+Ask Agent panel uses this contract; see [live setup](../../docs/live-frontend-setup.md).
 
 With the Manager token, call either
 `POST /api/reorder-recommendations/{recommendation.id}/approve` or `/reject` on
@@ -110,6 +124,18 @@ backend failures can be retried with `/resume`, retaining the submitted payload.
 A blocked/stale proposal needs review and a fresh request ID after correction.
 
 ## Evidence and limits
+
+- Demand calculation is deterministic and repeated by .NET before persistence.
+  The model can choose only an eligible supplier; if an eligible supplier can
+  deliver before on-hand stock runs out, slower at-risk offers are excluded.
+  When all eligible offers risk a shortage, the snapshot flags it for the manager.
+  Incoming orders reduce quantity but never count as on-hand stock for this risk
+  check, because confirmed delivery dates are not implemented.
+- History coverage uses the item's age and recorded Use transactions, excluding
+  future and out-of-window entries. It assumes usage is recorded consistently;
+  stockouts, missing records and seasonality can underestimate future demand.
+  This endpoint runs on request; there is no scheduled inventory monitor yet.
+- See [demand planning verification](../../docs/demand-planning-test-log.md).
 
 - `leadTimeDays` is a configured supplier estimate, **not past delivery performance**.
   Current supplier comparisons use price and that estimate. Fastest delivery and
