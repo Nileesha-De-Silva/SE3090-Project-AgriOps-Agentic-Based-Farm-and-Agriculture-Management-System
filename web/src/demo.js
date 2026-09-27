@@ -1,6 +1,33 @@
+import { validateDemandApproval } from './demand.js'
 // Synthetic UI fixtures. No credentials, API calls or real farm records.
 export const money = value => new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 2 }).format(value)
 export const lowStock = item => item.currentStock < item.minimumStockLevel
+export function hasInventoryReferences(data, id) {
+  return data.items.find(i => i.id === id)?.currentStock !== 0 ||
+    data.movements.some(m => m.itemId === id) ||
+    data.suppliers.some(s => s.offers.some(o => o.itemId === id)) ||
+    data.purchases.some(p => p.itemId === id) || data.recommendations.some(r => r.itemId === id)
+}
+
+export function updateInventoryItem(data, id, values) {
+  const existing = data.items.find(i => i.id === id)
+  if (!existing) throw new Error('Inventory item not found.')
+  const fields = {}
+  for (const [name, limit] of Object.entries({ name: 100, category: 50, unitOfMeasurement: 30 })) {
+    fields[name] = String(values[name] ?? '').trim()
+    if (!fields[name] || fields[name].length > limit) throw new Error(`Enter ${name} using 1–${limit} characters.`)
+  }
+  for (const name of ['minimumStockLevel', 'unitCost']) {
+    const value = Number(values[name])
+    if (values[name] == null || String(values[name]).trim() === '' || !Number.isFinite(value) || value < 0 || value > 99999999.99 || Math.abs(value * 100 - Math.round(value * 100)) > 0.000001) {
+      throw new Error('Minimum stock and valuation must be between 0 and 99999999.99 with up to two decimal places.')
+    }
+    fields[name] = value
+  }
+  if (fields.unitOfMeasurement.toLowerCase() === existing.unitOfMeasurement.toLowerCase()) fields.unitOfMeasurement = existing.unitOfMeasurement
+  else if (hasInventoryReferences(data, id)) throw new Error('The unit cannot change while the item has stock or related records.')
+  return { ...data, items: data.items.map(i => i.id === id ? { ...i, ...fields } : i) }
+}
 export function initialData() {
   return {
     items: [
@@ -44,6 +71,7 @@ export function decideRecommendation(data, id, approve, note, now = new Date().t
   if (approve && (!offer?.isAvailable || item.currentStock !== record.stockAtProposal || item.minimumStockLevel !== record.minimumAtProposal || offer.unitPrice !== record.unitPrice || offer.leadTimeDays !== record.leadTimeDays)) {
     throw new Error('Stock or supplier details changed. Reject this stale recommendation and request a fresh analysis after backend integration.')
   }
+  if (approve) validateDemandApproval(data, record, now)
   const purchaseId = approve ? `PR-${id}` : null
   return { ...data,
     recommendations: data.recommendations.map(r => r.id === id ? { ...r, status: approve ? 'Approved' : 'Rejected', note: note.trim(), decidedAt: now, purchaseId } : r),

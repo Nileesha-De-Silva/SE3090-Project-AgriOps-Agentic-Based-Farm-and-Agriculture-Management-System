@@ -1,14 +1,17 @@
+import DecimalInput from './DecimalInput'
 import { useState } from 'react'
 import { money, registerSupplier, updateSupplier, saveSupplierOffer } from './demo'
 
-export function SupplierForm({ data, supplierId, onSave, onCancel }) {
+export function SupplierForm({ data, supplierId, onSave, onCancel, onSubmitValues }) {
   const [error, setError] = useState('')
   const existing = supplierId ? data.suppliers.find(s => s.id === supplierId) : null
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
     try {
       const values = Object.fromEntries(new FormData(event.currentTarget))
-      onSave(existing ? updateSupplier(data, supplierId, values) : registerSupplier(data, values, crypto.randomUUID()))
+      const next = existing ? updateSupplier(data, supplierId, values) : registerSupplier(data, values, crypto.randomUUID())
+      if (onSubmitValues) await onSubmitValues(values)
+      else onSave(next)
     }
     catch (err) { setError(err.message) }
   }
@@ -19,21 +22,25 @@ export function SupplierForm({ data, supplierId, onSave, onCancel }) {
     <label>Address (optional)<textarea name="address" maxLength={250} rows={2} defaultValue={existing?.address || ''} /></label>
     <p className="form-hint">{existing ? 'Update contact details here. Supplier offers and prices are managed from the inventory item.' : 'Register contact details here. Add prices separately for each inventory item through Supplier offers.'}</p>
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="modal-actions"><button type="button" className="button subtle" onClick={onCancel}>Cancel</button><button className="button primary">{existing ? 'Save supplier details' : 'Register demo supplier'}</button></div>
+    <div className="modal-actions"><button type="button" className="button subtle" onClick={onCancel}>Cancel</button><button className="button primary">{existing ? 'Save supplier details' : onSubmitValues ? 'Register supplier' : 'Register demo supplier'}</button></div>
   </form>
 }
 
-export function SupplierOffers({ data, itemId, onSave, onRegister }) {
+export function SupplierOffers({ data, itemId, onSave, onRegister, onSubmitValues }) {
   const [editor, setEditor] = useState(null)
   const [error, setError] = useState('')
   const item = data.items.find(i => i.id === itemId)
   const linked = data.suppliers.filter(s => s.offers.some(o => o.itemId === itemId))
   const unlinked = data.suppliers.filter(s => !s.offers.some(o => o.itemId === itemId))
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
     const v = Object.fromEntries(new FormData(event.currentTarget))
     try {
-      onSave(saveSupplierOffer(data, itemId, editor.supplierId || v.supplierId, { ...v, isAvailable: v.isAvailable === 'true' }, Boolean(editor.supplierId)))
+      const supplierId = editor.supplierId || v.supplierId
+      const values = { ...v, isAvailable: v.isAvailable === 'true' }
+      const next = saveSupplierOffer(data, itemId, supplierId, values, Boolean(editor.supplierId))
+      if (onSubmitValues) await onSubmitValues(supplierId, values, Boolean(editor.supplierId))
+      else onSave(next)
       setEditor(null); setError('')
     } catch (err) { setError(err.message) }
   }
@@ -43,11 +50,11 @@ export function SupplierOffers({ data, itemId, onSave, onRegister }) {
     return <form key={editor.supplierId || 'new'} onSubmit={submit}>
       <h3 className="offer-editor-title">{supplier ? `Edit ${supplier.name}` : 'Add supplier offer'}</h3>
       {!supplier && <label>Registered supplier<select name="supplierId" required defaultValue=""><option value="" disabled>Select a supplier</option>{unlinked.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>}
-      <div className="form-row"><label>Price per {item.unitOfMeasurement} (LKR)<input name="unitPrice" type="number" required min="0" max="99999999.99" step="0.01" defaultValue={offer?.unitPrice ?? ''} /></label><label>Estimated delivery (days)<input name="leadTimeDays" type="number" required min="0" max="2147483647" step="1" defaultValue={offer?.leadTimeDays ?? ''} /></label></div>
+      <div className="form-row"><label>Price per {item.unitOfMeasurement} (LKR)<DecimalInput name="unitPrice" type="number" required min="0" max="99999999.99" step="0.01" defaultValue={offer?.unitPrice ?? ''} /></label><label>Estimated delivery (days)<input name="leadTimeDays" type="number" required min="0" max="2147483647" step="1" defaultValue={offer?.leadTimeDays ?? ''} /></label></div>
       <label>Availability<select name="isAvailable" defaultValue={String(offer?.isAvailable ?? true)}><option value="true">Available</option><option value="false">Unavailable</option></select></label>
       <p className="form-hint">This price applies only to this supplier and item. Updating an offer leaves existing recommendation snapshots unchanged; changed evidence may block approval.</p>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="modal-actions"><button type="button" className="button subtle" onClick={() => { setEditor(null); setError('') }}>Back to offers</button><button className="button primary">Save demo offer</button></div>
+      <div className="modal-actions"><button type="button" className="button subtle" onClick={() => { setEditor(null); setError('') }}>Back to offers</button><button className="button primary">{onSubmitValues ? 'Save offer' : 'Save demo offer'}</button></div>
     </form>
   }
   return <div>
