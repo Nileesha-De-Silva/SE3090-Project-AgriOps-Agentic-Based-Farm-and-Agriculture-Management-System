@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { initialData, decideRecommendation, recordMovement, lowStock, registerSupplier, saveSupplierOffer } from '../src/demo.js'
+import { initialData, decideRecommendation, recordMovement, lowStock, registerSupplier, updateSupplier, saveSupplierOffer } from '../src/demo.js'
 
 test('approval creates exactly one purchase and leaves stock unchanged', () => {
   const before = initialData()
@@ -78,5 +78,14 @@ test('invalid suppliers, offers and input are rejected', () => {
   for (const leadTimeDays of ['', -1, 1.5, Infinity]) assert.throws(() => saveSupplierOffer(data, 'fertilizer', 'rural', { ...valid, leadTimeDays }))
   const zero = saveSupplierOffer(data, 'fertilizer', 'rural', { unitPrice: 0, leadTimeDays: 0, isAvailable: false })
   assert.equal(zero.suppliers[2].offers.at(-1).unitPrice, 0)
+})
+test('supplier contact edits preserve supplied inventory and offers', () => {
+  const original = initialData()
+  const updated = updateSupplier(original, 'green', { name: ' Greenfield Co-op ', contactPerson: 'New contact', email: 'new@example.com', phone: '+94 70 000 0000', address: 'New address' })
+  assert.equal(updated.suppliers[0].name, 'Greenfield Co-op')
+  assert.equal(updated.suppliers[0].contactPerson, 'New contact')
+  assert.deepEqual(updated.suppliers[0].offers, original.suppliers[0].offers)
+  assert.deepEqual(updated.items, original.items)
+  assert.throws(() => updateSupplier(updated, 'green', { name: 'x', email: 'invalid' }))
 })
 

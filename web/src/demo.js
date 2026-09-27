@@ -73,6 +73,21 @@ export function registerSupplier(data, values, id) {
   return { ...data, suppliers: [...data.suppliers, supplier] }
 }
 
+export function updateSupplier(data, supplierId, values) {
+  const supplier = data.suppliers.find(s => s.id === supplierId)
+  if (!supplier) throw new Error('Supplier not found.')
+  const name = values.name.trim()
+  if (!name || name.length > 100) throw new Error('Enter a supplier name of up to 100 characters.')
+  const updated = { ...supplier, name }
+  for (const [field, limit] of Object.entries({ contactPerson: 100, email: 150, phone: 20, address: 250 })) {
+    updated[field] = (values[field] || '').trim()
+    if (updated[field].length > limit) throw new Error(`${field} is too long.`)
+  }
+  if (updated.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updated.email)) throw new Error('Enter a valid email address.')
+  updated.initials = name.split(/\s+/).slice(0, 2).map(n => n[0]).join('').toUpperCase()
+  return { ...data, suppliers: data.suppliers.map(s => s.id === supplierId ? updated : s) }
+}
+
 export function saveSupplierOffer(data, itemId, supplierId, values, editing = false) {
   if (!data.items.some(i => i.id === itemId)) throw new Error('Inventory item not found.')
   const supplier = data.suppliers.find(s => s.id === supplierId)

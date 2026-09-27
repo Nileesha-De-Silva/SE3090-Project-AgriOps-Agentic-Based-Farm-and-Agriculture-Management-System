@@ -1,21 +1,25 @@
 import { useState } from 'react'
-import { money, registerSupplier, saveSupplierOffer } from './demo'
+import { money, registerSupplier, updateSupplier, saveSupplierOffer } from './demo'
 
-export function SupplierForm({ data, onSave, onCancel }) {
+export function SupplierForm({ data, supplierId, onSave, onCancel }) {
   const [error, setError] = useState('')
+  const existing = supplierId ? data.suppliers.find(s => s.id === supplierId) : null
   function submit(event) {
     event.preventDefault()
-    try { onSave(registerSupplier(data, Object.fromEntries(new FormData(event.currentTarget)), crypto.randomUUID())) }
+    try {
+      const values = Object.fromEntries(new FormData(event.currentTarget))
+      onSave(existing ? updateSupplier(data, supplierId, values) : registerSupplier(data, values, crypto.randomUUID()))
+    }
     catch (err) { setError(err.message) }
   }
   return <form onSubmit={submit}>
-    <label>Supplier name<input name="name" required maxLength={100} placeholder="e.g. Valley Farm Supplies" /></label>
-    <label>Contact person (optional)<input name="contactPerson" maxLength={100} /></label>
-    <div className="form-row"><label>Email (optional)<input name="email" type="email" maxLength={150} /></label><label>Phone (optional)<input name="phone" type="tel" maxLength={20} /></label></div>
-    <label>Address (optional)<textarea name="address" maxLength={250} rows={2} /></label>
-    <p className="form-hint">Register contact details here. Add prices separately for each inventory item through Supplier offers.</p>
+    <label>Supplier name<input name="name" required maxLength={100} defaultValue={existing?.name || ''} placeholder="e.g. Valley Farm Supplies" /></label>
+    <label>Contact person (optional)<input name="contactPerson" maxLength={100} defaultValue={existing?.contactPerson || ''} /></label>
+    <div className="form-row"><label>Email (optional)<input name="email" type="email" maxLength={150} defaultValue={existing?.email || ''} /></label><label>Phone (optional)<input name="phone" type="tel" maxLength={20} defaultValue={existing?.phone || ''} /></label></div>
+    <label>Address (optional)<textarea name="address" maxLength={250} rows={2} defaultValue={existing?.address || ''} /></label>
+    <p className="form-hint">{existing ? 'Update contact details here. Supplier offers and prices are managed from the inventory item.' : 'Register contact details here. Add prices separately for each inventory item through Supplier offers.'}</p>
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="modal-actions"><button type="button" className="button subtle" onClick={onCancel}>Cancel</button><button className="button primary">Register demo supplier</button></div>
+    <div className="modal-actions"><button type="button" className="button subtle" onClick={onCancel}>Cancel</button><button className="button primary">{existing ? 'Save supplier details' : 'Register demo supplier'}</button></div>
   </form>
 }
 
