@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime
 from typing import TypedDict
 from uuid import UUID
 
@@ -9,7 +10,11 @@ class RecommendRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     request_id: UUID  # Reuse on client retries; it identifies one analysis.
     inventory_item_id: UUID
-    target_stock: Decimal = Field(gt=0, le=Decimal("99999999.99"), decimal_places=2)
+    # Omit target_stock for demand planning; retain explicit targets for legacy runs.
+    target_stock: Decimal | None = Field(default=None, gt=0, le=Decimal("99999999.99"), decimal_places=2)
+    weekly_estimate: Decimal | None = Field(default=None, gt=0, le=Decimal("99999999.99"), decimal_places=2)
+    safety_days: int = Field(default=7, ge=0, le=90)
+    message: str = Field(default="", max_length=500)
 
 
 class SupplierChoice(BaseModel):
@@ -39,11 +44,21 @@ class ContextEvidence(BaseModel):
     incomingQuantity: Decimal = Field(ge=0)
     pendingRecommendationId: UUID | None
     usageLast30Days: Decimal = Field(ge=0)
+    usageLast28Days: Decimal | None = Field(default=None, ge=0)
+    historyDays: int = Field(default=0, ge=0, le=28)
+    asOf: datetime | None = None
     offers: list[OfferEvidence] = Field(max_length=20)
     offersTruncated: bool
 
 
 class InventoryState(TypedDict, total=False):
+    message: str
+    request_input: dict
+    demand_mode: bool
+    weekly_estimate: str | None
+    safety_days: int
+    demand_plans: list[dict]
+    demand: dict
     run_id: str
     inventory_item_id: str
     target_stock: str

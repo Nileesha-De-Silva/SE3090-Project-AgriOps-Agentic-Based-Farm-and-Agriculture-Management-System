@@ -47,6 +47,7 @@ def create_app(settings=None, backend=None, model=None):
         state = snapshot.values
         return {"runId": str(run_id), "status": state.get("status"), "error": state.get("error"),
                 "recommendation": state.get("recommendation"), "quantity": state.get("quantity"),
+                "demand": state.get("demand"), "demandPlans": state.get("demand_plans"),
                 "evidence": state.get("context"), "modelAttempts": state.get("model_attempts", 0),
                 "totalTokens": state.get("total_tokens", 0), "trace": state.get("trace", []),
                 "canRetry": bool(snapshot.next) and state.get("status") != "awaiting_approval"}
@@ -74,11 +75,18 @@ def create_app(settings=None, backend=None, model=None):
             graph, cfg = request.app.state.graph, config(owner_id, body.request_id)
             snapshot = graph.get_state(cfg)
             if snapshot.values:
-                if snapshot.values["inventory_item_id"] != str(body.inventory_item_id) or Decimal(snapshot.values["target_stock"]) != body.target_stock:
+                saved_input = snapshot.values.get("request_input")
+                same_input = RecommendRequest.model_validate(saved_input) == body if saved_input else (
+                    snapshot.values["inventory_item_id"] == str(body.inventory_item_id) and
+                    Decimal(snapshot.values["target_stock"]) == body.target_stock and body.weekly_estimate is None and body.safety_days == 7 and body.message == "")
+                if not same_input:
                     raise HTTPException(409, "request_id already used for different input")
                 return response(body.request_id, snapshot)
             invoke(graph, {"run_id": str(body.request_id), "inventory_item_id": str(body.inventory_item_id),
-                           "target_stock": str(body.target_stock), "status": "starting", "trace": [],
+                           "request_input": body.model_dump(mode="json"), "demand_mode": body.target_stock is None,
+                           "weekly_estimate": str(body.weekly_estimate) if body.weekly_estimate is not None else None,
+                           "safety_days": body.safety_days, "message": body.message,
+                           "target_stock": str(body.target_stock) if body.target_stock is not None else "0", "status": "starting", "trace": [],
                            "model_attempts": 0, "total_tokens": 0}, cfg, body.request_id)
             return response(body.request_id, graph.get_state(cfg))
         finally:
