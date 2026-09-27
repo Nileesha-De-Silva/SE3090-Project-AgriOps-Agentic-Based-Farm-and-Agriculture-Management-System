@@ -32,14 +32,19 @@ public class InventoryAgentController(AgriOpsDbContext context) : ControllerBase
             .SumAsync(r => (decimal?)r.RequestedQuantity) ?? 0;
         var pending = await context.ReorderRecommendations.Where(r => r.InventoryItemId == id && r.Status == "Pending")
             .Select(r => (Guid?)r.Id).SingleOrDefaultAsync();
-        var since = DateTime.UtcNow.AddDays(-30);
-        var usage = await context.InventoryTransactions.Where(t => t.InventoryItemId == id && t.TransactionType == "Use" && t.TransactionDate >= since)
+        var asOf = DateTime.UtcNow;
+        var since = asOf.AddDays(-30);
+        var since28 = asOf.AddDays(-28);
+        var usage = await context.InventoryTransactions.Where(t => t.InventoryItemId == id && t.TransactionType == "Use" && t.TransactionDate >= since && t.TransactionDate <= asOf)
+            .SumAsync(t => (decimal?)t.Quantity) ?? 0;
+        var usage28 = await context.InventoryTransactions.Where(t => t.InventoryItemId == id && t.TransactionType == "Use" && t.TransactionDate >= since28 && t.TransactionDate <= asOf)
             .SumAsync(t => (decimal?)t.Quantity) ?? 0;
         await transaction.CommitAsync();
         return Ok(new
         {
             item = new { item.Id, item.Name, item.CurrentStock, item.MinimumStockLevel, item.UnitOfMeasurement },
             incomingQuantity = incoming, pendingRecommendationId = pending, usageLast30Days = usage,
+            usageLast28Days = usage28, historyDays = Math.Clamp((int)(asOf - item.CreatedAt).TotalDays, 0, 28), asOf,
             offers = offers.Take(20), offersTruncated = offers.Count > 20
         });
     }

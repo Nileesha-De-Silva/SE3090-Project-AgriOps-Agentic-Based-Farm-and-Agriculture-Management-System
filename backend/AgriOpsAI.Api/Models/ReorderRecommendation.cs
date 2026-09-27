@@ -2,6 +2,8 @@ namespace AgriOpsAI.Api.Models;
 
 public class ReorderRecommendation
 {
+    // Immutable evidence for manager review; nullable for pre-demand recommendations.
+    public string? DemandSnapshotJson { get; set; }
     public Guid Id { get; set; }
     public Guid AgentRunId { get; set; }
     public string Model { get; set; } = string.Empty;

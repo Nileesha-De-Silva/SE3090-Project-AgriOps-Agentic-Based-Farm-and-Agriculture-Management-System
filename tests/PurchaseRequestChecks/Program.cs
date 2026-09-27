@@ -9,6 +9,7 @@ using AgriOpsAI.Api.Controllers;
 using AgriOpsAI.Api.Data;
 using AgriOpsAI.Api.DTOs;
 using AgriOpsAI.Api.Models;
+using AgriOpsAI.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -253,13 +254,73 @@ try
     Check(await db.InventoryItems.Where(i => i.Id == itemId).Select(i => i.CurrentStock).SingleAsync() == 0 &&
         !await db.InventoryTransactions.AnyAsync(t => t.InventoryItemId == itemId), "Workflow changed stock");
     Pass("Old bypass routes removed, missing decision returns 404, stock/history unchanged");
-    Console.WriteLine($"RESULT: {passed}/11 groups passed. No LLM was called; proposals are labelled synthetic fixtures.");
+    var demandNow = DateTime.UtcNow;
+    var mathItem = new InventoryItem { CurrentStock = 28, MinimumStockLevel = 20, CreatedAt = demandNow.AddDays(-35) };
+    var mathInput = new DemandRequestDto { ObservedUsageLast28Days = 56, AsOf = demandNow };
+    var math = DemandPlanning.Calculate(mathItem, 56, 10, 7, mathInput, demandNow);
+    Check(math.AverageWeeklyUsage == 14 && math.MonthlyUsage == 60 && math.SafetyStock == 14 &&
+        math.ReorderPoint == 28 && math.TargetStock == 74 && math.Quantity == 36 && math.ReorderNeeded, "Demand arithmetic mismatch");
+    Check(!DemandPlanning.Calculate(mathItem, 56, 100, 7, mathInput, demandNow).ReorderNeeded, "Incoming orders were not netted");
+    Check(DemandPlanning.Calculate(mathItem, 56, 0, 40, mathInput, demandNow).TargetStock == 94, "Long lead time under-covered");
+    mathItem.CreatedAt = demandNow;
+    try { DemandPlanning.Calculate(mathItem, 56, 0, 7, mathInput, demandNow); throw new Exception("Missing weekly estimate accepted"); }
+    catch (System.ComponentModel.DataAnnotations.ValidationException) { }
+    mathInput.WeeklyEstimate = 14;
+    Check(DemandPlanning.Calculate(mathItem, 1, 10, 7, mathInput, demandNow).Source == "manager_weekly_estimate", "Short history not handled");
+    Pass("Demand arithmetic, incoming coverage, long lead times and short-history fallback");
+
+    await db.InventoryItems.Where(i => i.Id == itemId).ExecuteUpdateAsync(u => u
+        .SetProperty(i => i.CurrentStock, 28m).SetProperty(i => i.MinimumStockLevel, 20m).SetProperty(i => i.CreatedAt, demandNow.AddDays(-35)));
+    await db.SupplierItems.Where(l => l.InventoryItemId == itemId).ExecuteUpdateAsync(u => u.SetProperty(l => l.LeadTimeDays, 7));
+    var usageId = Guid.NewGuid();
+    db.ChangeTracker.Clear();
+    db.InventoryTransactions.Add(new InventoryTransaction { Id = usageId, InventoryItemId = itemId,
+        TransactionType = "Use", Quantity = 56, TransactionDate = demandNow.AddDays(-1) });
+    // Old/future Use entries and Receive entries must not inflate the forecast.
+    foreach (var entry in new[] { ("Use", -29), ("Use", 1), ("Receive", -1) })
+        db.InventoryTransactions.Add(new InventoryTransaction { Id = Guid.NewGuid(), InventoryItemId = itemId,
+            TransactionType = entry.Item1, Quantity = 500, TransactionDate = demandNow.AddDays(entry.Item2) });
+    await db.SaveChangesAsync();
+    var demandContext = await (await Call(HttpMethod.Get, $"/api/inventory-agent/items/{itemId}/context", null, HttpStatusCode.OK, agent))
+        .Content.ReadFromJsonAsync<JsonElement>();
+    Check(demandContext.GetProperty("usageLast28Days").GetDecimal() == 56 && demandContext.GetProperty("historyDays").GetInt32() == 28,
+        "Demand context included receipts, old or future usage");
+    var incomingQuantity = demandContext.GetProperty("incomingQuantity").GetDecimal();
+    var demandInput = Input();
+    demandInput.Reason = "Synthetic demand forecast: weekly 14, monthly 60, safety 14, target 74.";
+    demandInput.RecommendedQuantity = 74 - 28 - incomingQuantity;
+    demandInput.Observation = new ReorderObservationDto { CurrentStock = 28, MinimumStockLevel = 20,
+        UnitOfMeasurement = "kg", UnitPrice = 13, LeadTimeDays = 7, IncomingQuantity = incomingQuantity };
+    demandInput.Demand = new DemandRequestDto { AsOf = demandContext.GetProperty("asOf").GetDateTime(), ObservedUsageLast28Days = 56 };
+    demandInput.RecommendedQuantity += 1;
+    await Call(HttpMethod.Post, route, demandInput, HttpStatusCode.Conflict, agent);
+    demandInput.RecommendedQuantity -= 1;
+    var demandProposal = await Propose(demandInput);
+    Check(demandProposal.Demand?.ReorderPoint == 28 && demandProposal.Demand.MonthlyUsage == 60 && demandProposal.Status == "Pending",
+        "Demand snapshot missing or prematurely approved");
+    Check((await Propose(demandInput)).Id == demandProposal.Id, "Demand retry duplicated recommendation");
+    Pass("Demand context filters movements and accepts a verified early reorder above fixed minimum");
+
+    await db.InventoryTransactions.Where(t => t.Id == usageId).ExecuteUpdateAsync(u => u.SetProperty(t => t.Quantity, 57m));
+    await Decide(demandProposal.Id, true, HttpStatusCode.Conflict);
+    await db.InventoryTransactions.Where(t => t.Id == usageId).ExecuteUpdateAsync(u => u.SetProperty(t => t.Quantity, 56m));
+    await db.PurchaseRequests.Where(p => p.Id == purchase.Id).ExecuteUpdateAsync(u => u.SetProperty(p => p.RequestedQuantity, 6m));
+    await Decide(demandProposal.Id, true, HttpStatusCode.Conflict);
+    await db.PurchaseRequests.Where(p => p.Id == purchase.Id).ExecuteUpdateAsync(u => u.SetProperty(p => p.RequestedQuantity, 5m));
+    var beforeDemandApproval = await PurchaseCount();
+    var demandApproved = await Decide(demandProposal.Id, true);
+    Check(demandApproved.PurchaseRequestId is not null && await PurchaseCount() == beforeDemandApproval + 1 &&
+        await db.InventoryItems.Where(i => i.Id == itemId).Select(i => i.CurrentStock).SingleAsync() == 28,
+        "Demand approval did not create exactly one purchase while preserving stock");
+    Pass("Changed demand/incoming blocks approval; verified manager approval creates one request without changing stock");
+    Console.WriteLine($"RESULT: {passed}/14 groups passed. No LLM was called; proposals are labelled synthetic fixtures.");
 }
 finally
 {
     db.ChangeTracker.Clear();
     await db.ReorderRecommendations.Where(r => r.InventoryItemId == itemId).ExecuteDeleteAsync();
     await db.PurchaseRequests.Where(r => r.InventoryItemId == itemId).ExecuteDeleteAsync();
+    await db.InventoryTransactions.Where(t => t.InventoryItemId == itemId).ExecuteDeleteAsync();
     await db.SupplierItems.Where(l => l.InventoryItemId == itemId).ExecuteDeleteAsync();
     await db.Suppliers.Where(s => s.Id == supplierId).ExecuteDeleteAsync();
     await db.InventoryItems.Where(i => i.Id == itemId).ExecuteDeleteAsync();

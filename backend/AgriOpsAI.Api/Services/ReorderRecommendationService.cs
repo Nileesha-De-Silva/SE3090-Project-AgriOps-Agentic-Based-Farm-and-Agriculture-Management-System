@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using AgriOpsAI.Api.Data;
 using AgriOpsAI.Api.DTOs;
 using AgriOpsAI.Api.Models;
@@ -36,6 +37,11 @@ public class ReorderRecommendationService(AgriOpsDbContext context)
             r.AgentRunId == dto.AgentRunId && r.InventoryItemId == dto.InventoryItemId);
         if (existing is not null)
         {
+            var savedDemand = existing.DemandSnapshotJson is null ? null : JsonSerializer.Deserialize<DemandPlanDto>(existing.DemandSnapshotJson);
+            if ((savedDemand is null) != (dto.Demand is null) || (savedDemand is not null && dto.Demand is { } retry &&
+                (savedDemand.SafetyDays != retry.SafetyDays || (savedDemand.Source == "manager_weekly_estimate" && savedDemand.WeeklyEstimate != retry.WeeklyEstimate) ||
+                 savedDemand.UsageLast28Days != retry.ObservedUsageLast28Days || savedDemand.AsOf != retry.AsOf)))
+                throw new InvalidOperationException("This agent run already submitted different demand data.");
             if (existing.SupplierId != dto.SupplierId || existing.RecommendedQuantity != quantity ||
                 existing.Reason != dto.Reason.Trim() || existing.Model != dto.Model.Trim() ||
                 existing.ProposedBy != actor || existing.ProposedByIssuer != issuer)
@@ -44,13 +50,27 @@ public class ReorderRecommendationService(AgriOpsDbContext context)
         }
         if (await context.ReorderRecommendations.AnyAsync(r => r.InventoryItemId == item.Id && r.Status == "Pending"))
             throw new InvalidOperationException("This inventory item already has a pending recommendation.");
-        if (item.CurrentStock >= item.MinimumStockLevel)
+        if (dto.Demand is null && item.CurrentStock >= item.MinimumStockLevel)
             throw new InvalidOperationException("This inventory item is not below its minimum stock level.");
         if (item.CurrentStock + quantity > 99999999.99m)
             throw new ValidationException("Recommended quantity would exceed the stock limit.");
         var link = await LockLink(dto.SupplierId!.Value, item.Id);
         if (link is null || !link.IsAvailable)
             throw new InvalidOperationException("An available supplier-item link is required.");
+        DemandPlanDto? demand = null;
+        if (dto.Demand is { } demandInput)
+        {
+            if (dto.Observation is null) throw new ValidationException("Demand proposals require a stock and supplier observation.");
+            var now = DateTime.UtcNow;
+            if (demandInput.AsOf.Kind != DateTimeKind.Utc || demandInput.AsOf > now || demandInput.AsOf < now.AddDays(-1))
+                throw new ValidationException("Demand evidence must be a recent UTC snapshot.");
+            var usage = await Usage(item.Id, demandInput.AsOf);
+            if (usage != demandInput.ObservedUsageLast28Days || await Usage(item.Id, now) != usage)
+                throw new InvalidOperationException("Usage history changed. Start a fresh analysis.");
+            demand = DemandPlanning.Calculate(item, usage, await Incoming(item.Id), link.LeadTimeDays, demandInput, demandInput.AsOf);
+            if (!demand.ReorderNeeded || demand.Quantity != quantity)
+                throw new InvalidOperationException("Demand calculation does not support this reorder quantity.");
+        }
         if (dto.Observation is { } observed)
         {
             Validator.ValidateObject(observed, new ValidationContext(observed), true);
@@ -68,6 +88,7 @@ public class ReorderRecommendationService(AgriOpsDbContext context)
             ProposedBy = actor, ProposedByIssuer = issuer, InventoryItemId = item.Id,
             SupplierId = dto.SupplierId.Value, RecommendedQuantity = quantity, Reason = dto.Reason.Trim(),
             StockAtProposal = item.CurrentStock, MinimumStockAtProposal = item.MinimumStockLevel,
+            DemandSnapshotJson = demand is null ? null : JsonSerializer.Serialize(demand),
             UnitOfMeasurement = item.UnitOfMeasurement, UnitPrice = link.UnitPrice, LeadTimeDays = link.LeadTimeDays,
             Status = "Pending", CreatedAt = DateTime.UtcNow
         };
@@ -103,6 +124,19 @@ public class ReorderRecommendationService(AgriOpsDbContext context)
                 item.UnitOfMeasurement != recommendation.UnitOfMeasurement ||
                 link.UnitPrice != recommendation.UnitPrice || link.LeadTimeDays != recommendation.LeadTimeDays)
                 throw new InvalidOperationException("Stock or supplier details changed. Reject this recommendation and request a fresh analysis.");
+            if (recommendation.DemandSnapshotJson is { } json)
+            {
+                var saved = JsonSerializer.Deserialize<DemandPlanDto>(json)!;
+                var usage = await Usage(item.Id, now);
+                var incoming = await Incoming(item.Id);
+                if (usage != saved.UsageLast28Days || incoming != saved.IncomingQuantity)
+                    throw new InvalidOperationException("Demand or incoming orders changed. Reject this recommendation and request a fresh analysis.");
+                var fresh = DemandPlanning.Calculate(item, usage, incoming, link.LeadTimeDays,
+                    new DemandRequestDto { SafetyDays = saved.SafetyDays, WeeklyEstimate = saved.WeeklyEstimate,
+                        ObservedUsageLast28Days = usage, AsOf = now }, now);
+                if (fresh.Source != saved.Source || !fresh.ReorderNeeded || fresh.Quantity != saved.Quantity || fresh.ReorderPoint != saved.ReorderPoint)
+                    throw new InvalidOperationException("Demand or incoming orders changed. Reject this recommendation and request a fresh analysis.");
+            }
             var request = new PurchaseRequest
             {
                 Id = Guid.NewGuid(), InventoryItemId = recommendation.InventoryItemId,
@@ -125,6 +159,17 @@ public class ReorderRecommendationService(AgriOpsDbContext context)
         return ToDto(recommendation);
     }
 
+    private Task<decimal> Incoming(Guid id) => context.PurchaseRequests
+        .Where(r => r.InventoryItemId == id && (r.Status == "Pending" || r.Status == "Approved"))
+        .SumAsync(r => r.RequestedQuantity);
+
+    private Task<decimal> Usage(Guid id, DateTime asOf)
+    {
+        var start = asOf.AddDays(-28);
+        return context.InventoryTransactions.Where(t => t.InventoryItemId == id && t.TransactionType == "Use" &&
+            t.TransactionDate >= start && t.TransactionDate <= asOf).SumAsync(t => t.Quantity);
+    }
+
     private async Task<InventoryItem?> LockItem(Guid id)
         => (await context.InventoryItems.FromSqlInterpolated($"""
             SELECT * FROM "InventoryItems" WHERE "Id" = {id} FOR UPDATE
@@ -144,6 +189,7 @@ public class ReorderRecommendationService(AgriOpsDbContext context)
 
     private static ReorderRecommendationDto ToDto(ReorderRecommendation r) => new()
     {
+        Demand = r.DemandSnapshotJson is null ? null : JsonSerializer.Deserialize<DemandPlanDto>(r.DemandSnapshotJson),
         Id = r.Id, AgentRunId = r.AgentRunId, Model = r.Model, InventoryItemId = r.InventoryItemId,
         SupplierId = r.SupplierId, RecommendedQuantity = r.RecommendedQuantity, Reason = r.Reason,
         StockAtProposal = r.StockAtProposal, MinimumStockAtProposal = r.MinimumStockAtProposal,
