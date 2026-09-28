@@ -61,3 +61,25 @@
 .navbar-link-active::after {
   transform: scaleX(1);
 }
+
+/* ---- Component 4: login/logout controls (added) ---- */
+
+.navbar-auth {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.navbar-user {
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+/* Lets a <button> look like the other nav links */
+.navbar-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
