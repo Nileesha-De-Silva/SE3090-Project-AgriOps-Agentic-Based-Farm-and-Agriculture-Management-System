@@ -84,11 +84,12 @@ test('agent requests retain IDs and resume only through the agent route', async 
   const request = { request_id: 'fixed-run', inventory_item_id: 'i1', message: 'Compare delivery', safety_days: 7 }
   await api.recommend(request)
   await api.recommend(request)
+    assert.equal(bodies[0][0], '/api/inventory-agent/recommend')
   assert.equal(bodies[0][1], bodies[1][1])
   await api.run('fixed-run')
   await api.resume('fixed-run')
-  assert.equal(bodies[2][0], '/agent-api/runs/fixed-run')
-  assert.equal(bodies[3][0], '/agent-api/runs/fixed-run/resume')
+  assert.equal(bodies[2][0], '/api/inventory-agent/runs/fixed-run')
+  assert.equal(bodies[3][0], '/api/inventory-agent/runs/fixed-run/resume')
 })
 
 test('HTML proxy fallback is rejected instead of being treated as API data', async () => {

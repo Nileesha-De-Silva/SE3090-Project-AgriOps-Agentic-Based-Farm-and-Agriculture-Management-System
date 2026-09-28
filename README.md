@@ -1,5 +1,18 @@
 # AgriOpsAI – Component 3
 
+### Mobile inventory client and internal agent routing
+
+The Flutter client is in [`mobile/`](mobile/README.md). It includes inventory
+search, stock movements/history, supplier contacts, real agent submission/status,
+recommendation/purchase activity and QR item scanning. Android setup and all new
+checks are pending the user's manual commands; see [mobile test log](docs/mobile-test-log.md).
+Shared login/registration remains pending the group's authentication integration.
+
+Both React and Flutter now call ASP.NET Core only. Manager-authorized
+`/api/inventory-agent/recommend` and `/api/inventory-agent/runs/{id}` (plus `/resume`)
+forward to internal Python. Configure `InventoryAgent__BaseUrl` on the backend
+(default `http://127.0.0.1:8003/`); the old direct Vite `/agent-api` proxy is removed.
+
 ## Inventory & Agricultural Resources
 
 **Responsible Member:** IT24103140 - Nawarathna N.H.D.S
@@ -170,12 +183,11 @@ See [agent setup and API examples](agents/inventory-agent/README.md),
 represent configured estimates. Historical comparison needs actual sent/received
 dates for each supplier and product; it is the next procurement lifecycle addition.
 
-### Frontend preview
+### Web and mobile clients
 
-A browser-only inventory demo is now available in `web`. Run `npm ci` and
-`npm run dev` from that directory. It includes stock search/movements, supplier
-offers, sample recommendation decisions and demo purchase requests. No Android
-Studio, Gemini key or backend authentication is needed. All records are synthetic
-and reset on refresh. See [frontend setup](web/README.md) and
-[frontend verification](docs/frontend-test-log.md). Real API integration will follow
-the team's authentication decision.
+The React workspace in `web` uses real ASP.NET Core records and the backend agent
+gateway. Start its Vite server with `npm run dev`; there is no demo mode. See
+[web setup](web/README.md). The Flutter inventory companion lives in `mobile`;
+see [Android setup](mobile/README.md). Both use existing manager tokens during
+development until the group integrates shared login. Neither client contains
+Gemini or agent-service credentials.

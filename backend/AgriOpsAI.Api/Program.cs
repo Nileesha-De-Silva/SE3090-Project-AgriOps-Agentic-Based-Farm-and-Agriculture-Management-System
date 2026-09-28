@@ -17,6 +17,11 @@ builder.Services.AddDbContext<AgriOpsDbContext>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddHttpClient("InventoryAgentGateway", client => {
+    client.Timeout = TimeSpan.FromSeconds(110);
+    client.MaxResponseContentBufferSize = 1024 * 1024;
+})
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {

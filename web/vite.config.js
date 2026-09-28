@@ -10,8 +10,6 @@ export default defineConfig(({ mode }) => {
       host: '127.0.0.1',
       proxy: {
         '/api': { target: env.BACKEND_PROXY_TARGET || 'http://localhost:5289', changeOrigin: true },
-        '/agent-api': { target: env.AGENT_PROXY_TARGET || 'http://127.0.0.1:8003', changeOrigin: true,
-          rewrite: path => path.replace(/^\/agent-api/, '') },
       },
     },
   }
