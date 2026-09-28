@@ -1,21 +1,44 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'widgets/app_theme.dart';
-import 'screens/farms_screen.dart';
+import 'api.dart';
+import 'workspace.dart';
+import 'screens.dart';
 
 void main() {
-  runApp(const AgriOpsApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  const address = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:5289/api/');
+  try {
+    final workspace = Workspace(Api(address, allowLocalHttp: kDebugMode));
+    runApp(AgriOpsApp(workspace: workspace));
+    workspace.restore();
+  } catch (_) {
+    runApp(const MaterialApp(home: Scaffold(body: Center(child: Padding(
+      padding: EdgeInsets.all(24), 
+      child: Text('Configure API_BASE_URL with your HTTPS backend URL ending in /api/. Local HTTP is allowed only in debug builds.'),
+    )))));
+  }
 }
 
 class AgriOpsApp extends StatelessWidget {
-  const AgriOpsApp({super.key});
-
+  final Workspace workspace;
+  const AgriOpsApp({super.key, required this.workspace});
+  
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AgriOps AI',
-      theme: AppTheme.theme,
-      home: const FarmsScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'AgriOps', 
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      useMaterial3: true, 
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff356449)),
+      scaffoldBackgroundColor: const Color(0xfff5f7f1),
+      inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
+      appBarTheme: const AppBarTheme(backgroundColor: Color(0xfff5f7f1))
+    ),
+    home: ListenableBuilder(
+      listenable: workspace, 
+      builder: (context, _) => workspace.connected
+        ? HomeScreen(workspace: workspace) 
+        : ConnectScreen(workspace: workspace)
+    ),
+  );
 }
