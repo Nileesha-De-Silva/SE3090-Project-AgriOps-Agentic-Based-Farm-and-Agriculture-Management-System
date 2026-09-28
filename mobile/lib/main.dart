@@ -13,7 +13,8 @@ void main() {
     workspace.restore();
   } catch (_) {
     runApp(const MaterialApp(home: Scaffold(body: Center(child: Padding(
-      padding: EdgeInsets.all(24), child: Text('Configure API_BASE_URL with your HTTPS backend URL ending in /api/. Local HTTP is allowed only in debug builds.'),
+      padding: EdgeInsets.all(24), 
+      child: Text('Configure API_BASE_URL with your HTTPS backend URL ending in /api/. Local HTTP is allowed only in debug builds.'),
     )))));
   }
 }
@@ -21,14 +22,23 @@ void main() {
 class AgriOpsApp extends StatelessWidget {
   final Workspace workspace;
   const AgriOpsApp({super.key, required this.workspace});
+  
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'AgriOps', debugShowCheckedModeBanner: false,
-    theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff356449)),
+    title: 'AgriOps', 
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      useMaterial3: true, 
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff356449)),
       scaffoldBackgroundColor: const Color(0xfff5f7f1),
       inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
-      appBarTheme: const AppBarTheme(backgroundColor: Color(0xfff5f7f1))),
-    home: ListenableBuilder(listenable: workspace, builder: (context, _) => workspace.connected
-      ? HomeScreen(workspace: workspace) : ConnectScreen(workspace: workspace)),
+      appBarTheme: const AppBarTheme(backgroundColor: Color(0xfff5f7f1))
+    ),
+    home: ListenableBuilder(
+      listenable: workspace, 
+      builder: (context, _) => workspace.connected
+        ? HomeScreen(workspace: workspace) 
+        : ConnectScreen(workspace: workspace)
+    ),
   );
 }

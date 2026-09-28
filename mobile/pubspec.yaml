@@ -2,8 +2,10 @@ name: agriops_mobile
 description: AgriOps inventory companion for the shared ASP.NET Core API.
 publish_to: none
 version: 1.0.0+1
+
 environment:
   sdk: '>=3.9.0 <4.0.0'
+
 dependencies:
   flutter:
     sdk: flutter
@@ -11,8 +13,10 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   mobile_scanner: ^7.4.2
   uuid: ^4.6.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
 flutter:
   uses-material-design: true
