@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'api.dart';
 import 'workspace.dart';
 import 'scanner.dart';
+import 'inventory_views.dart';
 
 class Notice extends StatelessWidget {
   final String text;
@@ -60,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Workspace get w => widget.workspace;
   void openItem(Record item) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ItemScreen(workspace: w, itemId: item['id'] as String)));
   Future<void> scan() async {
-    final id = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => const ScannerScreen()));
-    if (!mounted || id == null) return;
+    final id = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => ScannerScreen(inventoryIds: w.items.map((item) => '${item['id']}').toSet())));
+    if (!mounted || id == null || !w.connected) return;
     final matches = w.items.where((i) => i['id'].toString().toLowerCase() == id);
     if (matches.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item not found in the current inventory. Refresh and try again.')));
@@ -97,36 +98,30 @@ class _HomeScreenState extends State<HomeScreen> {
         TextButton.icon(onPressed: w.busy ? null : scan, icon: const Icon(Icons.qr_code_scanner), label: const Text('Scan item')),
       ]),
       if (visible.isEmpty) const Notice('No matching inventory items.'),
-      for (final item in visible) Card(child: ListTile(onTap: () => openItem(item),
-        title: Text('${item['name']}'), subtitle: Text('${item['category']} · Minimum ${amount(item['minimumStockLevel'])}'),
-        trailing: Text('${amount(item['currentStock'])}\n${item['unitOfMeasurement']}', textAlign: TextAlign.end))),
+      for (final item in visible) Card(clipBehavior: Clip.antiAlias, child: InkWell(
+        onTap: () => openItem(item),
+        child: Padding(padding: const EdgeInsets.all(16), child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(child: Text('${item['name']}', style: Theme.of(context).textTheme.titleLarge)),
+              const SizedBox(width: 8), const Icon(Icons.chevron_right),
+            ]),
+            const SizedBox(height: 4), Text('${item['category']}'),
+            const SizedBox(height: 12),
+            Wrap(spacing: 16, runSpacing: 8, children: [
+              Text('Available: ${amount(item['currentStock'])} ${item['unitOfMeasurement']}'),
+              Text('Minimum: ${amount(item['minimumStockLevel'])} ${item['unitOfMeasurement']}'),
+            ]),
+            if (num.parse('${item['currentStock']}') < num.parse('${item['minimumStockLevel']}'))
+              const Padding(padding: EdgeInsets.only(top: 8), child: Text('Low stock · below minimum')),
+          ])),
+      )),
     ]);
   }
-  Widget suppliers() => ListView(padding: const EdgeInsets.all(16), children: [
-    Text('Supplier contacts', style: Theme.of(context).textTheme.headlineMedium),
-    const Notice('Supplier prices and item links are managed in web Inventory. Contact details below can be selected and copied.'),
-    if (w.suppliers.isEmpty) const Notice('No suppliers registered yet.'),
-    for (final s in w.suppliers) Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('${s['name']}', style: Theme.of(context).textTheme.titleLarge),
-      for (final key in ['contactPerson', 'phone', 'email', 'address'])
-        if (s[key] != null && s[key].toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: SelectableText('${s[key]}')),
-    ]))),
-  ]);
-  String itemName(dynamic id) => w.items.where((i) => i['id'] == id).map((i) => '${i['name']}').firstOrNull ?? '$id';
-  Widget activity() => ListView(padding: const EdgeInsets.all(16), children: [
-    Text('Recommendations', style: Theme.of(context).textTheme.headlineMedium),
-    const Notice('Managers review and approve recommendations in the web app. Refresh here to see their decisions. Approval does not add stock.'),
-    if (w.recommendations.isEmpty) const Notice('No recommendations yet.'),
-    for (final r in w.recommendations) Card(child: ExpansionTile(title: Text(itemName(r['inventoryItemId'])),
-      subtitle: Text('${r['status']} · ${amount(r['recommendedQuantity'])} ${r['unitOfMeasurement']}'),
-      children: [Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('${r['reason']}'), const SizedBox(height: 8), Text('Estimated cost: LKR ${amount(r['estimatedCost'])}'),
-        if (r['decisionNote'] != null) Text('Manager note: ${r['decisionNote']}'),
-      ]))])),
-    const SizedBox(height: 24), Text('Purchase requests', style: Theme.of(context).textTheme.titleLarge),
-    if (w.purchases.isEmpty) const Notice('No purchase requests yet.'),
-    for (final p in w.purchases) Card(child: ListTile(title: Text(itemName(p['inventoryItemId'])), subtitle: Text('${p['status']} · ${amount(p['requestedQuantity'])} requested'))),
-  ]);
+  Widget suppliers() => SupplierContacts(suppliers: w.suppliers);
+  Widget activity() => InventoryActivity(items: w.items, suppliers: w.suppliers,
+    recommendations: w.recommendations, purchases: w.purchases);
+
 }
 
 class ItemScreen extends StatefulWidget {
@@ -157,14 +152,32 @@ class _ItemScreenState extends State<ItemScreen> {
       if (!w.connected || item == null) const Notice('Reconnect and refresh inventory to open this item.'),
       if (item != null) Text('${amount(item['currentStock'])} ${item['unitOfMeasurement']} available', style: Theme.of(context).textTheme.headlineSmall),
       const SizedBox(height: 8), SelectableText('Item ID: ${widget.itemId}'),
-      const SizedBox(height: 20), Form(key: form, child: Column(children: [
+      if (item != null) OutlinedButton.icon(
+        onPressed: w.busy ? null : () => Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => InventoryQrLabelScreen(itemId: widget.itemId, itemName: '${item['name']}'))),
+        icon: const Icon(Icons.qr_code), label: const Text('Show QR label')),
+
+      const SizedBox(height: 20), Form(key: form, autovalidateMode: AutovalidateMode.onUserInteraction, child: Column(children: [
         DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Stock movement'),
           items: const [DropdownMenuItem(value: 'Use', child: Text('Use stock')), DropdownMenuItem(value: 'Receive', child: Text('Receive stock'))],
           onChanged: w.canWrite && !submitted ? (v) => setState(() => type = v!) : null),
-        const SizedBox(height: 12), TextFormField(controller: quantity, validator: quantityError,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Quantity')),
-        const SizedBox(height: 12), TextFormField(controller: notes, maxLength: 500, decoration: const InputDecoration(labelText: 'Notes (optional)')),
-        FilledButton(onPressed: !w.canWrite || submitted ? null : () async {
+        const SizedBox(height: 12), TextFormField(controller: quantity,
+          enabled: w.canWrite && !submitted && item != null,
+          validator: (value) {
+            final invalid = quantityError(value);
+            if (invalid != null) return invalid;
+            final available = num.tryParse('${item?['currentStock']}');
+            if (type == 'Use' && available != null && num.parse(value!.trim()) > available) {
+              return 'Only ${amount(available)} ${item?['unitOfMeasurement']} available.';
+            }
+            return null;
+          },
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(labelText: 'Quantity (${item?['unitOfMeasurement'] ?? 'item units'})',
+            helperText: type == 'Use' ? 'Amount used on the farm. Maximum 2 decimal places.' : 'Amount physically received. Maximum 2 decimal places.',
+            helperMaxLines: 3, errorMaxLines: 3)),
+        const SizedBox(height: 12), TextFormField(controller: notes, enabled: w.canWrite && !submitted && item != null, maxLength: 500, decoration: const InputDecoration(labelText: 'Notes (optional)')),
+        FilledButton(onPressed: !w.canWrite || submitted || item == null ? null : () async {
           if (!form.currentState!.validate()) return;
           setState(() => submitted = true);
           final ok = await w.movement(widget.itemId, type, quantity.text.trim(), notes.text);
@@ -184,7 +197,7 @@ class _ItemScreenState extends State<ItemScreen> {
         final records = snapshot.data ?? [];
         if (records.isEmpty) return const Notice('No stock movements recorded.');
         return Column(children: records.map((m) => ListTile(title: Text('${m['transactionType']} · ${amount(m['quantity'])}'),
-          subtitle: Text('${m['transactionDate']}\n${m['notes'] ?? ''}'))).toList());
+          subtitle: Text('${inventoryDate(m['transactionDate'])}\n${m['notes'] ?? ''}'))).toList());
       }),
     ]));
   });
@@ -230,6 +243,7 @@ class _AgentScreenState extends State<AgentScreen> {
         const SizedBox(height: 12), TextFormField(controller: message, enabled: !locked, maxLength: 500, minLines: 2, maxLines: 4,
           decoration: const InputDecoration(labelText: 'What matters for this order?', hintText: 'For example: prefer faster delivery if stock may run out.')),
         ExpansionTile(maintainState: true, title: const Text('Demand settings'), subtitle: const Text('Weekly estimate only if usage history is missing'), children: [
+          const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('Leave weekly usage blank when recorded usage is available. For a new item, enter how much you expect to use in one week.')),
           TextFormField(controller: weekly, enabled: !locked, keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (v) => (v ?? '').trim().isEmpty ? null : quantityError(v), decoration: const InputDecoration(labelText: 'Expected weekly usage (optional)')),
           const SizedBox(height: 12), TextFormField(controller: safety, enabled: !locked, keyboardType: TextInputType.number,
@@ -255,7 +269,9 @@ class _AgentScreenState extends State<AgentScreen> {
           _ => 'Status: ${run['status']}',
         }),
         if (run != null && run['error'] != null) Notice('Agent could not complete this request: ${run['error']}'),
-        if (run != null && run['recommendation'] is Map) Card(child: Padding(padding: const EdgeInsets.all(16), child: Text('${run['recommendation']['reason']}\nQuantity: ${amount(run['recommendation']['recommendedQuantity'])}\nRecommendation status: ${run['recommendation']['status']}'))),
+        if (run != null && run['recommendation'] is Map) AgentRecommendationCard(
+          recommendation: Map<String, dynamic>.from(run['recommendation'] as Map),
+          items: w.items, suppliers: w.suppliers),
         Wrap(spacing: 8, children: [
           OutlinedButton(onPressed: w.busy ? null : () => w.checkRun(), child: const Text('Check status')),
           if (run == null) OutlinedButton(onPressed: w.busy ? null : w.retrySameRun, child: const Text('Retry same request')),
