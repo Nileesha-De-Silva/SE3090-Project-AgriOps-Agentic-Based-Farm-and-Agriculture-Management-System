@@ -84,13 +84,22 @@ class _FarmsScreenState extends State<FarmsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
+              String formatToGuid(String input) {
+                final trimmed = input.trim();
+                final guidRegex = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+                if (guidRegex.hasMatch(trimmed)) return trimmed;
+                final digits = trimmed.replaceAll(RegExp(r'[^0-9a-fA-F]'), '').padLeft(12, '0');
+                final safeDigits = digits.length > 12 ? digits.substring(digits.length - 12) : digits;
+                return '00000000-0000-0000-0000-$safeDigits';
+              }
+
               try {
                 await Component1Api.createFarm(Farm(
                   id: '',
                   name: nameController.text,
                   location: locationController.text,
                   totalArea: double.tryParse(areaController.text) ?? 0,
-                  ownerId: ownerIdController.text,
+                  ownerId: formatToGuid(ownerIdController.text),
                 ));
                 if (context.mounted) Navigator.pop(context);
                 _loadFarms();

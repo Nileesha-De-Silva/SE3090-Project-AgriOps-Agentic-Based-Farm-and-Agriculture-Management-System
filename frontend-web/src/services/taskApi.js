@@ -1,5 +1,38 @@
 import { api, INITIAL_MOCK_TASKS } from './apiClient';
 
+const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function toValidGuidOrNull(val) {
+  if (!val || typeof val !== 'string') return null;
+  return GUID_REGEX.test(val.trim()) ? val.trim() : null;
+}
+
+function normalizeTask(dto) {
+  if (!dto) return null;
+  const firstAssignment = dto.assignments && dto.assignments.length > 0 ? dto.assignments[0] : null;
+  return {
+    id: dto.id,
+    title: dto.title || dto.description?.split('\n')[0] || dto.taskType || 'Farm Operation',
+    description: dto.description || '',
+    taskType: dto.taskType || 'CropMonitoring',
+    priority: dto.priority || 'Medium',
+    status: dto.status || 'Pending',
+    fieldId: dto.fieldId || '',
+    cropSeasonId: dto.cropSeasonId || null,
+    dueDate: dto.targetDate || dto.dueDate || new Date(Date.now() + 86400000).toISOString(),
+    targetDate: dto.targetDate || dto.dueDate || new Date(Date.now() + 86400000).toISOString(),
+    assignedWorkerId: firstAssignment ? firstAssignment.workerId : (dto.assignedWorkerId || null),
+    assignedWorkerName: firstAssignment ? (firstAssignment.workerName || 'Assigned Worker') : (dto.assignedWorkerName || null),
+    assignments: dto.assignments || [],
+    schedule: dto.schedule || null,
+    cropVariety: dto.cropVariety || '',
+    estimatedHours: dto.estimatedHours || 2.0,
+    sourceCropAnalysisId: dto.sourceCropAnalysisId || null,
+    createdAt: dto.createdAt,
+    updatedAt: dto.updatedAt,
+  };
+}
+
 // In-memory client cache for smooth optimistic UI & offline fallback
 let localTasks = [...INITIAL_MOCK_TASKS];
 
@@ -9,8 +42,8 @@ export const taskApi = {
     try {
       const response = await api.get('/tasks');
       if (response.data && Array.isArray(response.data)) {
-        localTasks = response.data;
-        return response.data;
+        localTasks = response.data.map(normalizeTask);
+        return localTasks;
       }
     } catch (err) {
       console.warn('Backend /api/tasks unavailable, using local state:', err.message);
@@ -22,7 +55,7 @@ export const taskApi = {
   async getTaskById(taskId) {
     try {
       const response = await api.get(`/tasks/${taskId}`);
-      return response.data;
+      return normalizeTask(response.data);
     } catch (err) {
       const found = localTasks.find((t) => t.id === taskId);
       if (found) return found;
@@ -32,33 +65,37 @@ export const taskApi = {
 
   // Create new task
   async createTask(taskData) {
-    const newTask = {
-      id: `tsk-${Date.now().toString().slice(-4)}`,
-      title: taskData.title,
-      description: taskData.description || '',
+    const payload = {
+      title: taskData.title?.trim() || 'Farm Operation',
+      fieldId: toValidGuidOrNull(taskData.fieldId),
+      cropSeasonId: toValidGuidOrNull(taskData.cropSeasonId),
       taskType: taskData.taskType || 'CropMonitoring',
       priority: taskData.priority || 'Medium',
-      status: 'Pending',
-      fieldId: taskData.fieldId || 'field-north-1',
-      assignedWorkerId: null,
-      assignedWorkerName: null,
-      dueDate: taskData.dueDate || new Date(Date.now() + 86400000).toISOString(),
-      cropVariety: taskData.cropVariety || 'Tomato',
-      estimatedHours: Number(taskData.estimatedHours) || 2.0,
-      sourceCropAnalysisId: taskData.sourceCropAnalysisId || null,
+      description: taskData.description || taskData.title || '',
+      targetDate: taskData.dueDate
+        ? new Date(taskData.dueDate).toISOString()
+        : (taskData.targetDate ? new Date(taskData.targetDate).toISOString() : new Date(Date.now() + 86400000).toISOString()),
     };
 
     try {
-      const response = await api.post('/tasks', newTask);
+      const response = await api.post('/tasks', payload);
       if (response.data) {
-        localTasks.unshift(response.data);
-        return response.data;
+        const savedTask = normalizeTask(response.data);
+        localTasks.unshift(savedTask);
+        return savedTask;
       }
     } catch (err) {
-      console.warn('Backend /api/tasks POST unavailable, persisting locally:', err.message);
+      console.error('Backend /api/tasks POST failed:', err.response?.data || err.message);
+      throw err;
     }
-    localTasks.unshift(newTask);
-    return newTask;
+
+    const fallbackTask = normalizeTask({
+      id: `tsk-${Date.now().toString().slice(-4)}`,
+      ...payload,
+      status: 'Pending',
+    });
+    localTasks.unshift(fallbackTask);
+    return fallbackTask;
   },
 
   // Assign worker to task
@@ -85,7 +122,11 @@ export const taskApi = {
   // Update task status (e.g. dragging across Kanban)
   async updateStatus(taskId, newStatus) {
     try {
-      await api.post(`/tasks/${taskId}/status`, { status: newStatus });
+      await api.patch(`/tasks/${taskId}/status`, {
+        newStatus,
+        userId: '00000000-0000-0000-0000-000000000000',
+        remarks: `Status updated to ${newStatus}`,
+      });
     } catch (err) {
       console.warn('Backend /api/tasks status unavailable, updating locally:', err.message);
     }
@@ -100,8 +141,9 @@ export const taskApi = {
   async verifyTask(taskId, isApproved, feedback = '') {
     try {
       await api.post(`/tasks/${taskId}/verify`, {
-        verified: isApproved,
-        feedback,
+        isApproved,
+        managerUserId: '00000000-0000-0000-0000-000000000000',
+        remarks: feedback,
       });
     } catch (err) {
       console.warn('Backend /api/tasks verify unavailable, updating locally:', err.message);

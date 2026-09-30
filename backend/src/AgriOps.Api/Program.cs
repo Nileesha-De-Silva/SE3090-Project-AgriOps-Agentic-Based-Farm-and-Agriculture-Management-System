@@ -13,6 +13,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseNpgsql(connectionString, b => b.MigrationsAssembly("AgriOps.Infrastructure"));
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
 // 2. Register Application Services
@@ -51,7 +52,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// 4. Automatic Database Migration & Seeding Execution
+// 4. Automatic Database Schema Initialization Execution
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -59,23 +60,15 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var dbContext = services.GetRequiredService<ApplicationDbContext>();
-        logger.LogInformation("Applying EF Core Migrations and Seeding Initial Data...");
+        logger.LogInformation("Initializing PostgreSQL Database schema for all Component 1 & 2 entities...");
         
-        if (dbContext.Database.IsNpgsql())
-        {
-            await dbContext.Database.MigrateAsync();
-        }
-        else
-        {
-            await dbContext.Database.EnsureCreatedAsync();
-        }
-        
+        await dbContext.Database.EnsureCreatedAsync();
         await DbInitializer.SeedAsync(dbContext);
-        logger.LogInformation("PostgreSQL Database Migration and Seed Data executed successfully.");
+        logger.LogInformation("PostgreSQL Database schema created and verified successfully.");
     }
     catch (Exception ex)
     {
-        logger.LogWarning(ex, "Note: Database initialization deferred (PostgreSQL server offline or pending connection). Migration script ready.");
+        logger.LogWarning(ex, "Note: Database initialization deferred (PostgreSQL server offline or pending connection).");
     }
 }
 

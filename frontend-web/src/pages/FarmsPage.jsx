@@ -13,8 +13,23 @@ export default function FarmsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  function formatToGuid(input) {
+    if (!input) return "00000000-0000-0000-0000-000000000001";
+    const trimmed = input.trim();
+    const guidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (guidPattern.test(trimmed)) return trimmed;
+    // Auto-convert short IDs like '0001' into a valid 128-bit UUID format
+    const digits = trimmed.replace(/[^0-9a-fA-F]/g, "").padStart(12, "0").slice(-12);
+    return `00000000-0000-0000-0000-${digits}`;
+  }
+
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ name: "", location: "", totalArea: "", ownerId: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    location: "",
+    totalArea: "",
+    ownerId: "00000000-0000-0000-0000-000000000001",
+  });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -42,9 +57,9 @@ export default function FarmsPage() {
         name: formData.name,
         location: formData.location,
         totalArea: parseFloat(formData.totalArea),
-        ownerId: formData.ownerId,
+        ownerId: formatToGuid(formData.ownerId),
       });
-      setFormData({ name: "", location: "", totalArea: "", ownerId: "" });
+      setFormData({ name: "", location: "", totalArea: "", ownerId: "00000000-0000-0000-0000-000000000001" });
       setShowForm(false);
       await loadFarms(); // refresh the list
     } catch (err) {

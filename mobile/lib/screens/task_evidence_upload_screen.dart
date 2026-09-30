@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../api/task_api.dart';
 import '../models/farm_task.dart';
 import '../widgets/app_theme.dart';
@@ -9,7 +10,8 @@ class TaskEvidenceUploadScreen extends StatefulWidget {
   const TaskEvidenceUploadScreen({super.key, required this.task});
 
   @override
-  State<TaskEvidenceUploadScreen> createState() => _TaskEvidenceUploadScreenState();
+  State<TaskEvidenceUploadScreen> createState() =>
+      _TaskEvidenceUploadScreenState();
 }
 
 class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
@@ -17,17 +19,10 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
   final _remarksController = TextEditingController();
   bool _submitting = false;
 
-  final List<String> _sampleEvidencePhotos = [
-    'https://images.unsplash.com/photo-1592417817098-8f3d6eb228cc?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=600&q=80',
-  ];
-
   @override
   void initState() {
     super.initState();
-    _photoUrlController.text = _sampleEvidencePhotos[0];
-    _remarksController.text = 'Field work completed successfully. Photo evidence attached for verification.';
+    // Fields start clean for direct manual user entry
   }
 
   Future<void> _submitEvidence() async {
@@ -66,7 +61,10 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(backgroundColor: Colors.red.shade700, content: Text('Error: $e')),
+          SnackBar(
+            backgroundColor: Colors.red.shade700,
+            content: Text('Error: $e'),
+          ),
         );
       }
     } finally {
@@ -94,10 +92,16 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
                       children: [
                         Text(
                           widget.task.taskType,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.orange.shade100,
                             borderRadius: BorderRadius.circular(6),
@@ -121,7 +125,10 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Target Date: ${widget.task.targetDate.split('T')[0]}',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -130,7 +137,8 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
             const SizedBox(height: 20),
             Text(
               'Evidence Photo',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -145,29 +153,7 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
               ),
               onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: 10),
-            const Text(
-              'Quick Samples for Mobile Testing:',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              children: [
-                ActionChip(
-                  label: const Text('Field Crop Sample'),
-                  onPressed: () => setState(() => _photoUrlController.text = _sampleEvidencePhotos[0]),
-                ),
-                ActionChip(
-                  label: const Text('Irrigation Sample'),
-                  onPressed: () => setState(() => _photoUrlController.text = _sampleEvidencePhotos[1]),
-                ),
-                ActionChip(
-                  label: const Text('Planting Sample'),
-                  onPressed: () => setState(() => _photoUrlController.text = _sampleEvidencePhotos[2]),
-                ),
-              ],
-            ),
+
             if (_photoUrlController.text.isNotEmpty) ...[
               const SizedBox(height: 14),
               ClipRRect(
@@ -181,7 +167,9 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
                     height: 120,
                     color: Colors.grey.shade200,
                     alignment: Alignment.center,
-                    child: const Text('Preview not available (invalid image URL)'),
+                    child: const Text(
+                      'Preview not available (invalid image URL)',
+                    ),
                   ),
                 ),
               ),
@@ -189,14 +177,16 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
             const SizedBox(height: 20),
             Text(
               'Completion Remarks & Notes',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _remarksController,
               maxLines: 3,
               decoration: const InputDecoration(
-                hintText: 'Describe how the task was executed or any observations...',
+                hintText:
+                    'Describe how the task was executed or any observations...',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -210,10 +200,17 @@ class _TaskEvidenceUploadScreenState extends State<TaskEvidenceUploadScreen> {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
                       )
                     : const Icon(Icons.cloud_upload),
-                label: Text(_submitting ? 'Submitting Evidence...' : 'Submit Evidence & Complete Task'),
+                label: Text(
+                  _submitting
+                      ? 'Submitting Evidence...'
+                      : 'Submit Evidence & Complete Task',
+                ),
               ),
             ),
           ],

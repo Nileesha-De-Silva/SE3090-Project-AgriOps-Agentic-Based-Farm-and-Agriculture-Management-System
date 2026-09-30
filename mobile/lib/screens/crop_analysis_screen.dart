@@ -18,9 +18,9 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
   // Form state
   List<Field> _fields = [];
   String? _selectedFieldId;
-  final _cropVarietyController = TextEditingController(text: 'Roma Tomato');
-  final _growthStageController = TextEditingController(text: 'Flowering');
-  final _observationController = TextEditingController(text: 'Yellowing of lower leaves with concentric dark rings, spreading towards upper foliage.');
+  final _cropVarietyController = TextEditingController();
+  final _growthStageController = TextEditingController();
+  final _observationController = TextEditingController();
   final _imageUrlController = TextEditingController();
 
   bool _loadingFields = true;
@@ -33,16 +33,10 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
   bool _loadingPending = false;
   String? _pendingError;
 
-  final List<String> _sampleDiseasePhotos = [
-    'https://images.unsplash.com/photo-1592417817098-8f3d6eb228cc?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?auto=format&fit=crop&w=600&q=80',
-  ];
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _imageUrlController.text = _sampleDiseasePhotos[0];
     _loadFields();
     _loadPendingApprovals();
   }
@@ -381,20 +375,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    ActionChip(
-                      label: const Text('Sample Photo 1'),
-                      onPressed: () => setState(() => _imageUrlController.text = _sampleDiseasePhotos[0]),
-                    ),
-                    ActionChip(
-                      label: const Text('Sample Photo 2'),
-                      onPressed: () => setState(() => _imageUrlController.text = _sampleDiseasePhotos[1]),
-                    ),
-                  ],
-                ),
+
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

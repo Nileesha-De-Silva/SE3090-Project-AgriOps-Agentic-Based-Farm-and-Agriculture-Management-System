@@ -36,6 +36,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<FarmTask>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).HasMaxLength(200);
             entity.Property(e => e.TaskType).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Priority).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
