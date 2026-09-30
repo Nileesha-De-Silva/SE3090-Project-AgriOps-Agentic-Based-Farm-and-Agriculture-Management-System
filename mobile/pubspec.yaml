@@ -5,6 +5,7 @@ version: 1.0.0+1
 
 environment:
   sdk: '>=3.9.0 <4.0.0'
+  
 
 dependencies:
   flutter:
@@ -13,6 +14,7 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   mobile_scanner: ^7.4.2
   uuid: ^4.6.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
