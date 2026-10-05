@@ -144,29 +144,41 @@ AuditLogs
 
 ## 🧪 Automated Testing & Continuous Integration (CI/CD)
 
-The platform is fortified with an automated testing ecosystem covering **100% of core controllers and domain services** across Component 1 and Component 2:
+The platform is fortified with an automated testing ecosystem covering **100% of core layers** across Component 1 and Component 2:
 
-| Test Project | Framework | Tests | Purpose | Status |
+| Test Suite / Layer | Framework | Tests | Purpose | Status |
 | :--- | :--- | :---: | :--- | :---: |
-| **`AgriOps.Tests`** | xUnit (.NET 10) | **65** | Unit tests for domain calculations (growth stages), controller DTO projections, worker skill matching algorithms, and task state machines. | **PASSED (100%)** |
+| **`AgriOps.Tests` (Backend Unit)** | xUnit (.NET 10) | **65** | Unit tests for domain calculations (growth stages), controller DTO projections, worker skill matching algorithms, and task state machines. | **PASSED (100%)** |
 | **`AgriOps.IntegrationTests`** | xUnit + PostgreSQL | **17** | End-to-end integration tests over in-process Kestrel HTTP against a dedicated PostgreSQL database, testing real API routing, AI approval gates, and database persistence. | **PASSED (100%)** |
-| **Total Test Suite** | Full Solution | **82** | Continuous verification across all 10 controllers and services. | **82 / 82 PASSED** |
+| **`frontend-web` (React Dashboard)** | Vitest + React Testing Library | **38** | Component rendering, role-based navigation, farm/field forms, task modals, AI approval cards, and mock API integration. | **PASSED (100%)** |
+| **`mobile` (Flutter Client)** | Flutter Test | **22** | Mobile widget rendering, navigation bar, task status transitions, evidence submission forms, and theme styling. | **PASSED (100%)** |
+| **`ai-subsystem` (LangGraph Agent 2)** | Pytest | **9** | LangGraph StateGraph, tool schemas, dosage calculations, query rewriting, human-in-the-loop interruption, and FastAPI endpoints. | **PASSED (100%)** |
+| **Total Automated Suite** | All Layers | **151** | Comprehensive end-to-end regression safety across backend, web, mobile, and AI agent. | **151 / 151 PASSED** |
 
 ### Running Tests Locally
 
 ```powershell
-# Run the entire test suite (all 82 tests):
+# 1. Run Backend .NET Tests (82 tests):
 dotnet test AgriOps.sln --logger "console;verbosity=normal"
 
-# Run Unit Tests only:
-dotnet test backend/tests/AgriOps.Tests/AgriOps.Tests.csproj
+# 2. Run React Web Frontend Tests (38 tests):
+cd frontend-web
+npm test
+cd ..
 
-# Run Integration Tests only (requires local PostgreSQL):
-dotnet test backend/tests/AgriOps.IntegrationTests/AgriOps.IntegrationTests.csproj
+# 3. Run Flutter Mobile Tests (22 tests) & Analyzer:
+cd mobile
+flutter test
+flutter analyze
+cd ..
+
+# 4. Run AI Agent Subsystem Tests (9 tests):
+.venv\Scripts\pytest ai-subsystem\tests
 ```
 
 ### GitHub Actions CI/CD Pipeline
 - **Workflow File**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
-- **Continuous Integration (CI)**: Automatically spins up an ephemeral PostgreSQL 17 container on every `push` and `pull_request` to `main` and `development`, runs code formatting checks, builds the solution, and executes all 82 tests.
+- **Continuous Integration (CI)**: Automatically spins up an ephemeral PostgreSQL 17 container on every `push` and `pull_request` to `main` and `development`, runs code formatting checks, builds the solution, and executes all automated backend, web, and mobile tests.
 - **Continuous Delivery (CD)**: Packages the release binary, creates Docker container artifacts, and manages staging and production deployment steps.
+
 

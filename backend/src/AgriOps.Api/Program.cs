@@ -22,14 +22,15 @@ builder.Services.AddScoped<ICropAnalysisService, CropAnalysisService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<WorkerSkillMatcher>();
 
-// 3. Configure CORS for Web Dashboard
+// 3. Configure CORS for Web Dashboard & Cloud Deployment
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost:5000")
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -72,12 +73,27 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// 5. Configure HTTP pipeline & Swagger UI
-if (app.Environment.IsDevelopment())
+// 5. Configure HTTP pipeline & Swagger UI (Always enabled for Evaluation & Cloud Deployments)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AgriOps Platform API v1");
+    c.RoutePrefix = "swagger";
+});
+
+// Health check endpoints required by Assignment Specification (Sections 14 & 15)
+app.MapGet("/health", () => Results.Ok(new 
+{ 
+    status = "Healthy", 
+    service = "AgriOps RESTful API", 
+    timestamp = DateTime.UtcNow 
+}));
+app.MapGet("/api/health", () => Results.Ok(new 
+{ 
+    status = "Healthy", 
+    service = "AgriOps RESTful API", 
+    timestamp = DateTime.UtcNow 
+}));
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
