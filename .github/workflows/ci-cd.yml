@@ -145,11 +145,37 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
   # =========================================================================
-  # JOB 4: Package & Containerize Backend Release
+  # JOB 4: Frontend Web Automated Testing (Vitest & React Testing Library)
+  # =========================================================================
+  frontend-tests:
+    name: Frontend Automated Tests (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-web
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend-web/package-lock.json'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run React Unit & Component Tests
+        run: npm test
+
+  # =========================================================================
+  # JOB 5: Package & Containerize Backend Release
   # =========================================================================
   package-backend:
     name: Package Backend Release
-    needs: [backend-tests, code-quality]
+    needs: [backend-tests, code-quality, frontend-tests]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development')
     steps:
