@@ -1,0 +1,126 @@
+name: Component 4 - CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - development2
+      - 'feature/**'
+    paths:
+      # Only triggers when Component 4 or shared backend/web code changes
+      - 'backend/AgriOpsAI.Api/**'
+      - 'web/**'
+      - '.github/workflows/component4-ci-cd.yml'
+  pull_request:
+    branches:
+      - main
+      - development2
+    paths:
+      - 'backend/AgriOpsAI.Api/**'
+      - 'web/**'
+
+jobs:
+  # ========================================================
+  # Job 1: Backend CI (.NET 10 Web API)
+  # ========================================================
+  backend-ci:
+    name: Backend CI (.NET 10)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore NuGet Packages
+        run: dotnet restore backend/AgriOpsAI.Api/AgriOpsAI.Api.csproj
+
+      - name: Build Backend (Release)
+        run: dotnet build backend/AgriOpsAI.Api/AgriOpsAI.Api.csproj --configuration Release --no-restore
+
+      - name: Install EF Core Tool
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Validate EF Core Migrations (Build Check)
+        run: dotnet ef migrations list --project backend/AgriOpsAI.Api --no-build
+
+      - name: Publish Build Artifacts
+        run: dotnet publish backend/AgriOpsAI.Api/AgriOpsAI.Api.csproj -c Release -o ./publish/backend
+
+      - name: Upload Backend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-api-build
+          path: ./publish/backend
+
+  # ========================================================
+  # Job 2: Frontend CI (React / Vite)
+  # ========================================================
+  frontend-ci:
+    name: Frontend CI (React 19 / Vite)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Frontend Tests
+        run: npm test
+
+      - name: Build Frontend Bundle
+        run: npm run build
+
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: web/dist
+
+  # ========================================================
+  # Job 3: Continuous Deployment (CD - Optional)
+  # ========================================================
+  deploy:
+    name: Deploy to Production
+    needs: [backend-ci, frontend-ci]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-api-build
+          path: ./backend-artifact
+
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./frontend-artifact
+
+      # --- Configure your deployment target here ---
+      # Examples:
+      # - Deploy Backend: Azure Web Apps / Render / Docker / Railway
+      # - Deploy Frontend: GitHub Pages / Vercel / Netlify
+      - name: Deployment Placeholder
+        run: echo "Deployment stage: connect your hosting provider (e.g. Azure, Render, Vercel, or GitHub Pages)"
