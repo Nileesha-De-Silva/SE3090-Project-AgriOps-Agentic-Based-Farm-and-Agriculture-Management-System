@@ -313,7 +313,7 @@ class _TasksScreenState extends State<TasksScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: _statusFilters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final status = _statusFilters[index];
                 final isSelected = _selectedStatus == status;
@@ -404,7 +404,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                                 Container(
                                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                                   decoration: BoxDecoration(
-                                                    color: _getPriorityColor(task.priority).withOpacity(0.12),
+                                                    color: _getPriorityColor(task.priority).withValues(alpha: 0.12),
                                                     borderRadius: BorderRadius.circular(4),
                                                   ),
                                                   child: Text(
@@ -420,7 +420,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                                 Container(
                                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                                   decoration: BoxDecoration(
-                                                    color: _getStatusColor(task.status).withOpacity(0.12),
+                                                    color: _getStatusColor(task.status).withValues(alpha: 0.12),
                                                     borderRadius: BorderRadius.circular(4),
                                                   ),
                                                   child: Text(

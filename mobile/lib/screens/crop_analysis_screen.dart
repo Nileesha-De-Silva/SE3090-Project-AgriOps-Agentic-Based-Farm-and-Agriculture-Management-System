@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../api/crop_analysis_api.dart';
 import '../api/component1_api.dart';
 import '../models/crop_analysis_assessment.dart';
@@ -12,15 +13,18 @@ class CropAnalysisScreen extends StatefulWidget {
   State<CropAnalysisScreen> createState() => _CropAnalysisScreenState();
 }
 
-class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTickerProviderStateMixin {
+class _CropAnalysisScreenState extends State<CropAnalysisScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   // Form state
   List<Field> _fields = [];
   String? _selectedFieldId;
-  final _cropVarietyController = TextEditingController();
-  final _growthStageController = TextEditingController();
-  final _observationController = TextEditingController();
+  final _cropVarietyController = TextEditingController(text: 'Roma Tomato');
+  final _growthStageController = TextEditingController(text: 'Flowering');
+  final _observationController = TextEditingController(
+    text: 'Yellowing of lower leaves with concentric dark rings, spreading towards upper foliage.',
+  );
   final _imageUrlController = TextEditingController();
 
   bool _loadingFields = true;
@@ -33,10 +37,16 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
   bool _loadingPending = false;
   String? _pendingError;
 
+  final List<String> _sampleDiseasePhotos = [
+    'https://images.unsplash.com/photo-1592417817098-8f3d6eb228cc?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?auto=format&fit=crop&w=600&q=80',
+  ];
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _imageUrlController.text = _sampleDiseasePhotos[0];
     _loadFields();
     _loadPendingApprovals();
   }
@@ -112,7 +122,9 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
         cropVariety: _cropVarietyController.text.trim(),
         growthStage: _growthStageController.text.trim(),
         observationText: _observationController.text.trim(),
-        imageUrl: _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim(),
+        imageUrl: _imageUrlController.text.trim().isEmpty
+            ? null
+            : _imageUrlController.text.trim(),
       );
 
       setState(() {
@@ -134,7 +146,9 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppTheme.primaryGreen,
-          content: Text('Assessment approved! Farm task has been created automatically.'),
+          content: Text(
+            'Assessment approved! Farm task has been created automatically.',
+          ),
         ),
       );
       _loadPendingApprovals();
@@ -142,22 +156,23 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
         setState(() => _lastAssessment = null);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
   Future<void> _rejectAssessment(CropAnalysisAssessment assessment) async {
     try {
       await CropAnalysisApi.rejectAssessment(assessment.id);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assessment rejected.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Assessment rejected.')));
       _loadPendingApprovals();
       if (_lastAssessment?.id == assessment.id) {
         setState(() => _lastAssessment = null);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -189,15 +204,24 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                 Expanded(
                   child: Text(
                     assessment.primaryIndicator ?? 'Crop Stress Detected',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: _getRiskColor(assessment.riskLevel).withOpacity(0.15),
+                    color: _getRiskColor(assessment.riskLevel)
+                        .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: _getRiskColor(assessment.riskLevel)),
+                    border: Border.all(
+                      color: _getRiskColor(assessment.riskLevel),
+                    ),
                   ),
                   child: Text(
                     '${assessment.riskLevel} Risk',
@@ -217,32 +241,59 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
             ),
             const SizedBox(height: 12),
             if (assessment.potentialStressFactors.isNotEmpty) ...[
-              const Text('Potential Stress Factors:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'Potential Stress Factors:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               const SizedBox(height: 4),
               Wrap(
                 spacing: 6,
                 runSpacing: 4,
-                children: assessment.potentialStressFactors.map((f) => Chip(
-                  backgroundColor: Colors.amber.shade50,
-                  label: Text(f, style: TextStyle(fontSize: 12, color: Colors.amber.shade900)),
-                )).toList(),
+                children: assessment.potentialStressFactors
+                    .map(
+                      (f) => Chip(
+                        backgroundColor: Colors.amber.shade50,
+                        label: Text(
+                          f,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.amber.shade900,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
               const SizedBox(height: 10),
             ],
             if (assessment.recommendedActions.isNotEmpty) ...[
-              const Text('Recommended Actions:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'Recommended Actions:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               const SizedBox(height: 4),
-              ...assessment.recommendedActions.map((action) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.check_circle_outline, size: 16, color: AppTheme.primaryGreen),
-                    const SizedBox(width: 6),
-                    Expanded(child: Text(action, style: const TextStyle(fontSize: 13))),
-                  ],
+              ...assessment.recommendedActions.map(
+                (action) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        size: 16,
+                        color: AppTheme.primaryGreen,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          action,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              )),
+              ),
               const SizedBox(height: 12),
             ],
             if (assessment.suggestedTaskType != null) ...[
@@ -259,7 +310,11 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                     Expanded(
                       child: Text(
                         'Suggested Task: ${assessment.suggestedTaskType} (${assessment.priority ?? 'Medium'} Priority)',
-                        style: TextStyle(fontSize: 13, color: Colors.blue.shade900, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.blue.shade900,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -272,7 +327,9 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _rejectAssessment(assessment),
-                    style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
                     child: const Text('Reject'),
                   ),
                 ),
@@ -317,15 +374,24 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                 if (_loadingFields)
                   const LinearProgressIndicator()
                 else if (_fields.isNotEmpty) ...[
-                  const Text('Field Location', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Field Location',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 4),
                   DropdownButtonFormField<String>(
-                    value: _selectedFieldId,
-                    decoration: const InputDecoration(border: OutlineInputBorder()),
-                    items: _fields.map((f) => DropdownMenuItem(
-                      value: f.id,
-                      child: Text('${f.fieldName} (${f.areaSize} acres)'),
-                    )).toList(),
+                    initialValue: _selectedFieldId,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _fields
+                        .map(
+                          (f) => DropdownMenuItem(
+                            value: f.id,
+                            child: Text('${f.fieldName} (${f.areaSize} acres)'),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (val) => setState(() => _selectedFieldId = val),
                   ),
                   const SizedBox(height: 12),
@@ -359,7 +425,8 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                   maxLines: 3,
                   decoration: const InputDecoration(
                     labelText: 'Symptom Observations',
-                    hintText: 'Describe leaf discoloration, pests, wilt, spots...',
+                    hintText:
+                        'Describe leaf discoloration, pests, wilt, spots...',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -375,7 +442,26 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                     ),
                   ),
                 ),
-
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ActionChip(
+                      label: const Text('Sample Photo 1'),
+                      onPressed: () => setState(
+                        () =>
+                            _imageUrlController.text = _sampleDiseasePhotos[0],
+                      ),
+                    ),
+                    ActionChip(
+                      label: const Text('Sample Photo 2'),
+                      onPressed: () => setState(
+                        () =>
+                            _imageUrlController.text = _sampleDiseasePhotos[1],
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -386,10 +472,17 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : const Icon(Icons.auto_awesome),
-                    label: Text(_analyzing ? 'Analyzing with AI Subsystem...' : 'Run AI Diagnosis'),
+                    label: Text(
+                      _analyzing
+                          ? 'Analyzing with AI Subsystem...'
+                          : 'Run AI Diagnosis',
+                    ),
                   ),
                 ),
                 if (_analysisError != null) ...[
@@ -411,7 +504,8 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
                   const SizedBox(height: 20),
                   Text(
                     'AI Diagnostic Result',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   _buildAssessmentCard(_lastAssessment!),
@@ -426,31 +520,35 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> with SingleTick
             child: _loadingPending
                 ? const Center(child: CircularProgressIndicator())
                 : _pendingError != null
-                    ? Center(child: Text('Error: $_pendingError'))
-                    : _pendingApprovals.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.check_circle_outline, size: 56, color: Colors.grey.shade400),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'No pending AI assessments awaiting approval.',
-                                  style: TextStyle(color: Colors.grey.shade600),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(12),
-                            itemCount: _pendingApprovals.length,
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _buildAssessmentCard(_pendingApprovals[index]),
-                              );
-                            },
-                          ),
+                ? Center(child: Text('Error: $_pendingError'))
+                : _pendingApprovals.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 56,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No pending AI assessments awaiting approval.',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _pendingApprovals.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildAssessmentCard(_pendingApprovals[index]),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

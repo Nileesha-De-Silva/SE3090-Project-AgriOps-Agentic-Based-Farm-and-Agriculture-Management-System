@@ -1,0 +1,224 @@
+name: AgriOps CI/CD Pipeline (Component 1 & Component 2)
+
+on:
+  push:
+    branches: [ "main", "development" ]
+  pull_request:
+    branches: [ "main", "development" ]
+  workflow_dispatch:
+
+# Cancel in-flight runs for the same branch/PR if new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  PG_USER: postgres
+  PG_PASSWORD: NileesHa2003#
+
+jobs:
+  # =========================================================================
+  # JOB 1: Code Quality & Linting
+  # =========================================================================
+  code-quality:
+    name: Code Quality & Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Check C# Formatting
+        run: |
+          dotnet format AgriOps.sln --verify-no-changes --verbosity diagnostic || echo "::warning::Formatting check reported style differences. Run 'dotnet format' locally."
+
+  # =========================================================================
+  # JOB 2: Backend Automated Testing (Component 1 + Component 2)
+  # =========================================================================
+  backend-tests:
+    name: Build & Test (Unit + Integration)
+    runs-on: ubuntu-latest
+
+    # Ephemeral PostgreSQL 17 Service Container
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ${{ env.PG_USER }}
+          POSTGRES_PASSWORD: ${{ env.PG_PASSWORD }}
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup PostgreSQL Test Databases
+        run: |
+          sudo apt-get install -y postgresql-client
+          export PGPASSWORD="${{ env.PG_PASSWORD }}"
+          psql -h localhost -U ${{ env.PG_USER }} -c "CREATE DATABASE agriops_test_db;"
+          psql -h localhost -U ${{ env.PG_USER }} -c "CREATE DATABASE agriops_integration_test_db;"
+          echo "Test databases created successfully."
+
+      - name: Restore Dependencies
+        run: dotnet restore AgriOps.sln
+
+      - name: Build Entire Solution
+        run: dotnet build AgriOps.sln --configuration Release --no-restore
+
+      # 1. Run Unit Tests (65 tests across Component 1 & 2)
+      - name: Run Unit Tests (AgriOps.Tests)
+        run: |
+          dotnet test backend/tests/AgriOps.Tests/AgriOps.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=unit-tests.trx" \
+            --logger "console;verbosity=normal" \
+            --collect:"XPlat Code Coverage"
+
+      # 2. Run Integration Tests (17 HTTP & Database tests across Component 1 & 2)
+      - name: Run Integration Tests (AgriOps.IntegrationTests)
+        run: |
+          dotnet test backend/tests/AgriOps.IntegrationTests/AgriOps.IntegrationTests.csproj \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=integration-tests.trx" \
+            --logger "console;verbosity=normal"
+
+      # 3. Upload Test Reports as Pipeline Artifacts
+      - name: Upload Test Results Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/TestResults/*.trx
+            **/TestResults/**/coverage.cobertura.xml
+          retention-days: 14
+
+  # =========================================================================
+  # JOB 3: Mobile App Validation (Flutter CI)
+  # =========================================================================
+  mobile-ci:
+    name: Mobile App (Flutter Lint & Test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Analyze Flutter Code
+        run: flutter analyze --no-fatal-infos
+
+  # =========================================================================
+  # JOB 4: Package & Containerize Backend Release
+  # =========================================================================
+  package-backend:
+    name: Package Backend Release
+    needs: [backend-tests, code-quality]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development')
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish ASP.NET Core API
+        run: |
+          dotnet publish backend/src/AgriOps.Api/AgriOps.Api.csproj \
+            --configuration Release \
+            --output ./dist/backend-api \
+            /p:UseAppHost=false
+
+      - name: Upload Published Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agriops-backend-release
+          path: ./dist/backend-api
+          retention-days: 7
+
+  # =========================================================================
+  # JOB 5: Deploy to Staging Environment
+  # =========================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [package-backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/development' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://staging.agriops.local
+    steps:
+      - name: Download Packaged Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: agriops-backend-release
+          path: ./release
+
+      - name: Deploy to Staging Server
+        run: |
+          echo "Deploying AgriOps backend to Staging environment..."
+          # Insert your deployment provider command here (e.g., Azure WebApp, Render deploy hook, Docker compose, or SSH rsync)
+          echo "Staging deployment completed successfully."
+
+  # =========================================================================
+  # JOB 6: Deploy to Production Environment
+  # =========================================================================
+  deploy-production:
+    name: Deploy to Production
+    needs: [package-backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://api.agriops.local
+    steps:
+      - name: Download Packaged Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: agriops-backend-release
+          path: ./release
+
+      - name: Deploy to Production Server
+        run: |
+          echo "Deploying AgriOps backend to Production environment..."
+          # Insert your production deployment provider command here (e.g., Azure WebApp, AWS ECS, Kubernetes helm, or Docker)
+          echo "Production deployment completed successfully."

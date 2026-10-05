@@ -41,7 +41,7 @@ class CropAnalysisApi {
       'growthStage': growthStage,
       'observationText': observationText,
       if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
-      if (submittedByUserId != null) 'submittedByUserId': submittedByUserId,
+      'submittedByUserId': ?submittedByUserId,
     };
 
     final res = await http.post(
@@ -72,7 +72,7 @@ class CropAnalysisApi {
   }) async {
     final payload = {
       'comments': comments ?? 'Approved via AgriOps Mobile',
-      if (managerUserId != null) 'managerUserId': managerUserId,
+      'managerUserId': ?managerUserId,
     };
 
     final res = await http.post(
@@ -91,7 +91,7 @@ class CropAnalysisApi {
   }) async {
     final payload = {
       'comments': comments ?? 'Rejected via AgriOps Mobile',
-      if (managerUserId != null) 'managerUserId': managerUserId,
+      'managerUserId': ?managerUserId,
     };
 
     final res = await http.post(
