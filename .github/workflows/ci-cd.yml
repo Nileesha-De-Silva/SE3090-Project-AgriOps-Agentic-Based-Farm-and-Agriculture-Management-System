@@ -144,6 +144,9 @@ jobs:
       - name: Analyze Flutter Code
         run: flutter analyze --no-fatal-infos
 
+      - name: Run Flutter Unit & Widget Tests
+        run: flutter test
+
   # =========================================================================
   # JOB 4: Frontend Web Automated Testing (Vitest & React Testing Library)
   # =========================================================================

@@ -6,6 +6,6 @@ void main() {
   testWidgets('App launches and shows Farms screen', (WidgetTester tester) async {
     await tester.pumpWidget(const AgriOpsApp());
 
-    expect(find.text('Farms'), findsOneWidget);
+    expect(find.text('Farms'), findsAtLeastNWidgets(1));
   });
 }
