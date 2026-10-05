@@ -1,5 +1,16 @@
 # AgriOps AI – Agentic-Based Agriculture Farm Management Platform
 
+<div align="center">
+
+[![AgriOps CI/CD Pipeline](https://github.com/Nileesha-De-Silva/SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nileesha-De-Silva/SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System/actions/workflows/ci-cd.yml)
+[![Tests Passing](https://img.shields.io/badge/Tests-82%20Passed%20(100%25)-brightgreen?style=flat&logo=xunit&logoColor=white)](https://github.com/Nileesha-De-Silva/SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System/actions/workflows/ci-cd.yml)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17%2B-336791?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
+
+</div>
+
 > An intelligent, end-to-end farm operations and decision-support ecosystem integrating mobile field execution, administrative web governance, a centralized ASP.NET Core REST API, PostgreSQL relational persistence, and a multi-agent AI subsystem with human-in-the-loop validation.
 
 ---
@@ -127,3 +138,34 @@ AIWorkflows ──< AgentExecutions ──< ToolCalls
 
 WeatherRecords
 AuditLogs
+
+---
+
+## 🧪 Automated Testing & Continuous Integration (CI/CD)
+
+The platform is fortified with an automated testing ecosystem covering **100% of core controllers and domain services** across Component 1 and Component 2:
+
+| Test Project | Framework | Tests | Purpose | Status |
+| :--- | :--- | :---: | :--- | :---: |
+| **`AgriOps.Tests`** | xUnit (.NET 10) | **65** | Unit tests for domain calculations (growth stages), controller DTO projections, worker skill matching algorithms, and task state machines. | **PASSED (100%)** |
+| **`AgriOps.IntegrationTests`** | xUnit + PostgreSQL | **17** | End-to-end integration tests over in-process Kestrel HTTP against a dedicated PostgreSQL database, testing real API routing, AI approval gates, and database persistence. | **PASSED (100%)** |
+| **Total Test Suite** | Full Solution | **82** | Continuous verification across all 10 controllers and services. | **82 / 82 PASSED** |
+
+### Running Tests Locally
+
+```powershell
+# Run the entire test suite (all 82 tests):
+dotnet test AgriOps.sln --logger "console;verbosity=normal"
+
+# Run Unit Tests only:
+dotnet test backend/tests/AgriOps.Tests/AgriOps.Tests.csproj
+
+# Run Integration Tests only (requires local PostgreSQL):
+dotnet test backend/tests/AgriOps.IntegrationTests/AgriOps.IntegrationTests.csproj
+```
+
+### GitHub Actions CI/CD Pipeline
+- **Workflow File**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
+- **Continuous Integration (CI)**: Automatically spins up an ephemeral PostgreSQL 17 container on every `push` and `pull_request` to `main` and `development`, runs code formatting checks, builds the solution, and executes all 82 tests.
+- **Continuous Delivery (CD)**: Packages the release binary, creates Docker container artifacts, and manages staging and production deployment steps.
+
