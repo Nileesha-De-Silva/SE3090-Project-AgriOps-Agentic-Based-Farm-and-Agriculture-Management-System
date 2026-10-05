@@ -143,6 +143,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen>
   Future<void> _approveAssessment(CropAnalysisAssessment assessment) async {
     try {
       await CropAnalysisApi.approveAssessment(assessment.id);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppTheme.primaryGreen,
@@ -156,6 +157,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen>
         setState(() => _lastAssessment = null);
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
@@ -164,6 +166,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen>
   Future<void> _rejectAssessment(CropAnalysisAssessment assessment) async {
     try {
       await CropAnalysisApi.rejectAssessment(assessment.id);
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Assessment rejected.')));
       _loadPendingApprovals();
@@ -171,6 +174,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen>
         setState(() => _lastAssessment = null);
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Error: $e')));
     }

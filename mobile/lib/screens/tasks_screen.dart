@@ -209,6 +209,7 @@ class _TasksScreenState extends State<TasksScreen> {
   Future<void> _startTask(FarmTask task) async {
     try {
       await TaskApi.updateTaskStatus(task.id, 'InProgress', remarks: 'Work started by field worker');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.blue,
@@ -217,6 +218,7 @@ class _TasksScreenState extends State<TasksScreen> {
       );
       _loadTasks();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }

@@ -30,8 +30,8 @@ services:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-AQ.Ab8RN6LkArrOiohXGzwLb1tHggCKLssa_lv-wUFM4clChFoSaA}
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-AQ.Ab8RN6LkArrOiohXGzwLb1tHggCKLssa_lv-wUFM4clChFoSaA}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -48,8 +48,8 @@ services:
       - "8001:8001"
     environment:
       - PYTHONUNBUFFERED=1
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-AQ.Ab8RN6LkArrOiohXGzwLb1tHggCKLssa_lv-wUFM4clChFoSaA}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-AQ.Ab8RN6LkArrOiohXGzwLb1tHggCKLssa_lv-wUFM4clChFoSaA}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - BACKEND_API_URL=http://backend:8080/api
     depends_on:
       - backend

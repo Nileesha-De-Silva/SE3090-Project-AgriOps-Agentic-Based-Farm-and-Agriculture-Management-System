@@ -16,7 +16,6 @@ void main() {
           theme: AppTheme.theme,
           home: Builder(
             builder: (context) {
-              final theme = Theme.of(context);
               return Scaffold(
                 appBar: AppBar(title: const Text('Theme Test')),
                 body: ElevatedButton(
