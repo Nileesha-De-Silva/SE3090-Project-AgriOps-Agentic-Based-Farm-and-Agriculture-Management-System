@@ -4,16 +4,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy solution and project definitions for optimized Docker caching
-COPY ["AgriOps.sln", "./"]
+# Copy project definitions for the API runtime and its dependencies
 COPY ["backend/src/AgriOps.Core/AgriOps.Core.csproj", "backend/src/AgriOps.Core/"]
 COPY ["backend/src/AgriOps.Infrastructure/AgriOps.Infrastructure.csproj", "backend/src/AgriOps.Infrastructure/"]
 COPY ["backend/src/AgriOps.Api/AgriOps.Api.csproj", "backend/src/AgriOps.Api/"]
-COPY ["backend/tests/AgriOps.Tests/AgriOps.Tests.csproj", "backend/tests/AgriOps.Tests/"]
-COPY ["backend/tests/AgriOps.IntegrationTests/AgriOps.IntegrationTests.csproj", "backend/tests/AgriOps.IntegrationTests/"]
 
-# Restore packages
-RUN dotnet restore "AgriOps.sln"
+# Restore packages only for the API
+RUN dotnet restore "backend/src/AgriOps.Api/AgriOps.Api.csproj"
 
 # Copy source code and build
 COPY . .

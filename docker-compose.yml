@@ -1,0 +1,90 @@
+services:
+  # =========================================================================
+  # 1. ASP.NET Core Backend API (Component 1 & Component 2)
+  # =========================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agriops-backend
+    restart: on-failure
+    ports:
+      - "5286:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # Connects directly to your local PostgreSQL where pgAdmin and tables reside
+      - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=agriops_db;Username=postgres;Password=NileesHa2003#
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # =========================================================================
+  # 2. Python AI Agent Subsystem (FastAPI / Uvicorn)
+  # =========================================================================
+  ai-subsystem:
+    build:
+      context: ./ai-subsystem
+      dockerfile: Dockerfile
+    container_name: agriops-ai-subsystem
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-AQ.Ab8RN6LkArrOiohXGzwLb1tHggCKLssa_lv-wUFM4clChFoSaA}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-AQ.Ab8RN6LkArrOiohXGzwLb1tHggCKLssa_lv-wUFM4clChFoSaA}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # =========================================================================
+  # 3. Component 1 AI Agent: Farm Planning Agent (FastAPI / LangGraph)
+  # =========================================================================
+  farm-planning-agent:
+    build:
+      context: ./agents/farm-planning-agent
+      dockerfile: Dockerfile
+    container_name: agriops-farm-planning-agent
+    restart: on-failure
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-AQ.Ab8RN6LkArrOiohXGzwLb1tHggCKLssa_lv-wUFM4clChFoSaA}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-AQ.Ab8RN6LkArrOiohXGzwLb1tHggCKLssa_lv-wUFM4clChFoSaA}
+      - BACKEND_API_URL=http://backend:8080/api
+    depends_on:
+      - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # =========================================================================
+  # 4. React Web Dashboard (Vite)
+  # =========================================================================
+  frontend-web:
+    build:
+      context: ./frontend-web
+      dockerfile: Dockerfile
+    container_name: agriops-frontend-web
+    restart: on-failure
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+
+  # =========================================================================
+  # 5. Flutter Mobile App (Browser Container)
+  # =========================================================================
+  mobile-web:
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile
+    container_name: agriops-mobile-web
+    restart: on-failure
+    depends_on:
+      - backend
+    ports:
+      - "8085:80"
+    profiles:
+      - full
+      - mobile
+
+

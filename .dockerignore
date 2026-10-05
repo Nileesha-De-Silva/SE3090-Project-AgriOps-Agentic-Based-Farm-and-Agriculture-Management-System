@@ -1,0 +1,28 @@
+# Git and IDE
+.git
+.github
+.vscode
+.idea
+
+# Python virtual environment and caches
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+
+# .NET compilation artifacts
+**/bin/
+**/obj/
+**/TestResults/
+
+# Node & Frontend dependencies and builds
+**/node_modules/
+frontend-web/dist/
+frontend-web/build/
+
+# Mobile (Flutter builds and platform folders)
+mobile/
+
+# Temporary and log files
+*.log
+*.tmp
