@@ -30,17 +30,21 @@ public class AnalyticsController : ControllerBase
     [HttpGet("harvest-yields")]
     public async Task<IActionResult> GetHarvestYields()
     {
-        var results = await _db.Harvests
+        var rawHarvests = await _db.Harvests
             .Include(h => h.CropSeason).ThenInclude(cs => cs.Field)
             .Include(h => h.CropSeason).ThenInclude(cs => cs.Crop)
+            .ToListAsync();
+
+        var results = rawHarvests
+            .Where(h => h.CropSeason != null && h.CropSeason.Field != null && h.CropSeason.Crop != null)
             .GroupBy(h => new
             {
-                h.CropSeason.FieldId,
-                h.CropSeason.Field.FieldName,
+                h.CropSeason!.FieldId,
+                h.CropSeason.Field!.FieldName,
                 h.CropSeasonId,
                 h.CropSeason.SeasonName,
                 h.CropSeason.StartDate,
-                CropName = h.CropSeason.Crop.CropName
+                CropName = h.CropSeason.Crop!.CropName
             })
             .Select(g => new SeasonYieldDto(
                 g.Key.FieldId,
@@ -51,7 +55,7 @@ public class AnalyticsController : ControllerBase
                 g.Key.CropName,
                 g.Sum(h => h.YieldAmount)))
             .OrderBy(d => d.StartDate)
-            .ToListAsync();
+            .ToList();
 
         return Ok(results);
     }

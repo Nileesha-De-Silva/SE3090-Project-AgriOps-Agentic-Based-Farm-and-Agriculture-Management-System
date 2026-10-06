@@ -124,7 +124,8 @@ public class UsersController : ControllerBase
     {
         // "User" here is ControllerBase's ClaimsPrincipal property, not the
         // AgriOpsAI.Api.Models.User entity - C# resolves the class member first.
-        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+               ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(sub, out var id) ? id : null;
     }
 }

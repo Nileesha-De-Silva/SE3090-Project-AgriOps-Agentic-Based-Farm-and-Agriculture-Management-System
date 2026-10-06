@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getAuditLogs, getUsers } from "../../api/adminApi";
 
 const PAGE_SIZE = 50;
@@ -105,7 +106,20 @@ export default function AuditLogsPage() {
         <button type="submit">Filter</button>
       </form>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <div style={{ padding: "1rem", marginBottom: "1.5rem", borderRadius: "0.5rem", backgroundColor: "#fef3c7", border: "1px solid #f59e0b", color: "#92400e" }}>
+          <p style={{ fontWeight: 600, margin: 0 }}>{error}</p>
+          {(error.includes("401") || error.includes("403") || error.includes("failed with status") || error.includes("token")) && (
+            <p style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+              Administrator permissions are required to view system audit logs. Please{" "}
+              <Link to="/login" style={{ fontWeight: 700, color: "#065f46", textDecoration: "underline" }}>
+                Sign In
+              </Link>{" "}
+              using the administrator account (<strong>admin</strong> / <strong>ChangeMe123!</strong>).
+            </p>
+          )}
+        </div>
+      )}
       {loading && <p>Loading audit log...</p>}
 
       {!loading && logs.length === 0 && !error && <p>No audit entries found.</p>}

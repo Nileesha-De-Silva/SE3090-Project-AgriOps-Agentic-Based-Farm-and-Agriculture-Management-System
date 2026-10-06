@@ -30,7 +30,46 @@ export default function LiveWorkspace() {
   const [page, setPage] = useState('inventory')
   const [modal, setModal] = useState(null)
   const [search, setSearch] = useState('')
-  useEffect(() => () => session.clearToken(), [session])
+  useEffect(() => {
+    let active = true;
+    async function init() {
+      const storedToken = localStorage.getItem('agriops_token');
+      if (storedToken) {
+        session.setToken(storedToken);
+        try {
+          await api.verifyManager();
+          const next = await api.loadWorkspace(true);
+          if (active) {
+            setData(next);
+            setLoaded(true);
+            setManager(true);
+            setStale(false);
+            setNotice('Connected as Manager. Live data loaded.');
+          }
+          return;
+        } catch {
+          // Token expired or invalid, fallback to public catalogue
+        }
+      }
+      try {
+        const next = await api.loadWorkspace(false);
+        if (active) {
+          setData(next);
+          setLoaded(true);
+          setManager(false);
+          setStale(false);
+          setNotice('Live catalogue loaded. Sign in or connect manager token for editing and reorder recommendations.');
+        }
+      } catch (err) {
+        if (active) setError(err.message);
+      }
+    }
+    init();
+    return () => {
+      active = false;
+      session.clearToken();
+    };
+  }, [session]);
   const item = id => data.items.find(i => i.id === id)
   const supplier = id => data.suppliers.find(s => s.id === id)
   const canWrite = loaded && manager && !stale && !busy

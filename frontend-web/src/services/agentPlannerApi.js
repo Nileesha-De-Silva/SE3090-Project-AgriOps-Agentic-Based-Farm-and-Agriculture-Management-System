@@ -7,7 +7,7 @@ async function handleResponse(response) {
       const body = await response.json();
       message = body.message || body.error || body.detail || message;
     } catch {
-      // response body wasn't JSON — fall back to the status-based message
+      // response body wasn't JSON — fall back to status-based message
     }
     throw new Error(message);
   }
@@ -26,10 +26,17 @@ async function handleResponse(response) {
  * }
  */
 export async function generatePlan(fieldId, cropSeasonId) {
-  const response = await fetch(`${AGENT_URL}/plan`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ field_id: fieldId, crop_season_id: cropSeasonId }),
-  });
-  return handleResponse(response);
+  try {
+    const response = await fetch(`${AGENT_URL}/plan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ field_id: fieldId, crop_season_id: cropSeasonId }),
+    });
+    return await handleResponse(response);
+  } catch (err) {
+    if (err.message && !err.message.includes("NetworkError") && !err.message.includes("Failed to fetch")) {
+      throw err;
+    }
+    throw new Error("Unable to connect to Farm Planning Agent (Agent 1). Please ensure the agriops-farm-planning-agent container is running on port 8001.");
+  }
 }

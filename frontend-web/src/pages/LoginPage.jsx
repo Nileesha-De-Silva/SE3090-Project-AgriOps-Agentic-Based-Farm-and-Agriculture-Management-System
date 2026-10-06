@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/authcontext";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -17,7 +17,7 @@ export default function LoginPage() {
     try {
       const result = await login(username, password);
       if (result.roles.includes("Administrator")) {
-        navigate("/admin/users");
+        navigate("/users");
       } else if (result.roles.includes("FarmManager")) {
         navigate("/analytics");
       } else {

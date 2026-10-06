@@ -39,9 +39,10 @@ class Settings:
 
 def load_settings() -> Settings:
     load_dotenv(ROOT / ".env")
+    load_dotenv(ROOT.parent.parent / ".env")
     checkpoint = Path(os.getenv("CHECKPOINT_DB", "data/checkpoints.sqlite"))
     return Settings(
-        backend_api_url=os.getenv("BACKEND_API_URL", "http://localhost:5289/api").rstrip("/"),
+        backend_api_url=os.getenv("BACKEND_API_URL", "http://localhost:5286/api").rstrip("/"),
         backend_agent_token=os.getenv("BACKEND_AGENT_TOKEN", "").strip(),
         gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
         chat_model=os.getenv("CHAT_MODEL", "").strip(),

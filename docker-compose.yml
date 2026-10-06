@@ -90,9 +90,14 @@ services:
       - backend
     ports:
       - "5173:5173"
+    environment:
+      - BACKEND_URL=http://backend:8080
+      - AGENT2_URL=http://ai-subsystem:8000
+      - AGENT1_URL=http://farm-planning-agent:8001
     volumes:
       - ./frontend-web/src:/app/src
       - ./frontend-web/index.html:/app/index.html
+      - ./frontend-web/vite.config.js:/app/vite.config.js
 
   # =========================================================================
   # 5. Flutter Mobile App (Browser Container)

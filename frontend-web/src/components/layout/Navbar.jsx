@@ -1,10 +1,12 @@
 import { useSelector } from 'react-redux';
 import { Bell, Sparkles, Database, ShieldCheck, Activity, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/authcontext';
 
 export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
   const pendingApprovals = useSelector((state) => state.cropAnalysis.pendingApprovals);
   const approvalCount = pendingApprovals.length;
+  const { user, logout } = useAuth();
 
   return (
     <header className="bg-gradient-to-r from-emerald-950 via-forest-950 to-teal-950 backdrop-blur-md border-b border-emerald-800/80 sticky top-0 z-30 shadow-md shadow-emerald-950/20 text-white">
@@ -87,16 +89,37 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
               )}
             </Link>
 
-            {/* User Profile Avatar */}
-            <div className="flex items-center space-x-2.5 pl-3 border-l border-emerald-800/80">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center text-xs font-bold ring-2 ring-emerald-400/30 shadow-xs">
-                ND
+            {/* User Profile Avatar / Sign In */}
+            {user ? (
+              <div className="flex items-center space-x-2.5 pl-3 border-l border-emerald-800/80">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center text-xs font-bold ring-2 ring-emerald-400/30 shadow-xs">
+                  {(user.username || 'U').slice(0, 2).toUpperCase()}
+                </div>
+                <div className="text-left hidden lg:block">
+                  <p className="text-xs font-bold text-white leading-none">{user.username}</p>
+                  <p className="text-[10px] text-emerald-400 font-semibold leading-none mt-1">
+                    {user.roles && user.roles.length > 0 ? user.roles[0] : 'User'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 hover:text-white border border-emerald-700/80 transition-colors cursor-pointer"
+                  title="Sign out of AgriOps"
+                >
+                  Sign Out
+                </button>
               </div>
-              <div className="text-left hidden lg:block">
-                <p className="text-xs font-bold text-white leading-none">Nileesha De Silva</p>
-                <p className="text-[10px] text-emerald-400 font-semibold leading-none mt-1">Farm Manager</p>
+            ) : (
+              <div className="flex items-center pl-3 border-l border-emerald-800/80">
+                <Link
+                  to="/login"
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-950/20 transition-all border border-emerald-500/30"
+                >
+                  Sign In
+                </Link>
               </div>
-            </div>
+            )}
 
           </div>
 

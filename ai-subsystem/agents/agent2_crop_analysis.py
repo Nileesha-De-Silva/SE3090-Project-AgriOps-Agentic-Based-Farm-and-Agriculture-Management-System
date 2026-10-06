@@ -45,6 +45,7 @@ from agents.tools.symptom_mapping_tool import (
 # ---------------------------------------------------------------------------
 ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(ENV_PATH)
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 API_KEY = os.getenv("GOOGLE_API_KEY", "")
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-3.8-flash")

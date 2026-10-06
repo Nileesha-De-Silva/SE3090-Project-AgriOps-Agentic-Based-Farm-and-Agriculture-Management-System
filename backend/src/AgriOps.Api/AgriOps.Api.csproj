@@ -22,4 +22,10 @@
     <ProjectReference Include="..\AgriOps.Core\AgriOps.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="component_3_and_4_migration.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

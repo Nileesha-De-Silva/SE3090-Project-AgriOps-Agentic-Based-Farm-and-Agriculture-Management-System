@@ -1,11 +1,13 @@
 # ==============================================================================
-# AGRIOPS PLATFORM - ROOT GITIGNORE (COMPONENT 1 + COMPONENT 2)
+# AGRIOPS PLATFORM - CONSOLIDATED ROOT GITIGNORE (COMPONENTS 1, 2, 3 & 4)
 # Unified Ignore Rules for:
-#   - Backend (.NET 10 / ASP.NET Core / EF Core / PostgreSQL)
-#   - Component 1 AI Agent (Farm Planning Agent / Python / LangGraph)
-#   - Component 2 AI Subsystem (Crop Diagnostics / Python / LangGraph / Chroma)
-#   - Frontend Web (React / Vite / TypeScript / Tailwind)
-#   - Mobile App (Flutter / Dart / Android / iOS)
+#   - Component 1: Farm & Crop Management + Farm Planning Agent (Python / LangGraph)
+#   - Component 2: Autonomous Farm Tasks & Crop Diagnostics (FastAPI / LangGraph / Chroma)
+#   - Component 3: Inventory Management & Procurement Reorder Agent (FastAPI / LangGraph)
+#   - Component 4: User Administration, RBAC, Audit Logs, Historical Production Analytics
+#   - Backend Core: ASP.NET Core / .NET 10 / EF Core / PostgreSQL
+#   - Frontend Web: React 18 / Vite / Tailwind CSS
+#   - Mobile App: Flutter / Dart / Android / iOS
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -19,6 +21,8 @@
 ehthumbs.db
 Thumbs.db
 Desktop.ini
+Library/
+**/Library/Application Support/
 
 # Visual Studio Code
 .vscode/
@@ -42,6 +46,7 @@ Desktop.ini
 *.bak
 *.rej
 *.orig
+*.tmp
 
 # AI Editor & Assistant Caches
 .cursor/
@@ -57,6 +62,7 @@ Desktop.ini
 **/.env.local
 **/.env.*.local
 *.local.json
+*.env.backup
 
 # Always allow commit of tracked example/template files
 !**/.env.example
@@ -84,11 +90,15 @@ client_secret*.json
 # ------------------------------------------------------------------------------
 # 3. ASP.NET Core Backend & .NET 10 Solution
 # ------------------------------------------------------------------------------
-# Build outputs
+# Build outputs & binaries
 [Bb]in/
+**/[Bb]in/
 [Oo]bj/
+**/[Oo]bj/
 [Dd]ebug/
+**/[Dd]ebug/
 [Rr]elease/
+**/[Rr]elease/
 publish/
 **/publish/
 out/
@@ -98,7 +108,6 @@ artifacts/
 *.cache
 *.pdb
 *.aps
-*.tmp
 *.pid
 *.dll
 *.exe
@@ -138,7 +147,7 @@ htmlcov/
 *.db-journal
 
 # ------------------------------------------------------------------------------
-# 4. Python AI Subsystems (Component 1 Planning + Component 2 Diagnostics)
+# 4. Python AI Subsystems & Agents (Components 1, 2, and 3)
 # ------------------------------------------------------------------------------
 # Bytecode & Caches
 __pycache__/
@@ -176,10 +185,16 @@ poetry.toml
 .langchain/
 .langchain.db
 .langgraph/
+**/.langgraph/
+.langgraph_api/
+**/.langgraph_api/
 .langsmith/
 ai-subsystem/checkpoints/
 agents/farm-planning-agent/checkpoints/
+agents/inventory-agent/checkpoints/
 **/checkpoints/
+agent.db
+**/agent.db
 
 # Vector Databases & Embeddings
 chroma/
@@ -208,7 +223,7 @@ evidence_uploads/
 temp_images/
 
 # ------------------------------------------------------------------------------
-# 5. Frontend Web Dashboard (React / Vite / TypeScript / Tailwind)
+# 5. Frontend Web Dashboard (React / Vite / Tailwind)
 # ------------------------------------------------------------------------------
 # Dependencies & Package Managers
 node_modules/
@@ -293,7 +308,14 @@ build/
 !mobile/pubspec.lock
 
 # ------------------------------------------------------------------------------
-# 7. General Temporary & Log Files
+# 7. Docker & Container Artifacts
+# ------------------------------------------------------------------------------
+.docker/
+docker-compose.override.yml
+*.docker.log
+
+# ------------------------------------------------------------------------------
+# 8. General Temporary & Log Files
 # ------------------------------------------------------------------------------
 *.log
 logs/
@@ -301,3 +323,10 @@ logs/
 tmp/
 temp/
 Documentations/generated/
+
+# ------------------------------------------------------------------------------
+# 9. Whitelist Explicitly Tracked Schema & Migration Files
+# ------------------------------------------------------------------------------
+!*.sql
+!backend/*.sql
+!backend/src/AgriOps.Api/*.sql

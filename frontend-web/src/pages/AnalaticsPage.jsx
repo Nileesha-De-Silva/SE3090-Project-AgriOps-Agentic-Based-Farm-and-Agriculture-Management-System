@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { getHarvestYields } from "../api/adminApi";
 
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
@@ -44,7 +45,20 @@ export default function AnalyticsPage() {
   return (
     <div className="analytics-page">
       <h1>Historical Production Trends</h1>
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <div style={{ padding: "1rem", marginBottom: "1.5rem", borderRadius: "0.5rem", backgroundColor: "#fef3c7", border: "1px solid #f59e0b", color: "#92400e" }}>
+          <p style={{ fontWeight: 600, margin: 0 }}>{error}</p>
+          {(error.includes("401") || error.includes("403") || error.includes("failed with status") || error.includes("token")) && (
+            <p style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+              Administrator or Farm Manager permissions are required to view production analytics. Please{" "}
+              <Link to="/login" style={{ fontWeight: 700, color: "#065f46", textDecoration: "underline" }}>
+                Sign In
+              </Link>{" "}
+              (Default: <strong>admin</strong> / <strong>ChangeMe123!</strong>).
+            </p>
+          )}
+        </div>
+      )}
 
       {!error && rows.length === 0 && (
         <p>No harvest data recorded yet. Once harvests are logged, yields will appear here.</p>

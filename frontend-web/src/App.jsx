@@ -57,7 +57,9 @@ export default function App() {
         {/* Analytics & Governance (Component 4 & Agent 4 - Sahas) */}
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/audit-logs" element={<AuditLogsPage />} />
+        <Route path="/admin/audit-logs" element={<Navigate to="/audit-logs" replace />} />
         <Route path="/users" element={<UsersAdminPage />} />
+        <Route path="/admin/users" element={<Navigate to="/users" replace />} />
         <Route path="/login" element={<LoginPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
