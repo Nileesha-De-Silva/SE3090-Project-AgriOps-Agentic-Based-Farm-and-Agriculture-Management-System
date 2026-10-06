@@ -1,4 +1,4 @@
-const AGENT_URL = import.meta.env.VITE_AGENT_API_URL || "/agent1";
+const AGENT_URL = import.meta.env.VITE_AGENT_API_URL || "/api/farm-planning-agent";
 
 async function handleResponse(response) {
   if (!response.ok) {

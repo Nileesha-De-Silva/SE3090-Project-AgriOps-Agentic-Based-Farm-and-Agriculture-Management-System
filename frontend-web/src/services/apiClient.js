@@ -10,7 +10,7 @@ export const api = axios.create({
 });
 
 export const aiApi = axios.create({
-  baseURL: import.meta.env.VITE_AI_URL || '/ai',
+  baseURL: import.meta.env.VITE_AI_URL || '/api/crop-analysis-agent',
   headers: {
     'Content-Type': 'application/json',
   },

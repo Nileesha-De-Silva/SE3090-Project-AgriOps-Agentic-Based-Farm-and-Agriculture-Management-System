@@ -78,7 +78,28 @@ services:
       - "host.docker.internal:host-gateway"
 
   # =========================================================================
-  # 5. React Web Dashboard (Vite)
+  # 5. Component 4 AI Agent: Operations & Yield Sentinel Agent (FastAPI / LangGraph)
+  # =========================================================================
+  analytics-agent:
+    build:
+      context: ./agents/analytics-sentinel-agent
+      dockerfile: Dockerfile
+    container_name: agriops-analytics-agent
+    restart: on-failure
+    ports:
+      - "8004:8004"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - BACKEND_API_URL=http://backend:8080/api
+    depends_on:
+      - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # =========================================================================
+  # 6. React Web Dashboard (Vite)
   # =========================================================================
   frontend-web:
     build:

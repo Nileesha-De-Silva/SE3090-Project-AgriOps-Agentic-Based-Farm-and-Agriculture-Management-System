@@ -330,3 +330,14 @@ Documentations/generated/
 !*.sql
 !backend/*.sql
 !backend/src/AgriOps.Api/*.sql
+
+# ------------------------------------------------------------------------------
+# 10. Academic Submission Reports & Private Evaluation Documents
+# ------------------------------------------------------------------------------
+docs/FINAL_SE3090_CONSOLIDATED_SUBMISSION_REPORT.md
+*CONSOLIDATED_SUBMISSION_REPORT*
+*submission*.pdf
+*Submission*.pdf
+*SE3090_*.pdf
+*SE3090_*.docx
+

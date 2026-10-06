@@ -47,6 +47,21 @@ builder.Services.AddHttpClient("InventoryAgentGateway", client => {
     client.MaxResponseContentBufferSize = 1024 * 1024;
 }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 
+builder.Services.AddHttpClient("AnalyticsAgentGateway", client => {
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.MaxResponseContentBufferSize = 1024 * 1024;
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+
+builder.Services.AddHttpClient("FarmPlanningAgentGateway", client => {
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.MaxResponseContentBufferSize = 1024 * 1024;
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+
+builder.Services.AddHttpClient("CropAnalysisAgentGateway", client => {
+    client.Timeout = TimeSpan.FromSeconds(90);
+    client.MaxResponseContentBufferSize = 1024 * 1024;
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+
 // Component 4 Services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
