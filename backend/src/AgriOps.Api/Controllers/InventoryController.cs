@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using System.ComponentModel.DataAnnotations;
 using AgriOpsAI.Api.DTOs;
 using AgriOpsAI.Api.Services;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AgriOpsAI.Api.Controllers;
 
 [ApiController]
+[Authorize(Policy = "InventoryRead")]
 [Route("api/inventory")]
 public class InventoryController : ControllerBase
 {
@@ -46,6 +48,7 @@ public class InventoryController : ControllerBase
         return Ok(item);
     }
 
+    [Authorize(Policy = "Manager")]
     [HttpPost]
     public async Task<ActionResult<InventoryItemDto>> Create(
         [FromBody] CreateInventoryItemDto dto)
@@ -68,6 +71,7 @@ public class InventoryController : ControllerBase
         }
     }
 
+    [Authorize(Policy = "Manager")]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<InventoryItemDto>> Update(
         Guid id,
@@ -103,6 +107,7 @@ public class InventoryController : ControllerBase
         }
     }
 
+    [Authorize(Policy = "Manager")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

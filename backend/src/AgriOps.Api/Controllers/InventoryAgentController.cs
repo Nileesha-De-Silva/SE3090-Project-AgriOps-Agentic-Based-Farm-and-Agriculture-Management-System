@@ -11,6 +11,15 @@ namespace AgriOpsAI.Api.Controllers;
 [Route("api/inventory-agent")]
 public class InventoryAgentController(AgriOpsDbContext context) : ControllerBase
 {
+    [Authorize(Policy = "InventoryRead")]
+    [HttpGet("/api/inventory/session")]
+    public IActionResult Session() => Ok(new {
+        subject = User.FindFirstValue("sub"), issuer = User.FindFirstValue("iss"),
+        canManage = AgriOpsAI.Api.Services.InventoryPermissions.IsManager(User),
+        canUse = AgriOpsAI.Api.Services.InventoryPermissions.CanMove(User, "Use"),
+        canReceive = AgriOpsAI.Api.Services.InventoryPermissions.CanMove(User, "Receive")
+    });
+
     [Authorize(Policy = "Manager")]
     [HttpGet("access")]
     public IActionResult Access() => Ok(new { subject = User.FindFirstValue("sub"), issuer = User.FindFirstValue("iss") });

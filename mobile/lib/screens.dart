@@ -22,9 +22,9 @@ class ConnectScreen extends StatefulWidget {
   State<ConnectScreen> createState() => _ConnectScreenState();
 }
 class _ConnectScreenState extends State<ConnectScreen> {
-  final token = TextEditingController();
+  final username = TextEditingController(), password = TextEditingController();
   @override
-  void dispose() { token.dispose(); super.dispose(); }
+  void dispose() { username.dispose(); password.dispose(); super.dispose(); }
   @override
   Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('AgriOps · Inventory')),
     body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: ListView(
@@ -32,16 +32,18 @@ class _ConnectScreenState extends State<ConnectScreen> {
         const Icon(Icons.eco_outlined, size: 64), const SizedBox(height: 20),
         Text('Your farm, on hand', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 12),
-        const Text('Development connection: enter a valid manager token issued by the shared authentication service. Group login and registration are still pending.'),
+        const Text('Sign in with your AgriOps account. Your role determines which inventory actions are available.'),
         const SizedBox(height: 20),
-        TextField(controller: token, obscureText: true, autocorrect: false, enableSuggestions: false,
-          decoration: const InputDecoration(labelText: 'Manager access token')),
+        TextField(controller: username, decoration: const InputDecoration(labelText: 'Username')),
+        const SizedBox(height: 12),
+        TextField(controller: password, obscureText: true, autocorrect: false, enableSuggestions: false,
+          decoration: const InputDecoration(labelText: 'Password')),
         const SizedBox(height: 12),
         FilledButton(onPressed: widget.workspace.busy ? null : () async {
-          if (token.text.trim().isEmpty) return;
-          final ok = await widget.workspace.connect(token.text);
-          if (mounted && ok) token.clear();
-        }, child: const Text('Connect securely')),
+          if (username.text.trim().isEmpty || password.text.isEmpty) return;
+          final ok = await widget.workspace.login(username.text, password.text);
+          if (mounted && ok) password.clear();
+        }, child: const Text('Sign in')),
         if (widget.workspace.busy) const LinearProgressIndicator(),
         if (widget.workspace.error != null) Notice(widget.workspace.error!),
         const Text('The token is stored in device secure storage and removed when you disconnect.'),
@@ -74,17 +76,17 @@ class _HomeScreenState extends State<HomeScreen> {
       IconButton(tooltip: 'Refresh from server', onPressed: w.busy ? null : w.refresh, icon: const Icon(Icons.refresh)),
       IconButton(tooltip: 'Disconnect', onPressed: w.busy ? null : w.disconnect, icon: const Icon(Icons.logout)),
     ]),
-    bottomNavigationBar: NavigationBar(selectedIndex: page, onDestinationSelected: (value) => setState(() => page = value), destinations: const [
+    bottomNavigationBar: NavigationBar(selectedIndex: page, onDestinationSelected: (value) => setState(() => page = value), destinations: [
       NavigationDestination(icon: Icon(Icons.inventory_2_outlined), label: 'Inventory'),
       NavigationDestination(icon: Icon(Icons.people_outline), label: 'Suppliers'),
-      NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), label: 'Ask Agent'),
-      NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Activity'),
+      if (w.canManage) const NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), label: 'Ask Agent'),
+      if (w.canManage) const NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Activity'),
     ]),
     body: SafeArea(child: Column(children: [
       if (w.busy) const LinearProgressIndicator(),
       if (w.error != null) Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Notice(w.error!)),
       if (w.stale && !w.busy) const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Notice('Refresh to load current records before making changes.')),
-      Expanded(child: IndexedStack(index: page, children: [inventory(), suppliers(), AgentScreen(workspace: w), activity()])),
+      Expanded(child: IndexedStack(index: page, children: [inventory(), suppliers(), if (w.canManage) ...[AgentScreen(workspace: w), activity()]])),
     ])),
   );
   Widget inventory() {
@@ -157,9 +159,9 @@ class _ItemScreenState extends State<ItemScreen> {
           builder: (_) => InventoryQrLabelScreen(itemId: widget.itemId, itemName: '${item['name']}'))),
         icon: const Icon(Icons.qr_code), label: const Text('Show QR label')),
 
-      const SizedBox(height: 20), Form(key: form, autovalidateMode: AutovalidateMode.onUserInteraction, child: Column(children: [
+      const SizedBox(height: 20), if (w.canUse) Form(key: form, autovalidateMode: AutovalidateMode.onUserInteraction, child: Column(children: [
         DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Stock movement'),
-          items: const [DropdownMenuItem(value: 'Use', child: Text('Use stock')), DropdownMenuItem(value: 'Receive', child: Text('Receive stock'))],
+          items: [const DropdownMenuItem(value: 'Use', child: Text('Use stock')), if (w.canReceive) const DropdownMenuItem(value: 'Receive', child: Text('Receive stock'))],
           onChanged: w.canWrite && !submitted ? (v) => setState(() => type = v!) : null),
         const SizedBox(height: 12), TextFormField(controller: quantity,
           enabled: w.canWrite && !submitted && item != null,

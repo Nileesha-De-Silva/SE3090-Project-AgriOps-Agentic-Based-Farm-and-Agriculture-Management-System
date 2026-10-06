@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using System.ComponentModel.DataAnnotations;
 using AgriOpsAI.Api.DTOs;
 using AgriOpsAI.Api.Services;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AgriOpsAI.Api.Controllers;
 
 [ApiController]
+[Authorize(Policy = "InventoryRead")]
 [Route("api/suppliers")]
 public class SupplierController(SupplierService service) : ControllerBase
 {
@@ -21,6 +23,7 @@ public class SupplierController(SupplierService service) : ControllerBase
         return supplier is null ? NotFound(new { message = "Supplier not found." }) : Ok(supplier);
     }
 
+    [Authorize(Policy = "Manager")]
     [HttpPost]
     [ProducesResponseType(typeof(SupplierDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -37,6 +40,7 @@ public class SupplierController(SupplierService service) : ControllerBase
         }
     }
 
+    [Authorize(Policy = "Manager")]
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(SupplierDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -54,6 +58,7 @@ public class SupplierController(SupplierService service) : ControllerBase
         }
     }
 
+    [Authorize(Policy = "Manager")]
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

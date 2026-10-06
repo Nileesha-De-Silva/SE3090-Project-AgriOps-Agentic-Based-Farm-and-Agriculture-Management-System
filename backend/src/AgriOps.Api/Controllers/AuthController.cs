@@ -7,7 +7,6 @@ namespace AgriOpsAI.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[AllowAnonymous]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -17,6 +16,7 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
@@ -30,6 +30,7 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Administrator")]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {

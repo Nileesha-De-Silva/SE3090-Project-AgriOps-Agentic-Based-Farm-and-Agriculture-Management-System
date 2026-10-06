@@ -28,8 +28,9 @@ class Api {
   void clearToken() => _token = '';
   void dispose() => client.close();
 
-  Future<dynamic> request(String path, {String method = 'GET', Record? body}) async {
-    if (_token.isEmpty) throw const ApiFailure('Connect with a valid manager session first.', status: 401);
+  Future<dynamic> request(String path, {String method = 'GET', Record? body, bool login = false}) async {
+    if (login && (path != 'auth/login' || method != 'POST')) throw ArgumentError('Invalid login request.');
+    if (!login && _token.isEmpty) throw const ApiFailure('Connect with a valid manager session first.', status: 401);
     final target = base.resolve(path);
     if (target.origin != base.origin || !target.path.startsWith(base.path)) {
       throw ArgumentError('Requests must stay inside the configured API.');
@@ -37,7 +38,7 @@ class Api {
     final write = method != 'GET';
     final request = http.Request(method, target)
       ..followRedirects = false
-      ..headers.addAll({'Authorization': 'Bearer $_token', 'Accept': 'application/json'});
+      ..headers.addAll({if (!login) 'Authorization': 'Bearer $_token', 'Accept': 'application/json'});
     if (body != null) {
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode(body);
@@ -48,7 +49,7 @@ class Api {
       if (response.statusCode < 200 || response.statusCode >= 300) {
         final message = switch (response.statusCode) {
           401 => 'Session expired. Disconnect and connect again.',
-          403 => 'This action requires an authorized manager.',
+          403 => 'Your account does not have permission for this action.',
           404 => 'Record or run not found.',
           409 => 'Data changed or a recommendation already exists. Refresh before continuing.',
           400 || 422 => 'Check your input. The server rejected this request.',

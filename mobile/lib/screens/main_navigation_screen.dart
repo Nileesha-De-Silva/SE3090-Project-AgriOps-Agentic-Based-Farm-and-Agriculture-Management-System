@@ -48,6 +48,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (ApiConfig.authToken != null && ApiConfig.authToken!.isNotEmpty) {
       _workspace!.connect(ApiConfig.authToken!);
     }
+    if (ApiConfig.authToken == null) _workspace!.restore();
     return _workspace!;
   }
 
@@ -90,8 +91,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _showLoginDialog() {
-    final userController = TextEditingController(text: 'admin');
-    final passController = TextEditingController(text: 'ChangeMe123!');
+    final userController = TextEditingController();
+    final passController = TextEditingController();
     bool loading = false;
     String? error;
 
@@ -103,7 +104,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             children: [
               Icon(Icons.lock_outline, color: AppTheme.primaryGreen),
               SizedBox(width: 8),
-              Text('Manager Sign In'),
+              Text('Sign in'),
             ],
           ),
           content: Column(
@@ -158,7 +159,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       });
                       final success = await AnalyticsApi.login(
                         userController.text.trim(),
-                        passController.text.trim(),
+                        passController.text,
                       );
                       if (success) {
                         if (_workspace != null && ApiConfig.authToken != null) {
@@ -169,7 +170,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               backgroundColor: AppTheme.primaryGreen,
-                              content: Text('Successfully authenticated as Manager!'),
+                              content: Text('Signed in successfully.'),
                             ),
                           );
                           setState(() {});
@@ -315,7 +316,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    ApiConfig.authToken != null ? 'Role: Authenticated Manager' : 'Operational Mode (Guest)',
+                    ApiConfig.authToken != null ? 'Signed in' : 'Operational Mode (Guest)',
                     style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
@@ -387,7 +388,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.vpn_key, color: Colors.blueGrey),
-              title: Text(ApiConfig.authToken != null ? 'Switch / Re-login' : 'Manager Sign In'),
+              title: Text(ApiConfig.authToken != null ? 'Switch / Re-login' : 'Sign in'),
               subtitle: const Text('JWT Authentication & RBAC'),
               onTap: () {
                 Navigator.pop(context);

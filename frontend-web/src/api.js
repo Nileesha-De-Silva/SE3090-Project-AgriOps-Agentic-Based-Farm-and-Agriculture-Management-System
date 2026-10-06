@@ -47,6 +47,7 @@ export function createApi({ getToken = () => '', fetchImpl = globalThis.fetch, t
   }
   const id = value => encodeURIComponent(value)
   return {
+    inventorySession: () => request('/api/inventory/session', 'GET', undefined, true),
     verifyManager: () => request('/api/inventory-agent/access', 'GET', undefined, true),
     async loadWorkspace(includeProtected = false) {
       const [items, suppliers, recommendations, purchases] = await Promise.all([

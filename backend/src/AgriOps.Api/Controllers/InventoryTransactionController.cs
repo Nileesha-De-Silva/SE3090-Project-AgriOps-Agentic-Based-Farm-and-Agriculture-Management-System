@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using System.ComponentModel.DataAnnotations;
 using AgriOpsAI.Api.DTOs;
 using AgriOpsAI.Api.Services;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AgriOpsAI.Api.Controllers;
 
 [ApiController]
+[Authorize(Policy = "InventoryRead")]
 [Route("api/inventory/{inventoryItemId:guid}/transactions")]
 public class InventoryTransactionController : ControllerBase
 {
@@ -72,6 +74,7 @@ public class InventoryTransactionController : ControllerBase
         Guid inventoryItemId,
         [FromBody] CreateInventoryTransactionDto dto)
     {
+        if (!InventoryPermissions.CanMove(User, dto.TransactionType)) return Forbid();
         try
         {
             var transaction = await _service.CreateAsync(

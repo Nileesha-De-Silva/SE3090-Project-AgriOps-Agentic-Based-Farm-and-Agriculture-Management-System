@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using System.ComponentModel.DataAnnotations;
 using AgriOpsAI.Api.DTOs;
 using AgriOpsAI.Api.Services;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AgriOpsAI.Api.Controllers;
 
 [ApiController]
+[Authorize(Policy = "InventoryRead")]
 [Route("api/suppliers/{supplierId:guid}/items")]
 public class SupplierItemController(SupplierItemService service) : ControllerBase
 {
@@ -27,6 +29,7 @@ public class SupplierItemController(SupplierItemService service) : ControllerBas
         return link is null ? Missing() : Ok(link);
     }
 
+    [Authorize(Policy = "Manager")]
     [HttpPost("{inventoryItemId:guid}")]
     [ProducesResponseType(typeof(SupplierItemDto), 201)]
     [ProducesResponseType(400)]
@@ -35,6 +38,7 @@ public class SupplierItemController(SupplierItemService service) : ControllerBas
     public Task<ActionResult<SupplierItemDto>> Create(Guid supplierId, Guid inventoryItemId, SaveSupplierItemDto dto)
         => Save(supplierId, inventoryItemId, dto, true);
 
+    [Authorize(Policy = "Manager")]
     [HttpPut("{inventoryItemId:guid}")]
     [ProducesResponseType(typeof(SupplierItemDto), 200)]
     [ProducesResponseType(400)]
@@ -43,6 +47,7 @@ public class SupplierItemController(SupplierItemService service) : ControllerBas
     public Task<ActionResult<SupplierItemDto>> Update(Guid supplierId, Guid inventoryItemId, SaveSupplierItemDto dto)
         => Save(supplierId, inventoryItemId, dto, false);
 
+    [Authorize(Policy = "Manager")]
     [HttpDelete("{inventoryItemId:guid}")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]

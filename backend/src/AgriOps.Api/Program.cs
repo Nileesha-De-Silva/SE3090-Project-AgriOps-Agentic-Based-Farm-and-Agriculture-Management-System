@@ -80,7 +80,8 @@ builder.Services.AddCors(options =>
 });
 
 // 4. Configure Authentication & Authorization
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "AgriOpsMasterSecretKeyForFullStackSecurity2026!MustBeAtLeast32CharsLong";
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Configure Jwt:Key using local secrets or the deployment environment.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AgriOpsAI";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "AgriOpsAIUsers";
 
@@ -93,13 +94,17 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
+    options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = false, // Relaxed for local dev & evaluation
-        ValidateAudience = false,
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        ValidateLifetime = false,
+        ValidateLifetime = true,
+        RequireExpirationTime = true,
         ClockSkew = TimeSpan.FromMinutes(5),
         RoleClaimType = System.Security.Claims.ClaimTypes.Role,
         NameClaimType = System.Security.Claims.ClaimTypes.Name
@@ -108,9 +113,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Manager", policy => policy.RequireAuthenticatedUser());
-    options.AddPolicy("InventoryAgent", policy => policy.RequireAuthenticatedUser());
-    options.AddPolicy("RecommendationReader", policy => policy.RequireAuthenticatedUser());
+    InventoryPermissions.Configure(options);
 });
 
 // 5. Add API Controllers & Swagger
@@ -160,16 +163,6 @@ using (var scope = app.Services.CreateScope())
             logger.LogInformation("Components 3 & 4 database tables verified successfully.");
         }
 
-        // Ensure default admin user has the known valid password hash: ChangeMe123!
-        var agriOpsDb = services.GetRequiredService<AgriOpsAI.Api.Data.AgriOpsDbContext>();
-        var adminUser = await agriOpsDb.Users.FirstOrDefaultAsync(u => u.Username == "admin");
-        if (adminUser != null)
-        {
-            adminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword("ChangeMe123!");
-            await agriOpsDb.SaveChangesAsync();
-            logger.LogInformation("Admin account credentials verified (admin / ChangeMe123!).");
-        }
-        
         logger.LogInformation("PostgreSQL Database schema created and verified successfully.");
     }
     catch (Exception ex)
