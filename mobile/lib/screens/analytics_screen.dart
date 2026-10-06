@@ -132,6 +132,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  if (_error != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Text('Error loading yields: $_error', style: TextStyle(color: Colors.red.shade800)),
+                    ),
+                  ],
                   // Header Card
                   Card(
                     elevation: 2,
@@ -242,7 +254,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: _getRiskColor(_sentinelReport!.overallRiskLevel).withOpacity(0.15),
+                                    color: _getRiskColor(_sentinelReport!.overallRiskLevel).withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
