@@ -64,7 +64,7 @@ export default function ApprovalDossierPage() {
       })
     );
     setIsProcessing(false);
-    navigate('/');
+    navigate('/workspace');
   };
 
   const handleReject = async () => {

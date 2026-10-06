@@ -54,7 +54,7 @@ export default function TaskDetailPage() {
         <h2 className="text-xl font-bold text-emerald-950">Task Not Found</h2>
         <p className="text-sm text-slate-500">The task with ID "{id}" could not be located.</p>
         <Link
-          to="/"
+          to="/workspace"
           className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white text-xs font-bold hover:from-emerald-700 hover:to-green-700 shadow-sm shadow-emerald-700/20 transition-all"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -131,7 +131,7 @@ export default function TaskDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <Link
-            to="/"
+            to="/workspace"
             className="p-2 rounded-xl bg-emerald-100/80 border border-emerald-300 text-emerald-900 hover:bg-emerald-200/90 hover:text-emerald-950 transition-colors shadow-2xs"
             title="Back to Kanban"
           >
@@ -139,7 +139,7 @@ export default function TaskDetailPage() {
           </Link>
           <div>
             <div className="flex items-center space-x-2 text-xs text-slate-500">
-              <Link to="/" className="hover:text-emerald-700 font-semibold">Kanban</Link>
+              <Link to="/workspace" className="hover:text-emerald-700 font-semibold">Kanban</Link>
               <ChevronRight className="w-3 h-3 text-slate-400" />
               <span className="font-mono text-emerald-800 font-semibold">{task.id}</span>
             </div>

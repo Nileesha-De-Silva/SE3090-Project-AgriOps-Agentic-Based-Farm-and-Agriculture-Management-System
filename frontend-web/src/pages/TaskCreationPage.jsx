@@ -89,7 +89,7 @@ export default function TaskCreationPage() {
             View Task in New Tab
           </Link>
           <Link
-            to="/"
+            to="/workspace"
             className="px-5 py-2.5 rounded-xl border border-emerald-300 bg-emerald-100/80 hover:bg-emerald-200/90 text-emerald-950 text-xs font-bold shadow-2xs transition-colors"
           >
             Return to Kanban Board
@@ -106,7 +106,7 @@ export default function TaskCreationPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Link
-            to="/"
+            to="/workspace"
             className="p-2 rounded-xl bg-emerald-100/80 border border-emerald-300 text-emerald-900 hover:bg-emerald-200/90 hover:text-emerald-950 transition-colors shadow-2xs"
             title="Back to Kanban"
           >
@@ -293,7 +293,7 @@ export default function TaskCreationPage() {
         {/* Submit Bar */}
         <div className="flex items-center justify-end space-x-3 pt-2">
           <Link
-            to="/"
+            to="/workspace"
             className="px-5 py-2.5 rounded-xl border border-emerald-300 bg-emerald-100/60 hover:bg-emerald-200/80 text-emerald-950 text-xs font-bold shadow-2xs transition-colors"
           >
             Cancel

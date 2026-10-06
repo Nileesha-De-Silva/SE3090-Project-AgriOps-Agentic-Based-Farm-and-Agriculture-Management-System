@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/layout/Layout';
+import HomePage from './pages/HomePage';
 import TaskKanbanBoard from './components/tasks/TaskKanbanBoard';
 import PendingApprovalsInbox from './components/crop-analysis/PendingApprovalsInbox';
 import CropAnalysisView from './components/crop-analysis/CropAnalysisView';
@@ -29,12 +30,13 @@ import UsersAdminPage from './pages/admin/userAdminPage';
 import LoginPage from './pages/LoginPage';
 
 export default function App() {
-  return (
-    <Layout>
-      <Routes>
+  const location = useLocation();
+  const routes = (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
         {/* Operations & Tasks (Component 2) */}
-        <Route path="/" element={<TaskKanbanBoard />} />
-        <Route path="/tasks" element={<Navigate to="/" replace />} />
+        <Route path="/workspace" element={<TaskKanbanBoard />} />
+        <Route path="/tasks" element={<Navigate to="/workspace" replace />} />
         <Route path="/tasks/new" element={<TaskCreationPage />} />
         <Route path="/tasks/:id" element={<TaskDetailPage />} />
         <Route path="/approvals" element={<PendingApprovalsInbox />} />
@@ -62,8 +64,10 @@ export default function App() {
         <Route path="/admin/users" element={<Navigate to="/users" replace />} />
         <Route path="/login" element={<LoginPage />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
+
+  const usesPublicShell = location.pathname === '/' || location.pathname === '/login';
+  return usesPublicShell ? routes : <Layout>{routes}</Layout>;
 }
