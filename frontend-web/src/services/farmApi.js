@@ -1,25 +1,8 @@
-import { authHeaders } from "./authToken";
-
 const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
-async function request(path, options = {}) {
+async function safeFetch(url, options) {
   try {
-    const res = await fetch(`${BASE_URL}${path}`, {
-      ...options,
-      headers: {
-        Accept: "application/json",
-        ...authHeaders(),
-        ...(options.headers || {}),
-      },
-    });
-
-    if (!res.ok) {
-      const errorBody = await res.json().catch(() => null);
-      const message = errorBody?.message || errorBody?.title || `Request failed with status ${res.status}`;
-      throw new Error(message);
-    }
-    if (res.status === 204) return null; // No Content
-    return await res.json();
+    return options !== undefined ? await fetch(url, options) : await fetch(url);
   } catch (err) {
     if (err.message && !err.message.includes("NetworkError") && !err.message.includes("Failed to fetch")) {
       throw err;
@@ -28,60 +11,79 @@ async function request(path, options = {}) {
   }
 }
 
+async function handleResponse(res) {
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    const message = errorBody?.message || errorBody?.title || `Request failed with status ${res.status}`;
+    throw new Error(message);
+  }
+  if (res.status === 204) return null; // No Content
+  return res.json();
+}
+
 // ---------- Farms ----------
 export async function getFarms() {
-  return request("/farm");
+  const res = await safeFetch(`${BASE_URL}/farm`);
+  return handleResponse(res);
 }
 
 export async function getFarm(id) {
-  return request(`/farm/${id}`);
+  const res = await safeFetch(`${BASE_URL}/farm/${id}`);
+  return handleResponse(res);
 }
 
 export async function createFarm(data) {
-  return request("/farm", {
+  const res = await safeFetch(`${BASE_URL}/farm`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
 }
 
 export async function updateFarm(id, data) {
-  return request(`/farm/${id}`, {
+  const res = await safeFetch(`${BASE_URL}/farm/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
 }
 
 export async function deleteFarm(id) {
-  return request(`/farm/${id}`, { method: "DELETE" });
+  const res = await safeFetch(`${BASE_URL}/farm/${id}`, { method: "DELETE" });
+  return handleResponse(res);
 }
 
 // ---------- Fields ----------
 export async function getFields(farmId) {
-  const url = farmId ? `/field?farmId=${farmId}` : "/field";
-  return request(url);
+  const url = farmId ? `${BASE_URL}/field?farmId=${farmId}` : `${BASE_URL}/field`;
+  const res = await safeFetch(url);
+  return handleResponse(res);
 }
 
 export async function createField(data) {
-  return request("/field", {
+  const res = await safeFetch(`${BASE_URL}/field`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
 }
 
 // ---------- Crops ----------
 export async function getCrops() {
-  return request("/crop");
+  const res = await safeFetch(`${BASE_URL}/crop`);
+  return handleResponse(res);
 }
 
 export async function createCrop(data) {
-  return request("/crop", {
+  const res = await safeFetch(`${BASE_URL}/crop`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
 }
 
 // ---------- Crop Seasons ----------
@@ -90,48 +92,56 @@ export async function getCropSeasons(fieldId, status) {
   if (fieldId) params.append("fieldId", fieldId);
   if (status) params.append("status", status);
   const query = params.toString() ? `?${params.toString()}` : "";
-  return request(`/cropseason${query}`);
+  const res = await safeFetch(`${BASE_URL}/cropseason${query}`);
+  return handleResponse(res);
 }
 
 export async function getCropSeason(id) {
-  return request(`/cropseason/${id}`);
+  const res = await safeFetch(`${BASE_URL}/cropseason/${id}`);
+  return handleResponse(res);
 }
 
 export async function createCropSeason(data) {
-  return request("/cropseason", {
+  const res = await safeFetch(`${BASE_URL}/cropseason`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
 }
 
 // ---------- Plantings ----------
 export async function getPlantings(cropSeasonId) {
-  return request(`/cropseason/${cropSeasonId}/planting`);
+  const res = await safeFetch(`${BASE_URL}/cropseason/${cropSeasonId}/planting`);
+  return handleResponse(res);
 }
 
 export async function createPlanting(cropSeasonId, data) {
-  return request(`/cropseason/${cropSeasonId}/planting`, {
+  const res = await safeFetch(`${BASE_URL}/cropseason/${cropSeasonId}/planting`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
 }
 
 // ---------- Harvests ----------
 export async function getHarvests(cropSeasonId) {
-  return request(`/cropseason/${cropSeasonId}/harvest`);
+  const res = await safeFetch(`${BASE_URL}/cropseason/${cropSeasonId}/harvest`);
+  return handleResponse(res);
 }
 
 export async function createHarvest(cropSeasonId, data) {
-  return request(`/cropseason/${cropSeasonId}/harvest`, {
+  const res = await safeFetch(`${BASE_URL}/cropseason/${cropSeasonId}/harvest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
 }
 
 // ---------- Soil Records ----------
 export async function getSoilRecords(fieldId) {
-  return request(`/field/${fieldId}/soilrecord`);
+  const res = await safeFetch(`${BASE_URL}/field/${fieldId}/soilrecord`);
+  return handleResponse(res);
 }
