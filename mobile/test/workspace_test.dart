@@ -14,7 +14,7 @@ void main() {
   test('uncertain agent run survives restart only for its verified owner', () async {
     final bodies = <String>[];
     Api client() => Api('https://farm.example/api/', client: MockClient((r) async {
-      if (r.url.path.endsWith('/access')) return json({'issuer':'farm', 'subject':r.headers['Authorization']});
+      if (r.url.path.endsWith('/session')) return json({'canManage':true, 'canUse':true, 'canReceive':true, 'issuer':'farm', 'subject':r.headers['Authorization']});
       if (r.method == 'POST') { bodies.add(r.body); return json({}, 502); }
       return json([]);
     }));
@@ -39,7 +39,7 @@ void main() {
   test('accepted stock write with failed refresh is not submitted again', () async {
     var writes = 0;
     final workspace = Workspace(Api('https://farm.example/api/', client: MockClient((r) async {
-      if (r.url.path.endsWith('/access')) return json({'issuer':'farm','subject':'manager'});
+      if (r.url.path.endsWith('/session')) return json({'canManage':true, 'canUse':true, 'canReceive':true, 'issuer':'farm','subject':'manager'});
       if (r.method == 'POST') { writes++; return json({'id':'movement'}, 201); }
       return writes > 0 ? json({}, 503) : json([]);
     })));
@@ -55,7 +55,7 @@ void main() {
     var expired = false;
     final workspace = Workspace(Api('https://farm.example/api/', client: MockClient((r) async {
       if (expired) return json({}, 401);
-      if (r.url.path.endsWith('/access')) return json({'issuer':'farm','subject':'manager'});
+      if (r.url.path.endsWith('/session')) return json({'canManage':true, 'canUse':true, 'canReceive':true, 'issuer':'farm','subject':'manager'});
       return json([]);
     })));
     await workspace.connect('manager');
@@ -71,7 +71,7 @@ void main() {
     var writes = 0;
     final workspace = Workspace(Api('https://farm.example/api/', client: MockClient((r) async {
       if (r.method == 'POST') writes++;
-      if (r.url.path.endsWith('/access')) return json({'issuer':'farm','subject':'manager'});
+      if (r.url.path.endsWith('/session')) return json({'canManage':true, 'canUse':true, 'canReceive':true, 'issuer':'farm','subject':'manager'});
       return json([]);
     })));
     await workspace.connect('manager');
