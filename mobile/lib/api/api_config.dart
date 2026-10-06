@@ -9,4 +9,13 @@ class ApiConfig {
       : (defaultTargetPlatform == TargetPlatform.android
           ? 'http://10.0.2.2:5286/api'
           : 'http://localhost:5286/api');
+
+  /// Active JWT token for authenticated operations
+  static String? authToken;
+
+  static Map<String, String> get authHeaders => {
+        'Content-Type': 'application/json',
+        if (authToken != null && authToken!.isNotEmpty)
+          'Authorization': 'Bearer $authToken',
+      };
 }
