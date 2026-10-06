@@ -1,6 +1,6 @@
 import { setToken } from "./authToken";
 
-const BASE_URL = "http://localhost:5289/api"; // same backend as the farm API client
+const BASE_URL = import.meta.env.VITE_API_URL || "/api"; // same backend as the farm API client
 
 async function handleResponse(res) {
   if (!res.ok) {

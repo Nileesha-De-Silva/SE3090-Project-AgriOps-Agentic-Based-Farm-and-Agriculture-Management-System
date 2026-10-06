@@ -90,6 +90,9 @@ services:
       - backend
     ports:
       - "5173:5173"
+    volumes:
+      - ./frontend-web/src:/app/src
+      - ./frontend-web/index.html:/app/index.html
 
   # =========================================================================
   # 5. Flutter Mobile App (Browser Container)

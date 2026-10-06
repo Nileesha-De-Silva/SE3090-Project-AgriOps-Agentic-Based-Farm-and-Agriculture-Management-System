@@ -1,6 +1,6 @@
 import { authHeaders } from "./authToken";
 
-const BASE_URL = "http://localhost:5289/api";
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 async function handleResponse(res) {
   if (!res.ok) {

@@ -11,7 +11,11 @@ import {
   ChevronLeft,
   MapPin,
   Sprout,
-  Bot
+  Bot,
+  Package,
+  BarChart3,
+  Shield,
+  UserCog
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -72,6 +76,38 @@ export default function Sidebar({
       name: 'Field Workers',
       path: '/workers',
       icon: Users,
+      badge: null,
+    },
+  ];
+
+  const inventoryNavItems = [
+    {
+      name: 'Inventory & Supplies',
+      path: '/inventory',
+      icon: Package,
+      badge: 'Agent 3',
+      badgeColor: 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-200',
+    },
+  ];
+
+  const adminNavItems = [
+    {
+      name: 'Production Analytics',
+      path: '/analytics',
+      icon: BarChart3,
+      badge: null,
+    },
+    {
+      name: 'Audit Logs',
+      path: '/audit-logs',
+      icon: Shield,
+      badge: 'Agent 4',
+      badgeColor: 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-200',
+    },
+    {
+      name: 'User Management',
+      path: '/users',
+      icon: UserCog,
       badge: null,
     },
   ];
@@ -146,6 +182,94 @@ export default function Sidebar({
                 key={item.path}
                 to={item.path}
                 end={item.path === '/'}
+                onClick={() => {
+                  if (isMobile && onCloseMobile) {
+                    onCloseMobile();
+                  }
+                }}
+                className={({ isActive }) =>
+                  `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
+                      : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
+                  }`
+                }
+              >
+                <div className="flex items-center space-x-3">
+                  <Icon className="w-4 h-4 transition-colors" />
+                  <span>{item.name}</span>
+                </div>
+                {item.badge !== null && item.badge !== undefined && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      item.badgeColor || 'bg-white/20 text-white'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Inventory & Supply Chain Group (Component 3 - Dinali / Thisara) */}
+      <div>
+        <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+          <span>Inventory & Supply</span>
+        </div>
+        <nav className="space-y-1.5">
+          {inventoryNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => {
+                  if (isMobile && onCloseMobile) {
+                    onCloseMobile();
+                  }
+                }}
+                className={({ isActive }) =>
+                  `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
+                      : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
+                  }`
+                }
+              >
+                <div className="flex items-center space-x-3">
+                  <Icon className="w-4 h-4 transition-colors" />
+                  <span>{item.name}</span>
+                </div>
+                {item.badge !== null && item.badge !== undefined && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      item.badgeColor || 'bg-white/20 text-white'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Analytics & Governance Group (Component 4 - Sahas) */}
+      <div>
+        <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+          <span>Analytics & Governance</span>
+        </div>
+        <nav className="space-y-1.5">
+          {adminNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
                 onClick={() => {
                   if (isMobile && onCloseMobile) {
                     onCloseMobile();

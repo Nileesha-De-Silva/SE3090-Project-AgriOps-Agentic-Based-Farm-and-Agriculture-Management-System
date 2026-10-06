@@ -19,6 +19,15 @@ import CropsPage from './pages/CropsPage';
 import CropSeasonDetailPage from './pages/CropSeasonDetailPage';
 import AgentPlannerPage from './pages/AgentPlannerPage';
 
+// Inventory & Procurement Views (Component 3 & Agent 3 - Dinali / Thisara)
+import LiveWorkspace from './LiveWorkspace';
+
+// Analytics, User Administration & Audit Views (Component 4 & Agent 4 - Sahas)
+import AnalyticsPage from './pages/AnalaticsPage';
+import AuditLogsPage from './pages/admin/auditLogsPage';
+import UsersAdminPage from './pages/admin/userAdminPage';
+import LoginPage from './pages/LoginPage';
+
 export default function App() {
   return (
     <Layout>
@@ -41,6 +50,15 @@ export default function App() {
         <Route path="/crops" element={<CropsPage />} />
         <Route path="/cropseasons/:id" element={<CropSeasonDetailPage />} />
         <Route path="/agent-planner" element={<AgentPlannerPage />} />
+
+        {/* Inventory & Supply Chain (Component 3 & Agent 3 - Dinali / Thisara) */}
+        <Route path="/inventory" element={<LiveWorkspace />} />
+
+        {/* Analytics & Governance (Component 4 & Agent 4 - Sahas) */}
+        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/audit-logs" element={<AuditLogsPage />} />
+        <Route path="/users" element={<UsersAdminPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
