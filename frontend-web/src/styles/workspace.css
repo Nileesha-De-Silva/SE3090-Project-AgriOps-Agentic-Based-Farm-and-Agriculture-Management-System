@@ -7,7 +7,7 @@
 }
 
 .live-connection {
-  border: 1px solid #dce5d1;
+  border: 1px solid #D1E5DB;
   background: white;
   border-radius: 12px;
   padding: 18px;
@@ -18,7 +18,7 @@
 .live-connection summary {
   font-weight: 600;
   cursor: pointer;
-  color: #065f46;
+  color: #285A48;
 }
 
 .live-connection form {
@@ -77,7 +77,7 @@
 .panel-heading h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #064e3b;
+  color: #091413;
 }
 
 .table-scroll {
@@ -96,11 +96,11 @@
 .analytics-page th,
 .audit-logs-page th {
   padding: 10px 14px;
-  background: #f0fdf4;
-  color: #065f46;
+  background: #F2FAF6;
+  color: #285A48;
   font-weight: 600;
   font-size: 13px;
-  border-bottom: 2px solid #bbf7d0;
+  border-bottom: 2px solid #B0E4CC;
 }
 
 .table-scroll td,
@@ -127,7 +127,7 @@
 .supplier-card h3 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #065f46;
+  color: #285A48;
   margin-bottom: 0.5rem;
 }
 
@@ -138,8 +138,8 @@
 }
 
 .recommendation {
-  border: 1px solid #d1fae5;
-  background: #f0fdf4;
+  border: 1px solid #E0F3E9;
+  background: #F2FAF6;
   border-radius: 10px;
   padding: 1.25rem;
 }
@@ -149,19 +149,19 @@
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #047857;
+  color: #285A48;
   margin-bottom: 0.5rem;
 }
 
 .ask-agent {
-  background: #f0fdf4;
-  border: 1px solid #a7f3d0;
+  background: #F2FAF6;
+  border: 1px solid #B0E4CC;
   border-radius: 12px;
   padding: 1.5rem;
 }
 
 .button.primary {
-  background: #059669;
+  background: #285A48;
   color: white;
   font-weight: 600;
   padding: 8px 16px;
@@ -172,7 +172,7 @@
 }
 
 .button.primary:hover:not(:disabled) {
-  background: #047857;
+  background: #285A48;
 }
 
 .button.subtle {
@@ -204,6 +204,6 @@
 .audit-logs-page h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #064e3b;
+  color: #091413;
   margin-bottom: 1.5rem;
 }

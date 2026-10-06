@@ -53,7 +53,7 @@ export default function Sidebar({
   const navItems = [
     {
       name: 'Task Kanban Board',
-      path: '/',
+      path: '/workspace',
       icon: Kanban,
       badge: tasks.length,
       badgeColor: 'bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold',
@@ -113,10 +113,10 @@ export default function Sidebar({
   ];
 
   const renderNav = (isMobile = false) => (
-    <div className="space-y-6">
+    <div className="sidebar-nav space-y-6">
       {/* Farm & Crop Management Group */}
       <div>
-        <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+        <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
           <span>Farm Management</span>
           {!isMobile && onToggleDesktop && (
             <button
@@ -130,12 +130,13 @@ export default function Sidebar({
             </button>
           )}
         </div>
-        <nav className="space-y-1.5">
+        <nav className="sidebar-links space-y-1.5">
           {farmNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.path}
+                title={item.name}
                 to={item.path}
                 onClick={() => {
                   if (isMobile && onCloseMobile) {
@@ -143,20 +144,20 @@ export default function Sidebar({
                   }
                 }}
                 className={({ isActive }) =>
-                  `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                  `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
                     isActive
                       ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
                       : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
                   }`
                 }
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className="w-4 h-4 transition-colors" />
-                  <span>{item.name}</span>
+                <div className="sidebar-link-content flex items-center space-x-3">
+                  <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                  <span className="sidebar-label">{item.name}</span>
                 </div>
                 {item.badge !== null && item.badge !== undefined && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
+                    className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
                       item.badgeColor || 'bg-white/20 text-white'
                     }`}
                   >
@@ -171,15 +172,16 @@ export default function Sidebar({
 
       {/* Operations & Tasks Navigation Group */}
       <div>
-        <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+        <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
           <span>Operations & Tasks</span>
         </div>
-        <nav className="space-y-1.5">
+        <nav className="sidebar-links space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.path}
+                title={item.name}
                 to={item.path}
                 end={item.path === '/'}
                 onClick={() => {
@@ -188,20 +190,20 @@ export default function Sidebar({
                   }
                 }}
                 className={({ isActive }) =>
-                  `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                  `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
                     isActive
                       ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
                       : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
                   }`
                 }
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className="w-4 h-4 transition-colors" />
-                  <span>{item.name}</span>
+                <div className="sidebar-link-content flex items-center space-x-3">
+                  <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                  <span className="sidebar-label">{item.name}</span>
                 </div>
                 {item.badge !== null && item.badge !== undefined && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
+                    className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
                       item.badgeColor || 'bg-white/20 text-white'
                     }`}
                   >
@@ -216,15 +218,16 @@ export default function Sidebar({
 
       {/* Inventory & Supply Chain Group (Component 3 - Dinali / Thisara) */}
       <div>
-        <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+        <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
           <span>Inventory & Supply</span>
         </div>
-        <nav className="space-y-1.5">
+        <nav className="sidebar-links space-y-1.5">
           {inventoryNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.path}
+                title={item.name}
                 to={item.path}
                 onClick={() => {
                   if (isMobile && onCloseMobile) {
@@ -232,20 +235,20 @@ export default function Sidebar({
                   }
                 }}
                 className={({ isActive }) =>
-                  `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                  `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
                     isActive
                       ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
                       : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
                   }`
                 }
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className="w-4 h-4 transition-colors" />
-                  <span>{item.name}</span>
+                <div className="sidebar-link-content flex items-center space-x-3">
+                  <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                  <span className="sidebar-label">{item.name}</span>
                 </div>
                 {item.badge !== null && item.badge !== undefined && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
+                    className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
                       item.badgeColor || 'bg-white/20 text-white'
                     }`}
                   >
@@ -260,15 +263,16 @@ export default function Sidebar({
 
       {/* Analytics & Governance Group (Component 4 - Sahas) */}
       <div>
-        <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+        <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
           <span>Analytics & Governance</span>
         </div>
-        <nav className="space-y-1.5">
+        <nav className="sidebar-links space-y-1.5">
           {adminNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.path}
+                title={item.name}
                 to={item.path}
                 onClick={() => {
                   if (isMobile && onCloseMobile) {
@@ -276,20 +280,20 @@ export default function Sidebar({
                   }
                 }}
                 className={({ isActive }) =>
-                  `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                  `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
                     isActive
                       ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
                       : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
                   }`
                 }
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className="w-4 h-4 transition-colors" />
-                  <span>{item.name}</span>
+                <div className="sidebar-link-content flex items-center space-x-3">
+                  <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                  <span className="sidebar-label">{item.name}</span>
                 </div>
                 {item.badge !== null && item.badge !== undefined && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
+                    className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
                       item.badgeColor || 'bg-white/20 text-white'
                     }`}
                   >
@@ -346,16 +350,16 @@ export default function Sidebar({
     <>
       {/* Desktop Sidebar with Smooth Collapse / Expand Animation */}
       <aside
-        className={`bg-emerald-50/80 backdrop-blur-md border-r border-emerald-200/90 min-h-[calc(100vh-4rem)] flex-col justify-between hidden md:flex shadow-xs transition-all duration-300 ease-in-out shrink-0 ${
+        className={`app-sidebar bg-emerald-50/80 backdrop-blur-md border-r border-emerald-200/90 min-h-[calc(100vh-4rem)] flex-col justify-between hidden md:flex shadow-xs transition-all duration-300 ease-in-out shrink-0 ${
           isOpen
             ? 'w-64 p-4 opacity-100'
             : 'w-0 p-0 opacity-0 overflow-hidden border-r-0 pointer-events-none'
         }`}
       >
-        <div className="w-56">
+        <div className="sidebar-inner w-56">
           {renderNav(false)}
         </div>
-        <div className="w-56 mt-6">
+        <div className="sidebar-inner w-56 mt-6">
           {renderFooter()}
         </div>
       </aside>
@@ -364,14 +368,14 @@ export default function Sidebar({
       {isMobileOpen && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-emerald-950/60 backdrop-blur-xs transition-opacity md:hidden animate-in fade-in duration-200"
+          className="sidebar-backdrop fixed inset-0 z-40 bg-emerald-950/60 backdrop-blur-xs transition-opacity md:hidden animate-in fade-in duration-200"
           aria-hidden="true"
         />
       )}
 
       {/* Mobile Slide-Out Drawer */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-emerald-50/98 via-white/95 to-teal-50/95 backdrop-blur-xl border-r border-emerald-300 p-5 shadow-2xl flex flex-col justify-between md:hidden transition-transform duration-300 ease-out ${
+        className={`mobile-sidebar fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-emerald-50/98 via-white/95 to-teal-50/95 backdrop-blur-xl border-r border-emerald-300 p-5 shadow-2xl flex flex-col justify-between md:hidden transition-transform duration-300 ease-out ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

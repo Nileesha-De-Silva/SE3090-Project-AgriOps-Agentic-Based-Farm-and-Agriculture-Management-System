@@ -8,8 +8,10 @@ import AskAgent from './AskAgent'
 import DecimalInput from './DecimalInput'
 import InventoryItemForm from './InventoryItemForm'
 import { SupplierForm, SupplierOffers } from './SupplierForms'
+import { MoreHorizontal, Search } from 'lucide-react'
 
 const empty = () => ({ items: [], suppliers: [], movements: [], recommendations: [], purchases: [] })
+const formatNumber = value => new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(Number(value || 0))
 function LiveDialog({ title, busy, onClose, children }) {
   const ref = useRef(null)
   useEffect(() => { ref.current.showModal() }, [])
@@ -93,6 +95,7 @@ function InventoryWorkspace() {
   }
   const newItem = { id: 'new-item', name: '', category: 'Other', unitOfMeasurement: 'kg', currentStock: 0, minimumStockLevel: 0, unitCost: 0 }
   const editData = modal?.type === 'add-item' ? { ...data, items: [...data.items, newItem] } : data
+  const filteredItems = data.items.filter(i => `${i.name} ${i.category}`.toLowerCase().includes(search.toLowerCase()))
   return <main className="live-workspace">
     <header className="page-heading"><div><h1>Inventory</h1><p>Check stock levels, suppliers and recent movements.</p></div></header>
     {error && <div className="form-error" role="alert"><p>{error}</p>{!loaded && <button className="button subtle" disabled={busy} onClick={connect}>Try again</button>}</div>}
@@ -103,11 +106,11 @@ function InventoryWorkspace() {
       {stale && <p className="demand-note">Editing is paused until records refresh successfully.</p>}
       {page === 'inventory' && <section className="panel">
         <div className="panel-heading"><h2>Inventory</h2>{manager && <button className="button primary" disabled={!canWrite} onClick={() => setModal({ type: 'add-item' })}>Add item</button>}</div>
-        <label className="live-search">Search inventory<input value={search} onChange={e => setSearch(e.target.value)} /></label>
-        <div className="table-scroll"><table><thead><tr><th>Item</th><th>Stock / minimum</th><th>Valuation</th><th>Actions</th></tr></thead><tbody>{data.items.filter(i => `${i.name} ${i.category}`.toLowerCase().includes(search.toLowerCase())).map(i => <tr key={i.id}>
-          <td>{i.name}<small className="cell-small">{i.category}</small></td><td>{i.currentStock} / {i.minimumStockLevel} {i.unitOfMeasurement}</td><td>{money(i.unitCost)}</td>
-          <td><div className="live-actions">{manager && <button className="button subtle" disabled={!canWrite} onClick={() => setModal({ type: 'edit-item', id: i.id })}>Edit item</button>}{manager && <button className="button subtle" disabled={!canWrite} onClick={() => setModal({ type: 'offers', id: i.id })}>Supplier offers</button>}{permissions.canUse && <button className="button subtle" disabled={!canMove} onClick={() => setModal({ type: 'movement', id: i.id })}>Record movement</button>}<button className="button subtle" disabled={busy} onClick={() => setModal({ type: 'history', id: i.id })}>History</button></div></td>
-        </tr>)}</tbody></table></div>{!data.items.length && <p className="empty">No inventory items in the database.</p>}
+        <label className="live-search"><span className="search-label"><Search aria-hidden="true" size={16} /> Search inventory</span><input placeholder="Search by item or category" value={search} onChange={e => setSearch(e.target.value)} /></label>
+        <div className="table-scroll"><table className="inventory-table"><thead><tr><th>Item</th><th className="numeric-cell">Stock / minimum</th><th className="numeric-cell">Valuation</th><th className="actions-cell">Actions</th></tr></thead><tbody>{filteredItems.map(i => <tr key={i.id}>
+          <td><span className="item-name">{i.name}</span><small className="cell-small">{i.category}</small></td><td className="numeric-cell"><span>{formatNumber(i.currentStock)} / {formatNumber(i.minimumStockLevel)} {i.unitOfMeasurement}</span>{Number(i.currentStock) < Number(i.minimumStockLevel) && <span className="stock-low">Low stock</span>}</td><td className="numeric-cell">{money(i.unitCost)}</td>
+          <td className="actions-cell"><details className="actions-menu"><summary className="button subtle" aria-label={`Actions for ${i.name}`}><MoreHorizontal size={17} aria-hidden="true" /></summary><div className="actions-menu-popover">{manager && <button className="button subtle" disabled={!canWrite} onClick={() => setModal({ type: 'edit-item', id: i.id })}>Edit item</button>}{manager && <button className="button subtle" disabled={!canWrite} onClick={() => setModal({ type: 'offers', id: i.id })}>Supplier offers</button>}{permissions.canUse && <button className="button subtle" disabled={!canMove} onClick={() => setModal({ type: 'movement', id: i.id })}>Record movement</button>}<button className="button subtle" disabled={busy} onClick={() => setModal({ type: 'history', id: i.id })}>History</button></div></details></td>
+        </tr>)}</tbody></table></div>{!filteredItems.length && <p className="empty">{data.items.length ? 'No inventory items match your search.' : 'No inventory items in the database.'}</p>}
       </section>}
       {page === 'suppliers' && <section className="panel"><div className="panel-heading"><h2>Suppliers</h2>{manager && <button className="button primary" disabled={!canWrite} onClick={() => setModal({ type: 'supplier' })}>Register supplier</button>}</div><div className="supplier-grid">{data.suppliers.map(s => <article className="supplier-card" key={s.id}>
         <h3>{s.name}</h3><p>{s.contactPerson || 'No contact person'}</p><p>{s.email || 'No email'} · {s.phone || 'No phone'}</p><p>{s.address || 'No address'}</p>

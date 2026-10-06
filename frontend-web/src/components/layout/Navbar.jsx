@@ -9,15 +9,15 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
   const { user, logout } = useAuth();
 
   return (
-    <header className="bg-gradient-to-r from-emerald-950 via-forest-950 to-teal-950 backdrop-blur-md border-b border-emerald-800/80 sticky top-0 z-30 shadow-md shadow-emerald-950/20 text-white">
+    <header className="app-header bg-gradient-to-r from-emerald-950 via-forest-950 to-teal-950 backdrop-blur-md border-b border-emerald-800/80 sticky top-0 z-30 shadow-md shadow-emerald-950/20 text-white">
       {/* Top emerald ambient brandline */}
-      <div className="h-1 bg-gradient-to-r from-emerald-500 via-green-400 via-teal-400 to-emerald-500 w-full" />
+      <div className="app-header-accent h-1 bg-gradient-to-r from-emerald-500 via-green-400 via-teal-400 to-emerald-500 w-full" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
+      <div className="header-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="header-row flex justify-between h-16 items-center">
           
           {/* Brand Logo, System Title & 3 Horizontal Line Notation Button */}
-          <div className="flex items-center space-x-2.5 sm:space-x-3.5">
+          <div className="header-brand flex items-center space-x-2.5 sm:space-x-3.5">
             {/* 3 Horizontal Line Notation (Hamburger Menu) Button */}
             <button
               type="button"
@@ -49,10 +49,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
           </div>
 
           {/* Status Indicators & Alerts */}
-          <div className="flex items-center space-x-3.5">
+          <div className="header-right flex items-center space-x-3.5">
             
             {/* System Status Badges */}
-            <div className="hidden md:flex items-center space-x-2 text-xs">
+            <div className="status-chips hidden md:flex items-center space-x-2 text-xs">
               <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-900/60 text-emerald-200 border border-emerald-700/60 shadow-2xs font-medium">
                 <Database className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Backend Core</span>
@@ -91,7 +91,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
 
             {/* User Profile Avatar / Sign In */}
             {user ? (
-              <div className="flex items-center space-x-2.5 pl-3 border-l border-emerald-800/80">
+              <div className="header-account flex items-center space-x-2.5 pl-3 border-l border-emerald-800/80">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center text-xs font-bold ring-2 ring-emerald-400/30 shadow-xs">
                   {(user.username || 'U').slice(0, 2).toUpperCase()}
                 </div>
