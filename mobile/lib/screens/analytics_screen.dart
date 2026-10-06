@@ -85,7 +85,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: approve ? Colors.green : Colors.red,
+            backgroundColor: approve ? AppTheme.primaryGreen : Colors.red,
             content: Text(approve ? 'Intervention Approved & Task Scheduled!' : 'Intervention Rejected.'),
           ),
         );
@@ -107,7 +107,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       case 'MEDIUM':
         return Colors.amber.shade800;
       default:
-        return Colors.green.shade700;
+        return AppTheme.primaryGreen;
     }
   }
 
@@ -340,7 +340,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                           Expanded(
                                             child: ElevatedButton(
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.green,
+                                                backgroundColor: AppTheme.primaryGreen,
                                                 foregroundColor: Colors.white,
                                               ),
                                               onPressed: () => _decideIntervention(true),
@@ -371,7 +371,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                   _sentinelReport!.finalOutcome!,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: _sentinelReport!.approvalStatus == 'approved' ? Colors.green : Colors.red,
+                                    color: _sentinelReport!.approvalStatus == 'approved' ? AppTheme.primaryGreen : Colors.red,
                                   ),
                                 ),
                               ],

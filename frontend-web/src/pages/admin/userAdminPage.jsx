@@ -63,7 +63,7 @@ export default function UsersAdminPage() {
           {(error.includes("401") || error.includes("403") || error.includes("failed with status") || error.includes("token")) && (
             <p style={{ marginTop: "0.5rem", marginBottom: 0 }}>
               Administrator permissions are required to view and manage users. Please{" "}
-              <Link to="/login" style={{ fontWeight: 700, color: "#065f46", textDecoration: "underline" }}>
+              <Link to="/login" style={{ fontWeight: 700, color: "#285A48", textDecoration: "underline" }}>
                 Sign In
               </Link>{" "}
               using the administrator account (<strong>admin</strong> / <strong>ChangeMe123!</strong>).

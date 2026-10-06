@@ -1,61 +1,61 @@
-/*
- * AgriOps AI — shared design tokens
- * Plain CSS custom properties, consumed by all components in
- * components/common/ and migrated pages.
- */
-
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/fonts/BricolageGrotesque-Variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Source Sans 3';
+  src: url('/fonts/SourceSans3-Variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+}
+/* Shared AgriOps design tokens: web components and Tailwind use one palette. */
 :root {
-  /* ---- Brand green ---- */
-  --color-primary: #4a7c59;         /* natural, mid-tone green — primary actions */
-  --color-primary-hover: #3d6849;   /* darker shade for primary hover/active */
-  --color-secondary: #7fa88b;       /* soft secondary green — accents, hover states */
-  --color-secondary-hover: #6d9679;
+  --brand-ink: #091413;
+  --brand-forest: #285A48;
+  --brand-green: #408A71;
+  --brand-mint: #B0E4CC;
 
-  /* ---- Backgrounds ---- */
-  --color-bg: #f7f8f5;              /* app / page background, off-white */
-  --color-bg-alt: #ffffff;          /* card / surface background, white */
-  --color-bg-light-green: #e7f0e9;  /* subtle green background — badges, highlighted rows */
+  --color-primary: var(--brand-forest);
+  --color-primary-hover: var(--brand-ink);
+  --color-secondary: var(--brand-green);
+  --color-secondary-hover: var(--brand-forest);
+  --color-bg: #F2FAF6;
+  --color-bg-alt: #FFFFFF;
+  --color-bg-light-green: #E0F3E9;
+  --color-text: var(--brand-ink);
+  --color-text-muted: #4C655A;
+  --color-text-on-primary: #FFFFFF;
+  --color-border: #D1E5DB;
+  --color-border-strong: var(--brand-mint);
+  --shadow-card: 0 1px 3px rgba(9,20,19,0.08), 0 1px 2px rgba(9,20,19,0.06);
 
-  /* ---- Text ---- */
-  --color-text: #2b2e2a;            /* dark charcoal — primary text */
-  --color-text-muted: #6b7268;      /* secondary / helper text */
-  --color-text-on-primary: #ffffff; /* text on solid green surfaces */
+  --color-success: var(--brand-forest);
+  --color-success-bg: #E0F3E9;
+  --color-info: #4A6B7C;
+  --color-info-bg: #E6EDF0;
+  --color-neutral: #4C655A;
+  --color-neutral-bg: #EDF2EF;
+  --color-error: #A13D3D;
+  --color-error-bg: #FBE9E9;
+  --color-warning: #92650C;
+  --color-warning-bg: #F9ECD3;
 
-  /* ---- Borders & shadows ---- */
-  --color-border: #dde3dc;
-  --color-border-strong: #c3ccc2;
-  --shadow-card: 0 1px 3px rgba(43, 46, 42, 0.08), 0 1px 2px rgba(43, 46, 42, 0.06);
-
-  /* ---- Status colors (used by Badge, ErrorBanner, etc.) ---- */
-  --color-success: #4a7c59;
-  --color-success-bg: #e7f0e9;
-  --color-info: #4a6b7c;
-  --color-info-bg: #e6edf0;
-  --color-neutral: #6b7268;
-  --color-neutral-bg: #ececea;
-  --color-error: #a13d3d;
-  --color-error-bg: #fbe9e9;
-  --color-warning: #92650c;         /* amber — used sparingly, e.g. approval-pending states */
-  --color-warning-bg: #f9ecd3;
-
-  /* ---- Spacing scale ---- */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
   --space-2xl: 48px;
-
-  /* ---- Radius ---- */
   --radius-sm: 4px;
   --radius: 8px;
   --radius-lg: 12px;
   --radius-pill: 999px;
-
-  /* ---- Motion ---- */
   --transition-fast: 150ms ease;
 
-  /* ---- Type ---- */
-  --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
+  --font-family-base: 'Source Sans 3', system-ui, sans-serif;
+  --font-family-heading: 'Bricolage Grotesque', system-ui, sans-serif;
 }

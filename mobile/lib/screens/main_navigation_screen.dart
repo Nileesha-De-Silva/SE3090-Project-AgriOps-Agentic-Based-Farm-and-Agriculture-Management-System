@@ -377,7 +377,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.analytics, color: Colors.teal),
+              leading: const Icon(Icons.analytics, color: AppTheme.secondaryGreen),
               title: const Text('Production & Sentinel (Comp 4)'),
               subtitle: const Text('Yield Trends & AI Operations Sentinel'),
               trailing: const Icon(Icons.chevron_right),
