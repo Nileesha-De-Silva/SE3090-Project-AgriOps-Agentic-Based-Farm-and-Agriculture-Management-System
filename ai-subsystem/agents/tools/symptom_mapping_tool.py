@@ -10,12 +10,12 @@ from langchain_core.tools import tool
 AGRI_HANDBOOK = [
     {
         "crop": "Tomato",
-        "keywords": ["yellow", "pale", "chlorosis"],
-        "issue": "Nitrogen / Iron Chlorosis",
+        "keywords": ["yellow", "pale", "chlorosis", "vein", "veins", "curling", "margin", "margins"],
+        "issue": "Magnesium / Nitrogen Nutrient Deficiency (Chlorosis)",
         "category": "NutrientDeficiency",
         "risk": "Medium",
         "recommended_task": "Fertilization",
-        "treatment": "Apply NPK 20-20-20 foliar spray at 2.5 kg/ha. Test soil pH within 48 hours."
+        "treatment": "Apply NPK 20-20-20 foliar spray at 2.5 kg/ha with micronutrient booster. Test soil pH within 48 hours."
     },
     {
         "crop": "Tomato",

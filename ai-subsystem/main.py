@@ -75,10 +75,10 @@ def analyze_crop(request: AskRequest):
             "field_id": request.field_id,
             "crop_variety": request.crop_variety,
             "growth_stage": request.growth_stage,
-            "observation": request.observation,
+            "observation": request.get_observation(),
             "image_url": request.image_url or "",
         }
-        response = run_agent2_workflow(initial_input, thread_id=request.thread_id)
+        response = run_agent2_workflow(initial_input, thread_id=request.get_thread_id())
         response.seconds = round(time.time() - start_time, 2)
         return response
     except Exception as ex:

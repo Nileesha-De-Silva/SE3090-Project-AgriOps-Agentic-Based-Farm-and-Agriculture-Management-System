@@ -31,6 +31,7 @@ class TaskApi {
     String? priority,
     String? fieldId,
     String? workerId,
+    http.Client? client,
   }) async {
     final queryParams = <String, String>{};
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
@@ -42,13 +43,15 @@ class TaskApi {
       queryParameters: queryParams.isNotEmpty ? queryParams : null,
     );
 
-    final res = await http.get(uri);
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.get(uri);
     final list = await _handleResponseList(res);
     return list.map((json) => FarmTask.fromJson(json as Map<String, dynamic>)).toList();
   }
 
-  static Future<FarmTask> getTaskById(String id) async {
-    final res = await http.get(Uri.parse('$baseUrl/tasks/$id'));
+  static Future<FarmTask> getTaskById(String id, {http.Client? client}) async {
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.get(Uri.parse('$baseUrl/tasks/$id'));
     final data = await _handleResponse(res);
     return FarmTask.fromJson(data);
   }
@@ -60,6 +63,7 @@ class TaskApi {
     required String priority,
     required String description,
     required DateTime targetDate,
+    http.Client? client,
   }) async {
     final payload = {
       'fieldId': fieldId,
@@ -70,7 +74,8 @@ class TaskApi {
       'targetDate': targetDate.toIso8601String(),
     };
 
-    final res = await http.post(
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.post(
       Uri.parse('$baseUrl/tasks'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
@@ -84,6 +89,7 @@ class TaskApi {
     String newStatus, {
     String? remarks,
     String? userId,
+    http.Client? client,
   }) async {
     final payload = {
       'newStatus': newStatus,
@@ -91,7 +97,8 @@ class TaskApi {
       'userId': userId,
     };
 
-    final res = await http.patch(
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.patch(
       Uri.parse('$baseUrl/tasks/$id/status'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
@@ -105,6 +112,7 @@ class TaskApi {
     required String evidencePhotoUrl,
     String? remarks,
     String? workerUserId,
+    http.Client? client,
   }) async {
     final payload = {
       'evidencePhotoUrl': evidencePhotoUrl,
@@ -112,7 +120,8 @@ class TaskApi {
       'workerUserId': workerUserId,
     };
 
-    final res = await http.post(
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.post(
       Uri.parse('$baseUrl/tasks/$id/evidence'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
@@ -126,6 +135,7 @@ class TaskApi {
     required bool isApproved,
     String? remarks,
     String? managerUserId,
+    http.Client? client,
   }) async {
     final payload = {
       'isApproved': isApproved,
@@ -133,7 +143,8 @@ class TaskApi {
       'managerUserId': managerUserId,
     };
 
-    final res = await http.post(
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.post(
       Uri.parse('$baseUrl/tasks/$id/verify'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
@@ -142,8 +153,9 @@ class TaskApi {
     return FarmTask.fromJson(data);
   }
 
-  static Future<List<TaskHistoryItem>> getTaskHistory(String id) async {
-    final res = await http.get(Uri.parse('$baseUrl/tasks/$id/history'));
+  static Future<List<TaskHistoryItem>> getTaskHistory(String id, {http.Client? client}) async {
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.get(Uri.parse('$baseUrl/tasks/$id/history'));
     final list = await _handleResponseList(res);
     return list.map((json) => TaskHistoryItem.fromJson(json as Map<String, dynamic>)).toList();
   }

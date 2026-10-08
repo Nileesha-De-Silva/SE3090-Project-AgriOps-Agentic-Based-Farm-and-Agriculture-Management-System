@@ -34,6 +34,7 @@ class CropAnalysisApi {
     required String observationText,
     String? imageUrl,
     String? submittedByUserId,
+    http.Client? client,
   }) async {
     final payload = {
       'fieldId': fieldId,
@@ -41,10 +42,11 @@ class CropAnalysisApi {
       'growthStage': growthStage,
       'observationText': observationText,
       if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
-      'submittedByUserId': ?submittedByUserId,
+      if (submittedByUserId != null) 'submittedByUserId': submittedByUserId,
     };
 
-    final res = await http.post(
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.post(
       Uri.parse('$baseUrl/cropanalysis'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
@@ -53,14 +55,16 @@ class CropAnalysisApi {
     return CropAnalysisAssessment.fromJson(data);
   }
 
-  static Future<CropAnalysisAssessment> getAssessmentById(String id) async {
-    final res = await http.get(Uri.parse('$baseUrl/cropanalysis/$id'));
+  static Future<CropAnalysisAssessment> getAssessmentById(String id, {http.Client? client}) async {
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.get(Uri.parse('$baseUrl/cropanalysis/$id'));
     final data = await _handleResponse(res);
     return CropAnalysisAssessment.fromJson(data);
   }
 
-  static Future<List<CropAnalysisAssessment>> getPendingApprovals() async {
-    final res = await http.get(Uri.parse('$baseUrl/cropanalysis/pending'));
+  static Future<List<CropAnalysisAssessment>> getPendingApprovals({http.Client? client}) async {
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.get(Uri.parse('$baseUrl/cropanalysis/pending'));
     final list = await _handleResponseList(res);
     return list.map((json) => CropAnalysisAssessment.fromJson(json as Map<String, dynamic>)).toList();
   }
@@ -69,13 +73,15 @@ class CropAnalysisApi {
     String id, {
     String? comments,
     String? managerUserId,
+    http.Client? client,
   }) async {
     final payload = {
       'comments': comments ?? 'Approved via AgriOps Mobile',
-      'managerUserId': ?managerUserId,
+      if (managerUserId != null) 'managerUserId': managerUserId,
     };
 
-    final res = await http.post(
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.post(
       Uri.parse('$baseUrl/cropanalysis/$id/approve'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
@@ -88,13 +94,15 @@ class CropAnalysisApi {
     String id, {
     String? comments,
     String? managerUserId,
+    http.Client? client,
   }) async {
     final payload = {
       'comments': comments ?? 'Rejected via AgriOps Mobile',
-      'managerUserId': ?managerUserId,
+      if (managerUserId != null) 'managerUserId': managerUserId,
     };
 
-    final res = await http.post(
+    final httpClient = client ?? http.Client();
+    final res = await httpClient.post(
       Uri.parse('$baseUrl/cropanalysis/$id/reject'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),

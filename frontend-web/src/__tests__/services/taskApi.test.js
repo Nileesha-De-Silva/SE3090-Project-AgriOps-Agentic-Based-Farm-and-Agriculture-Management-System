@@ -79,4 +79,47 @@ describe('Task API Service (Component 2)', () => {
       expect.objectContaining({ newStatus: 'Completed' })
     );
   });
+
+  it('getTaskById fetches a single task by its identifier', async () => {
+    const singleTask = {
+      id: 'task-single-01',
+      title: 'Calibrate Soil pH Meters',
+      taskType: 'SoilTesting',
+      priority: 'Medium',
+      status: 'Pending',
+    };
+    api.get.mockResolvedValue({ data: singleTask });
+
+    const result = await taskApi.getTaskById('task-single-01');
+    expect(result.id).toBe('task-single-01');
+    expect(result.title).toBe('Calibrate Soil pH Meters');
+    expect(api.get).toHaveBeenCalledWith('/tasks/task-single-01');
+  });
+
+  it('assignWorker posts assignment to /tasks/{id}/assign endpoint', async () => {
+    api.post.mockResolvedValue({ data: { success: true } });
+
+    const result = await taskApi.assignWorker('task-101', 'w-10', 'Kasun Bandara');
+    expect(api.post).toHaveBeenCalledWith(
+      '/tasks/task-101/assign',
+      { workerId: 'w-10' }
+    );
+    expect(result.assignedWorkerId).toBe('w-10');
+    expect(result.assignedWorkerName).toBe('Kasun Bandara');
+  });
+
+  it('verifyTask posts verification outcome to /tasks/{id}/verify endpoint', async () => {
+    api.post.mockResolvedValue({ data: { success: true } });
+
+    const result = await taskApi.verifyTask('task-101', true, 'Verified and approved.');
+    expect(api.post).toHaveBeenCalledWith(
+      '/tasks/task-101/verify',
+      expect.objectContaining({
+        isApproved: true,
+        remarks: 'Verified and approved.',
+      })
+    );
+    expect(result.status).toBe('Completed');
+    expect(result.verificationFeedback).toBe('Verified and approved.');
+  });
 });

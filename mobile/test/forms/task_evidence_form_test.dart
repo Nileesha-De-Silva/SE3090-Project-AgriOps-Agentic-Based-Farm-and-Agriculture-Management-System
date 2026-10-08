@@ -43,5 +43,27 @@ void main() {
 
       expect(find.text('Please provide an evidence photo URL'), findsOneWidget);
     });
+
+    testWidgets('allows entering photo URL and completion remarks', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TaskEvidenceUploadScreen(task: mockTask),
+        ),
+      );
+
+      final textFields = find.byType(TextField);
+      expect(textFields, findsAtLeastNWidgets(2));
+
+      // Enter Photo URL in first textfield
+      await tester.enterText(textFields.first, 'https://storage.local/evidence1.jpg');
+      await tester.pump();
+
+      // Enter Remarks in second textfield
+      await tester.enterText(textFields.at(1), 'Foliage spraying completed without runoff.');
+      await tester.pump();
+
+      expect(find.text('https://storage.local/evidence1.jpg'), findsOneWidget);
+      expect(find.text('Foliage spraying completed without runoff.'), findsOneWidget);
+    });
   });
 }
