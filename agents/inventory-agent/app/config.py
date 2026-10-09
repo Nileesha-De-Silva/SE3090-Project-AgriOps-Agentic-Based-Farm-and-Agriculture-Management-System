@@ -23,7 +23,7 @@ class Settings:
         url = urlparse(self.backend_api_url)
         if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password or url.query or url.fragment:
             raise ValueError("BACKEND_API_URL must be an HTTP(S) URL without credentials/query/fragment.")
-        if url.scheme == "http" and url.hostname not in {"localhost", "127.0.0.1", "::1"}:
+        if url.scheme == "http" and url.hostname not in {"localhost", "127.0.0.1", "::1", "backend", "host.docker.internal"}:
             raise ValueError("Use HTTPS for a non-local backend.")
         if not 1 <= self.max_model_attempts <= 3:
             raise ValueError("MAX_MODEL_ATTEMPTS must be between 1 and 3.")
@@ -39,9 +39,10 @@ class Settings:
 
 def load_settings() -> Settings:
     load_dotenv(ROOT / ".env")
+    load_dotenv(ROOT.parent.parent / ".env")
     checkpoint = Path(os.getenv("CHECKPOINT_DB", "data/checkpoints.sqlite"))
     return Settings(
-        backend_api_url=os.getenv("BACKEND_API_URL", "http://localhost:5289/api").rstrip("/"),
+        backend_api_url=os.getenv("BACKEND_API_URL", "http://localhost:5286/api").rstrip("/"),
         backend_agent_token=os.getenv("BACKEND_AGENT_TOKEN", "").strip(),
         gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
         chat_model=os.getenv("CHAT_MODEL", "").strip(),

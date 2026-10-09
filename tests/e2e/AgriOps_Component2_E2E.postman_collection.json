@@ -1,0 +1,603 @@
+{
+  "info": {
+    "_postman_id": "c2-e2e-workflow-test-suite-001",
+    "name": "AgriOps Component 2 - End-to-End & Integration Test Suite",
+    "description": "Comprehensive E2E and Cross-Platform Integration test collection for Component 2 (Nileesha De Silva). Covers API Integration, Cross-Component Integration (C1 -> C2 -> C4), Complete Business Workflow (Scouting -> AI Gate -> Task -> Dispatch -> Execution -> Evidence Verification -> Audit), and Cross-Platform Client Simulation (Mobile Flutter Client & Web React Dashboard).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Phase 1: Cross-Component Setup (Component 1 Farm & Field)",
+      "item": [
+        {
+          "name": "01 - Create Farm (C1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Farm ID is returned\", function () {",
+                  "    pm.expect(jsonData.id).to.be.a('string');",
+                  "});",
+                  "pm.environment.set(\"farmId\", jsonData.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"E2E AgriOps Research Farm\",\n  \"location\": \"Sector 4 - Mahaweli Zone B\",\n  \"totalArea\": 25.5,\n  \"ownerId\": \"{{managerUserId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/farm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "farm"]
+            }
+          }
+        },
+        {
+          "name": "02 - Create Field (C1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Field ID is returned with correct Farm linkage\", function () {",
+                  "    pm.expect(jsonData.id).to.be.a('string');",
+                  "    pm.expect(jsonData.farmId).to.eql(pm.environment.get(\"farmId\"));",
+                  "});",
+                  "pm.environment.set(\"fieldId\", jsonData.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farmId\": \"{{farmId}}\",\n  \"fieldName\": \"Paddy Block Gamma-4\",\n  \"areaSize\": 10.2,\n  \"soilType\": \"ClayLoam\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/field",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "field"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 2: Workforce Onboarding & Qualification (Component 2)",
+      "item": [
+        {
+          "name": "03 - Onboard Field Worker (C2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Worker Profile Created with Zero Workload\", function () {",
+                  "    pm.expect(jsonData.id).to.be.a('string');",
+                  "    pm.expect(jsonData.activeWorkloadCount).to.eql(0);",
+                  "    pm.expect(jsonData.fullName).to.eql(\"Sunil Shantha\");",
+                  "});",
+                  "pm.environment.set(\"workerId\", jsonData.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{workerUserId}}\",\n  \"fullName\": \"Sunil Shantha\",\n  \"contactNumber\": \"+94771234567\",\n  \"employmentType\": \"FullTime\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workers"]
+            }
+          }
+        },
+        {
+          "name": "04 - Add Worker Skill Certification (C2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skillName\": \"PestDiagnostic\",\n  \"proficiencyLevel\": \"Expert\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workers/{{workerId}}/skills",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workers", "{{workerId}}", "skills"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 3: AI Crop Diagnostic Scouting & Gatekeeper Approval (C2 & AI)",
+      "item": [
+        {
+          "name": "05 - Mobile Scout Submits Crop Health Observation (Mobile Simulation)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Assessment Placed in PendingApproval Gate\", function () {",
+                  "    pm.expect(jsonData.id).to.be.a('string');",
+                  "    pm.expect(jsonData.status).to.eql(\"PendingApproval\");",
+                  "    pm.expect(jsonData.suggestedTaskType).to.eql(\"PestInspection\");",
+                  "});",
+                  "pm.environment.set(\"assessmentId\", jsonData.id);",
+                  "pm.environment.set(\"workflowId\", jsonData.workflowId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Mobile/1.0.0 (Android; Flutter)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fieldId\": \"{{fieldId}}\",\n  \"cropVariety\": \"BG 352 (Rice)\",\n  \"growthStage\": \"Tillering\",\n  \"observationText\": \"Rhizoctonia solani (Sheath Blight) oval lesions observed at water line\",\n  \"imageUrl\": \"https://cdn.agriops.local/scouting/sheath-blight-paddy4.jpg\",\n  \"submittedByUserId\": \"{{workerUserId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cropanalysis",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cropanalysis"]
+            }
+          }
+        },
+        {
+          "name": "06 - Web Dashboard Queries Pending Approvals Queue (Web Simulation)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var list = pm.response.json();",
+                  "pm.test(\"Submitted assessment is in pending queue\", function () {",
+                  "    var item = list.find(a => a.id === pm.environment.get(\"assessmentId\"));",
+                  "    pm.expect(item).to.not.be.undefined;",
+                  "    pm.expect(item.status).to.eql(\"PendingApproval\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cropanalysis/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cropanalysis", "pending"]
+            }
+          }
+        },
+        {
+          "name": "07 - Web Manager Approves Diagnostic -> Auto-Provisions Remediation Task (Web)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var task = pm.response.json();",
+                  "pm.test(\"Remediation Task Generated Successfully in Pending State\", function () {",
+                  "    pm.expect(task.id).to.be.a('string');",
+                  "    pm.expect(task.status).to.eql(\"Pending\");",
+                  "    pm.expect(task.fieldId).to.eql(pm.environment.get(\"fieldId\"));",
+                  "    pm.expect(task.taskType).to.eql(\"PestInspection\");",
+                  "});",
+                  "pm.environment.set(\"taskId\", task.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"managerUserId\": \"{{managerUserId}}\",\n  \"comments\": \"Approved AI recommendation. Complete foliar disease inspection.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cropanalysis/{{assessmentId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cropanalysis", "{{assessmentId}}", "approve"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 4: Workforce Matching & Dispatch Execution (C2)",
+      "item": [
+        {
+          "name": "08 - Dispatch Engine Worker Matching Recommendations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var workers = pm.response.json();",
+                  "pm.test(\"Qualified worker identified with PestDiagnostic skill\", function () {",
+                  "    var matched = workers.find(w => w.id === pm.environment.get(\"workerId\"));",
+                  "    pm.expect(matched).to.not.be.undefined;",
+                  "    pm.expect(matched.activeWorkloadCount).to.eql(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/workers/matched?taskType=PestInspection",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workers", "matched"],
+              "query": [
+                { "key": "taskType", "value": "PestInspection" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "09 - Assign Worker to Generated Remediation Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var assignment = pm.response.json();",
+                  "pm.test(\"Assignment created with Active status\", function () {",
+                  "    pm.expect(assignment.status).to.eql(\"Active\");",
+                  "    pm.expect(assignment.workerId).to.eql(pm.environment.get(\"workerId\"));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workerId\": \"{{workerId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "assign"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 5: Cross-Platform Field Execution & Evidence Verification Loop",
+      "item": [
+        {
+          "name": "10 - Mobile Worker Starts Task (Mobile Client)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var task = pm.response.json();",
+                  "pm.test(\"Task Status updated to InProgress\", function () {",
+                  "    pm.expect(task.status).to.eql(\"InProgress\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Mobile/1.0.0 (Android; Flutter)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"InProgress\",\n  \"userId\": \"{{workerUserId}}\",\n  \"remarks\": \"Foliar inspection initiated across block Gamma-4.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "11 - Mobile Worker Submits Evidence (Attempt 1 - Incomplete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var history = pm.response.json();",
+                  "pm.test(\"Task Status transitioned to PendingVerification\", function () {",
+                  "    pm.expect(history.newStatus).to.eql(\"PendingVerification\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Mobile/1.0.0 (Android; Flutter)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evidencePhotoUrl\": \"https://cdn.agriops.local/evidence/gamma4_inspection_pass1.jpg\",\n  \"remarks\": \"Partial inspection completed on eastern boundary rows.\",\n  \"workerUserId\": \"{{workerUserId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/evidence",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "evidence"]
+            }
+          }
+        },
+        {
+          "name": "12 - Web Manager Rejects Evidence with Rework Order (Web Dashboard)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var task = pm.response.json();",
+                  "pm.test(\"Task reverts to InProgress for rework\", function () {",
+                  "    pm.expect(task.status).to.eql(\"InProgress\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isApproved\": false,\n  \"managerUserId\": \"{{managerUserId}}\",\n  \"remarks\": \"Western border buffer zone was missed. Complete full inspection across all 10.2 hectares.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "verify"]
+            }
+          }
+        },
+        {
+          "name": "13 - Mobile Worker Resubmits Rectified Evidence (Attempt 2 - Complete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var history = pm.response.json();",
+                  "pm.test(\"Task returns to PendingVerification\", function () {",
+                  "    pm.expect(history.newStatus).to.eql(\"PendingVerification\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Mobile/1.0.0 (Android; Flutter)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evidencePhotoUrl\": \"https://cdn.agriops.local/evidence/gamma4_inspection_complete.jpg\",\n  \"remarks\": \"Western buffer zone and drain borders fully inspected.\",\n  \"workerUserId\": \"{{workerUserId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/evidence",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "evidence"]
+            }
+          }
+        },
+        {
+          "name": "14 - Web Manager Approves Evidence -> Task Completed (Web Dashboard)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var task = pm.response.json();",
+                  "pm.test(\"Task Status finalized as Completed\", function () {",
+                  "    pm.expect(task.status).to.eql(\"Completed\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isApproved\": true,\n  \"managerUserId\": \"{{managerUserId}}\",\n  \"remarks\": \"Inspection coverage verified satisfactory. Task signed off.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "verify"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 6: Component 4 Immutable Audit Trail Verification",
+      "item": [
+        {
+          "name": "15 - Verify Complete Task History & Audit Trail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var history = pm.response.json();",
+                  "pm.test(\"Full audit chain captured (> 5 events)\", function () {",
+                  "    pm.expect(history.length).to.be.at.least(5);",
+                  "});",
+                  "pm.test(\"Contains Creation transition\", function () {",
+                  "    var hasCreated = history.some(h => h.newStatus === 'Pending');",
+                  "    pm.expect(hasCreated).to.be.true;",
+                  "});",
+                  "pm.test(\"Contains Assignment transition\", function () {",
+                  "    var hasAssigned = history.some(h => h.newStatus === 'Assigned');",
+                  "    pm.expect(hasAssigned).to.be.true;",
+                  "});",
+                  "pm.test(\"Contains InProgress transition\", function () {",
+                  "    var hasInProgress = history.some(h => h.newStatus === 'InProgress');",
+                  "    pm.expect(hasInProgress).to.be.true;",
+                  "});",
+                  "pm.test(\"Contains Rework Rejection feedback\", function () {",
+                  "    var hasReject = history.some(h => h.previousStatus === 'PendingVerification' && h.newStatus === 'InProgress');",
+                  "    pm.expect(hasReject).to.be.true;",
+                  "});",
+                  "pm.test(\"Contains Final Completed transition\", function () {",
+                  "    var hasCompleted = history.some(h => h.newStatus === 'Completed');",
+                  "    pm.expect(hasCompleted).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "User-Agent", "value": "AgriOps-Web/1.0.0 (React/Vite)" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "history"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -56,7 +56,8 @@ class TestAgent2FastApiEndpoints(unittest.TestCase):
         self.assertEqual(data_ask["status"], "awaiting_approval")
         self.assertIsNotNone(data_ask["interrupt"])
         self.assertEqual(data_ask["thread_id"], thread_id)
-        self.assertIn("generate_diagnosis", data_ask["nodes"])
+        self.assertIn("diagnose", data_ask["nodes"])
+        self.assertIn("grade_assessment", data_ask["nodes"])
 
         # 2. Inspect thread in checkpointer before decision
         res_thread = self.client.get(f"/threads/{thread_id}")
@@ -75,8 +76,27 @@ class TestAgent2FastApiEndpoints(unittest.TestCase):
         data_resume = res_resume.json()
         self.assertEqual(data_resume["status"], "completed")
         self.assertIn("human_gate", data_resume["nodes"])
-        self.assertIn("dispatch_task", data_resume["nodes"])
+        self.assertIn("create_task", data_resume["nodes"])
         self.assertIn("APPROVED", data_resume["answer"])
+
+    def test_04_prd_sample_payload_http(self):
+        """POST /analyze with exact PRD Section 4 sample payload."""
+        payload = {
+            "workflow_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "field_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+            "crop_variety": "Tomato (Roma)",
+            "growth_stage": "Vegetative",
+            "observation_text": "Lower leaves show yellowing between veins, slight curling along margins.",
+            "image_url": "https://storage.agriops.ai/evidence/2026/08/fieldA_leaf01.jpg",
+            "submitted_by_user_id": "e2a14b58-091a-4d22-b5e1-0c58742e74d1",
+        }
+        res = self.client.post("/analyze", json=payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "completed")
+        self.assertEqual(data["suggested_task_type"], "Fertilization")
+        self.assertIn("Chlorosis", data["answer"])
+        self.assertEqual(data["thread_id"], "3fa85f64-5717-4562-b3fc-2c963f66afa6")
 
 
 if __name__ == "__main__":

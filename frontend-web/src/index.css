@@ -1,65 +1,50 @@
+@import './styles/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  color-scheme: light;
-}
-
+:root { font-family: var(--font-family-base); color-scheme: light; }
 body {
   margin: 0;
   min-height: 100vh;
-  background: #eef7f2;
-  color: #064e3b;
-  background-image: 
-    radial-gradient(at 10% 10%, rgba(167, 243, 208, 0.65) 0px, transparent 45%),
-    radial-gradient(at 90% 85%, rgba(153, 246, 228, 0.55) 0px, transparent 45%),
-    radial-gradient(at 50% 40%, rgba(209, 250, 229, 0.7) 0px, transparent 60%);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+  background-image: radial-gradient(at 0% 0%, rgba(176,228,204,0.25), transparent 55%);
   background-attachment: fixed;
 }
 
-/* Custom scrollbars for Kanban columns in Agri Green */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-heading);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  input, select, textarea, button { font: inherit; }
 }
 
-::-webkit-scrollbar-track {
-  background: #e2f5ea;
-  border-radius: 6px;
-}
+::selection { background: var(--brand-mint); color: var(--brand-ink); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg-light-green); border-radius: 6px; }
+::-webkit-scrollbar-thumb { background: var(--brand-green); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-forest); }
 
-::-webkit-scrollbar-thumb {
-  background: #6ee7b7;
-  border-radius: 6px;
-  border: 1px solid #a7f3d0;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
-}
-
-/* Agricultural Glass Card Utility */
 @layer components {
   .agri-glass-panel {
-    background: rgba(240, 253, 244, 0.94);
+    background: rgba(242,250,246,0.96);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(110, 231, 183, 0.6);
+    border: 1px solid var(--brand-mint);
   }
-
-  .agri-gradient-header {
-    background: linear-gradient(135deg, #064e3b 0%, #065f46 60%, #047857 100%);
-  }
-
+  .agri-gradient-header { background: linear-gradient(135deg, #091413, #285A48); }
   .agri-badge-pulse {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-    animation: agriPulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    box-shadow: 0 0 0 0 rgba(64,138,113,0.5);
+    animation: agriPulse 2s infinite cubic-bezier(0.66,0,0,1);
   }
 }
-
-@keyframes agriPulse {
-  to {
-    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-  }
-}
+@keyframes agriPulse { to { box-shadow: 0 0 0 8px rgba(64,138,113,0); } }
+@media (prefers-reduced-motion: reduce) { .agri-badge-pulse { animation: none; } }

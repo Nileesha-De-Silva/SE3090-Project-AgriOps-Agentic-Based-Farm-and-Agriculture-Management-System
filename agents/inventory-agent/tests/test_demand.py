@@ -1,4 +1,9 @@
 """Offline demand checks. No Gemini calls or backend writes."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from copy import deepcopy
 from datetime import datetime, timezone
 from uuid import uuid4

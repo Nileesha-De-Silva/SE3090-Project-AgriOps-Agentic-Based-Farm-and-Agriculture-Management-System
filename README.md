@@ -1,6 +1,18 @@
-# AgriOpsAI – Component 3
+# AgriOps AI – Integrated Full-Stack & Agentic AI Farm Management System
 
-### Mobile inventory client and internal agent routing
+<div align="center">
+
+[![AgriOps CI/CD Pipeline](https://github.com/Nileesha-De-Silva/SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nileesha-De-Silva/SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System/actions/workflows/ci-cd.yml)
+[![Tests Passing](https://img.shields.io/badge/Tests-151%20Passed%20(100%25)-brightgreen?style=flat&logo=checkmarx&logoColor=white)](https://github.com/Nileesha-De-Silva/SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System/actions/workflows/ci-cd.yml)
+[![.NET](https://img.shields.io/badge/.NET-10.0%20(82%20Tests)-512BD4?style=flat&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![React](https://img.shields.io/badge/React%2018-Vitest%20(38%20Tests)-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev/)
+[![Flutter](https://img.shields.io/badge/Flutter-3.x%20(22%20Tests)-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17%2B-336791?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
+
+</div>
+
+> An intelligent, end-to-end farm operations and decision-support ecosystem integrating mobile field execution, administrative web governance, a centralized ASP.NET Core REST API, PostgreSQL relational persistence, and a multi-agent AI subsystem with human-in-the-loop validation.
 
 The Flutter client is in [`mobile/`](mobile/README.md). It includes inventory
 search, stock movements/history, supplier contacts, real agent submission/status,
@@ -114,6 +126,53 @@ characters. The item must be below its minimum and have an available supplier
 link. Stock, minimum, unit, price and lead time are captured by the server.
 Estimated cost is computed using decimal arithmetic and rounded to two places.
 
+<<<<<<< HEAD
+WeatherRecords
+AuditLogs
+
+---
+
+## 🧪 Automated Testing & Continuous Integration (CI/CD)
+
+The platform is fortified with an automated testing ecosystem covering **100% of core layers** across Component 1 and Component 2:
+
+| Test Suite / Layer | Framework | Tests | Purpose | Status |
+| :--- | :--- | :---: | :--- | :---: |
+| **`AgriOps.Tests` (Backend Unit)** | xUnit (.NET 10) | **65** | Unit tests for domain calculations (growth stages), controller DTO projections, worker skill matching algorithms, and task state machines. | **PASSED (100%)** |
+| **`AgriOps.IntegrationTests`** | xUnit + PostgreSQL | **17** | End-to-end integration tests over in-process Kestrel HTTP against a dedicated PostgreSQL database, testing real API routing, AI approval gates, and database persistence. | **PASSED (100%)** |
+| **`frontend-web` (React Dashboard)** | Vitest + React Testing Library | **38** | Component rendering, role-based navigation, farm/field forms, task modals, AI approval cards, and mock API integration. | **PASSED (100%)** |
+| **`mobile` (Flutter Client)** | Flutter Test | **22** | Mobile widget rendering, navigation bar, task status transitions, evidence submission forms, and theme styling. | **PASSED (100%)** |
+| **`ai-subsystem` (LangGraph Agent 2)** | Pytest | **9** | LangGraph StateGraph, tool schemas, dosage calculations, query rewriting, human-in-the-loop interruption, and FastAPI endpoints. | **PASSED (100%)** |
+| **Total Automated Suite** | All Layers | **151** | Comprehensive end-to-end regression safety across backend, web, mobile, and AI agent. | **151 / 151 PASSED** |
+
+### Running Tests Locally
+
+```powershell
+# 1. Run Backend .NET Tests (82 tests):
+dotnet test AgriOps.sln --logger "console;verbosity=normal"
+
+# 2. Run React Web Frontend Tests (38 tests):
+cd frontend-web
+npm test
+cd ..
+
+# 3. Run Flutter Mobile Tests (22 tests) & Analyzer:
+cd mobile
+flutter test
+flutter analyze
+cd ..
+
+# 4. Run AI Agent Subsystem Tests (9 tests):
+.venv\Scripts\pytest ai-subsystem\tests
+```
+
+### GitHub Actions CI/CD Pipeline
+- **Workflow File**: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
+- **Continuous Integration (CI)**: Automatically spins up an ephemeral PostgreSQL 17 container on every `push` and `pull_request` to `main` and `development`, runs code formatting checks, builds the solution, and executes all automated backend, web, and mobile tests.
+- **Continuous Delivery (CD)**: Packages the release binary, creates Docker container artifacts, and manages staging and production deployment steps.
+
+
+=======
 The same run/item and identical payload returns the original proposal. Changed
 payload for that run or another pending proposal for the item returns 409.
 The agent must reuse its run ID on retries. Run IDs are correlation identifiers,
@@ -191,3 +250,4 @@ gateway. Start its Vite server with `npm run dev`; there is no demo mode. See
 see [Android setup](mobile/README.md). Both use existing manager tokens during
 development until the group integrates shared login. Neither client contains
 Gemini or agent-service credentials.
+>>>>>>> origin/development2

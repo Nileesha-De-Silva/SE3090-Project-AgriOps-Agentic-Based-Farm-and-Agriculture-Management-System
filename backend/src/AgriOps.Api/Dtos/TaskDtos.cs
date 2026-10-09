@@ -4,18 +4,20 @@ using System.Collections.Generic;
 namespace AgriOps.Api.Dtos;
 
 public record CreateTaskDto(
-    Guid FieldId,
-    Guid CropSeasonId,
+    Guid? FieldId,
+    Guid? CropSeasonId,
+    string? Title,
     string TaskType,
     string Priority,
     string Description,
-    DateTime TargetDate
+    DateTime? TargetDate
 );
 
 public record TaskResponseDto(
     Guid Id,
-    Guid FieldId,
-    Guid CropSeasonId,
+    Guid? FieldId,
+    Guid? CropSeasonId,
+    string? Title,
     string TaskType,
     string Priority,
     string Description,

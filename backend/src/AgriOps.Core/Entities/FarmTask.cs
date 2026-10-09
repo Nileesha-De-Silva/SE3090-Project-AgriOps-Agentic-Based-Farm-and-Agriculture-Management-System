@@ -6,8 +6,9 @@ namespace AgriOps.Core.Entities;
 public class FarmTask
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid FieldId { get; set; } // FK to Component 1 Field
-    public Guid CropSeasonId { get; set; } // FK to Component 1 CropSeason
+    public string? Title { get; set; }
+    public Guid? FieldId { get; set; } // FK to Component 1 Field
+    public Guid? CropSeasonId { get; set; } // FK to Component 1 CropSeason
     public string TaskType { get; set; } = string.Empty; // Watering, Fertilization, Weeding, PestInspection, CropMonitoring, Harvesting, EquipmentMaintenance
     public string Priority { get; set; } = "Medium"; // Low, Medium, High, Critical
     public string Description { get; set; } = string.Empty;

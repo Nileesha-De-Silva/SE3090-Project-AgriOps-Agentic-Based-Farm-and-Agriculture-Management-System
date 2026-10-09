@@ -1,44 +1,70 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'widgets/app_theme.dart';
+import 'screens/main_navigation_screen.dart';
+import 'api/api_config.dart';
 import 'api.dart';
 import 'workspace.dart';
 import 'screens.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  const address = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:5289/api/');
-  try {
-    final workspace = Workspace(Api(address, allowLocalHttp: kDebugMode));
-    runApp(AgriOpsApp(workspace: workspace));
-    workspace.restore();
-  } catch (_) {
-    runApp(const MaterialApp(home: Scaffold(body: Center(child: Padding(
-      padding: EdgeInsets.all(24), 
-      child: Text('Configure API_BASE_URL with your HTTPS backend URL ending in /api/. Local HTTP is allowed only in debug builds.'),
-    )))));
-  }
+  runApp(const AgriOpsApp());
 }
 
-class AgriOpsApp extends StatelessWidget {
-  final Workspace workspace;
-  const AgriOpsApp({super.key, required this.workspace});
-  
+class AgriOpsApp extends StatefulWidget {
+  final Workspace? workspace;
+  const AgriOpsApp({super.key, this.workspace});
+
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'AgriOps', 
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      useMaterial3: true, 
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff356449)),
-      scaffoldBackgroundColor: const Color(0xfff5f7f1),
-      inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
-      appBarTheme: const AppBarTheme(backgroundColor: Color(0xfff5f7f1))
-    ),
-    home: ListenableBuilder(
-      listenable: workspace, 
-      builder: (context, _) => workspace.connected
-        ? HomeScreen(workspace: workspace) 
-        : ConnectScreen(workspace: workspace)
-    ),
-  );
+  State<AgriOpsApp> createState() => _AgriOpsAppState();
+}
+
+class _AgriOpsAppState extends State<AgriOpsApp> {
+  Workspace? _localWorkspace;
+
+  Workspace get _activeWorkspace {
+    if (widget.workspace != null) return widget.workspace!;
+    if (_localWorkspace != null) return _localWorkspace!;
+    String url = ApiConfig.baseUrl;
+    if (!url.endsWith('/')) url = '$url/';
+    final api = Api(url, allowLocalHttp: true);
+    if (ApiConfig.authToken != null && ApiConfig.authToken!.isNotEmpty) {
+      api.setToken(ApiConfig.authToken!);
+    }
+    _localWorkspace = Workspace(api);
+    if (ApiConfig.authToken != null && ApiConfig.authToken!.isNotEmpty) {
+      _localWorkspace!.connect(ApiConfig.authToken!);
+    } else {
+      _localWorkspace!.restore();
+    }
+    return _localWorkspace!;
+  }
+
+  @override
+  void dispose() {
+    _localWorkspace?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ws = _activeWorkspace;
+    return MaterialApp(
+      title: 'AgriOps AI',
+      theme: AppTheme.theme,
+      home: ListenableBuilder(
+        listenable: ws,
+        builder: (context, _) {
+          final isConnected = ws.connected || ApiConfig.isAuthenticated;
+          if (widget.workspace != null) {
+            // Preserves workspace-specific test behavior (e.g. app_test.dart)
+            return isConnected ? HomeScreen(workspace: ws) : ConnectScreen(workspace: ws);
+          }
+          // Default mobile client behavior: Sign In / Sign Up first, then full app
+          return isConnected ? MainNavigationScreen(workspace: ws) : ConnectScreen(workspace: ws);
+        },
+      ),
+      debugShowCheckedModeBanner: false,
+    );
+  }
 }

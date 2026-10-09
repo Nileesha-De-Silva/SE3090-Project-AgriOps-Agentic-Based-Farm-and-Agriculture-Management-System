@@ -1,21 +1,23 @@
 import { useSelector } from 'react-redux';
-import { Bell, Sparkles, Database, ShieldCheck, Activity, Menu } from 'lucide-react';
+import { Bell, Sparkles, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/authcontext';
 
 export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
   const pendingApprovals = useSelector((state) => state.cropAnalysis.pendingApprovals);
   const approvalCount = pendingApprovals.length;
+  const { user, logout } = useAuth();
 
   return (
-    <header className="bg-gradient-to-r from-emerald-950 via-forest-950 to-teal-950 backdrop-blur-md border-b border-emerald-800/80 sticky top-0 z-30 shadow-md shadow-emerald-950/20 text-white">
+    <header className="app-header bg-gradient-to-r from-emerald-950 via-forest-950 to-teal-950 backdrop-blur-md border-b border-emerald-800/80 sticky top-0 z-30 shadow-md shadow-emerald-950/20 text-white">
       {/* Top emerald ambient brandline */}
-      <div className="h-1 bg-gradient-to-r from-emerald-500 via-green-400 via-teal-400 to-emerald-500 w-full" />
+      <div className="app-header-accent h-1 bg-gradient-to-r from-emerald-500 via-green-400 via-teal-400 to-emerald-500 w-full" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
+      <div className="header-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="header-row flex justify-between h-16 items-center">
           
           {/* Brand Logo, System Title & 3 Horizontal Line Notation Button */}
-          <div className="flex items-center space-x-2.5 sm:space-x-3.5">
+          <div className="header-brand flex items-center space-x-2.5 sm:space-x-3.5">
             {/* 3 Horizontal Line Notation (Hamburger Menu) Button */}
             <button
               type="button"
@@ -47,27 +49,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
           </div>
 
           {/* Status Indicators & Alerts */}
-          <div className="flex items-center space-x-3.5">
-            
-            {/* System Status Badges */}
-            <div className="hidden md:flex items-center space-x-2 text-xs">
-              <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-900/60 text-emerald-200 border border-emerald-700/60 shadow-2xs font-medium">
-                <Database className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Backend Core</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              </div>
-
-              <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-teal-900/60 text-teal-200 border border-teal-700/60 shadow-2xs font-medium">
-                <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
-                <span>Gemini 3.8 Flash</span>
-                <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-              </div>
-
-              <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-green-900/60 text-green-200 border border-green-700/60 shadow-2xs font-medium">
-                <Activity className="w-3.5 h-3.5 text-green-400" />
-                <span>Health: 98.4%</span>
-              </div>
-            </div>
+          <div className="header-right flex items-center space-x-3.5">
 
             {/* Approval Inbox Alert Button */}
             <Link
@@ -87,16 +69,37 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
               )}
             </Link>
 
-            {/* User Profile Avatar */}
-            <div className="flex items-center space-x-2.5 pl-3 border-l border-emerald-800/80">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center text-xs font-bold ring-2 ring-emerald-400/30 shadow-xs">
-                ND
+            {/* User Profile Avatar / Sign In */}
+            {user ? (
+              <div className="header-account flex items-center space-x-2.5 pl-3 border-l border-emerald-800/80">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center text-xs font-bold ring-2 ring-emerald-400/30 shadow-xs">
+                  {(user.username || 'U').slice(0, 2).toUpperCase()}
+                </div>
+                <div className="text-left hidden lg:block">
+                  <p className="text-xs font-bold text-white leading-none">{user.username}</p>
+                  <p className="text-[10px] text-emerald-400 font-semibold leading-none mt-1">
+                    {user.roles && user.roles.length > 0 ? user.roles[0] : 'User'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 hover:text-white border border-emerald-700/80 transition-colors cursor-pointer"
+                  title="Sign out of AgriOps"
+                >
+                  Sign Out
+                </button>
               </div>
-              <div className="text-left hidden lg:block">
-                <p className="text-xs font-bold text-white leading-none">Nileesha De Silva</p>
-                <p className="text-[10px] text-emerald-400 font-semibold leading-none mt-1">Farm Manager</p>
+            ) : (
+              <div className="flex items-center pl-3 border-l border-emerald-800/80">
+                <Link
+                  to="/login"
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-950/20 transition-all border border-emerald-500/30"
+                >
+                  Sign In
+                </Link>
               </div>
-            </div>
+            )}
 
           </div>
 

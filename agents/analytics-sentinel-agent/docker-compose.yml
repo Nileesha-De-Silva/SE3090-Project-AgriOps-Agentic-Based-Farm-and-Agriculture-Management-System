@@ -1,0 +1,22 @@
+services:
+  agent4-validation-safety:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agriops-agent4-validation-safety
+    restart: unless-stopped
+    ports:
+      - "8004:8004"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CHAT_MODEL=${CHAT_MODEL:-gemini-2.5-flash}
+      - BACKEND_API_URL=${BACKEND_API_URL:-http://host.docker.internal:5286/api}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

@@ -1,19 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { addTask } from '../../store/slices/taskSlice';
+import { getFields } from '../../services/farmApi';
 import { X, PlusCircle, ExternalLink } from 'lucide-react';
 
 export default function CreateTaskModal({ onClose }) {
   const dispatch = useDispatch();
+  const [fields, setFields] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     taskType: 'PestInspection',
     priority: 'Medium',
-    fieldId: 'field-north-plot-1',
+    fieldId: '',
     cropVariety: 'Tomato',
     estimatedHours: 2.0,
+    dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
   });
+
+  useEffect(() => {
+    async function loadFields() {
+      try {
+        const data = await getFields();
+        if (data && Array.isArray(data)) {
+          setFields(data);
+          if (data.length > 0) {
+            setFormData((prev) => ({ ...prev, fieldId: data[0].id }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load fields for task creation modal:', err);
+      }
+    }
+    loadFields();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -98,23 +118,28 @@ export default function CreateTaskModal({ onClose }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold text-emerald-950 mb-1">Field Plot ID</label>
-              <input
-                type="text"
+              <label className="block font-bold text-emerald-950 mb-1">Target Field Plot</label>
+              <select
                 value={formData.fieldId}
                 onChange={(e) => setFormData({ ...formData, fieldId: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl border border-emerald-200/90 bg-emerald-50/50 focus:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-emerald-950"
-              />
+                className="w-full px-3 py-2 rounded-xl border border-emerald-200/90 bg-emerald-50/50 focus:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-emerald-950 font-medium"
+              >
+                <option value="">-- General Operation (No Field) --</option>
+                {fields.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.fieldName} ({f.areaSize || 0} ha)
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <label className="block font-bold text-emerald-950 mb-1">Estimated Hours</label>
+              <label className="block font-bold text-emerald-950 mb-1">Scheduled Due Date</label>
               <input
-                type="number"
-                step="0.5"
-                min="0.5"
-                value={formData.estimatedHours}
-                onChange={(e) => setFormData({ ...formData, estimatedHours: e.target.value })}
+                type="date"
+                required
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl border border-emerald-200/90 bg-emerald-50/50 focus:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-emerald-950 font-medium"
               />
             </div>

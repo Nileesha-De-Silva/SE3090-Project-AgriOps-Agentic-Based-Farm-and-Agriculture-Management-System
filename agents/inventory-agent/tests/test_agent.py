@@ -1,4 +1,8 @@
 """Offline tests: actual FastAPI/LangGraph/SQLite, controlled backend and model doubles."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from copy import deepcopy
 from types import SimpleNamespace
 from uuid import uuid4

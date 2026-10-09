@@ -11,7 +11,7 @@ void main() {
   testWidgets('disconnected users see connection screen, not protected actions', (tester) async {
     final workspace = Workspace(Api('https://farm.example/api/'));
     await tester.pumpWidget(AgriOpsApp(workspace: workspace));
-    expect(find.text('Manager access token'), findsOneWidget);
+    expect(find.text('Password'), findsOneWidget);
     expect(find.text('Generate recommendation'), findsNothing);
     expect(find.byType(NavigationBar), findsNothing);
     await tester.pumpWidget(const SizedBox());
@@ -19,7 +19,7 @@ void main() {
   });
   testWidgets('connected inventory supports search and empty state', (tester) async {
     final workspace = Workspace(Api('https://farm.example/api/'))
-      ..connected = true ..stale = false
+      ..connected = true ..stale = false ..canManage = true ..canUse = true ..canReceive = true
       ..items = [{'id':'00000000-0000-4000-8000-000000000001','name':'Neem oil','category':'Pesticide','currentStock':5,'minimumStockLevel':10,'unitOfMeasurement':'litres'}];
     await tester.pumpWidget(AgriOpsApp(workspace: workspace));
     expect(find.text('Neem oil'), findsWidgets);
@@ -37,7 +37,7 @@ void main() {
       return http.Response('[]', 200, headers: {'content-type': 'application/json'});
     }))..setToken('test-manager');
     final workspace = Workspace(api)
-      ..connected = true ..stale = false
+      ..connected = true ..stale = false ..canManage = true ..canUse = true ..canReceive = true
       ..items = [{'id':'00000000-0000-4000-8000-000000000001','name':'Neem oil','currentStock':5,'unitOfMeasurement':'litres'}];
     await tester.pumpWidget(MaterialApp(home: ItemScreen(
       workspace: workspace, itemId: '00000000-0000-4000-8000-000000000001')));

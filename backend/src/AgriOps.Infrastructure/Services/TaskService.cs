@@ -70,6 +70,14 @@ public class TaskService : ITaskService
 
         task.CreatedAt = DateTime.UtcNow;
         task.UpdatedAt = DateTime.UtcNow;
+        if (task.TargetDate.Kind == DateTimeKind.Unspecified)
+        {
+            task.TargetDate = DateTime.SpecifyKind(task.TargetDate, DateTimeKind.Utc);
+        }
+        else
+        {
+            task.TargetDate = task.TargetDate.ToUniversalTime();
+        }
 
         var history = new TaskHistory
         {

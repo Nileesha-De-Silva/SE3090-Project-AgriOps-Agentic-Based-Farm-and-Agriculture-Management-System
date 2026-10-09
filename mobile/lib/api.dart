@@ -28,8 +28,9 @@ class Api {
   void clearToken() => _token = '';
   void dispose() => client.close();
 
-  Future<dynamic> request(String path, {String method = 'GET', Record? body}) async {
-    if (_token.isEmpty) throw const ApiFailure('Connect with a valid manager session first.', status: 401);
+  Future<dynamic> request(String path, {String method = 'GET', Record? body, bool login = false, bool allowAnonymous = false}) async {
+    final isAnonymous = login || allowAnonymous || path == 'auth/login' || path == 'auth/register';
+    if (!isAnonymous && _token.isEmpty) throw const ApiFailure('Connect with a valid session first.', status: 401);
     final target = base.resolve(path);
     if (target.origin != base.origin || !target.path.startsWith(base.path)) {
       throw ArgumentError('Requests must stay inside the configured API.');
@@ -37,7 +38,7 @@ class Api {
     final write = method != 'GET';
     final request = http.Request(method, target)
       ..followRedirects = false
-      ..headers.addAll({'Authorization': 'Bearer $_token', 'Accept': 'application/json'});
+      ..headers.addAll({if (!isAnonymous) 'Authorization': 'Bearer $_token', 'Accept': 'application/json'});
     if (body != null) {
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode(body);
@@ -46,12 +47,27 @@ class Api {
       final response = await client.send(request).then(http.Response.fromStream)
           .timeout(const Duration(seconds: 120));
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        String? serverError;
+        if (response.statusCode < 500) {
+          try {
+            final decoded = jsonDecode(response.body);
+            if (decoded is Map) {
+              if (decoded['message'] is String && (decoded['message'] as String).trim().isNotEmpty) {
+                serverError = (decoded['message'] as String).trim();
+              } else if (decoded['error'] is String && (decoded['error'] as String).trim().isNotEmpty) {
+                serverError = (decoded['error'] as String).trim();
+              } else if (decoded['title'] is String && (decoded['title'] as String).trim().isNotEmpty) {
+                serverError = (decoded['title'] as String).trim();
+              }
+            }
+          } catch (_) {}
+        }
         final message = switch (response.statusCode) {
-          401 => 'Session expired. Disconnect and connect again.',
-          403 => 'This action requires an authorized manager.',
-          404 => 'Record or run not found.',
-          409 => 'Data changed or a recommendation already exists. Refresh before continuing.',
-          400 || 422 => 'Check your input. The server rejected this request.',
+          401 => serverError ?? 'Session expired. Disconnect and connect again.',
+          403 => serverError ?? 'Your account does not have permission for this action.',
+          404 => serverError ?? 'Record or run not found.',
+          409 => serverError ?? 'Data changed or a recommendation already exists. Refresh before continuing.',
+          400 || 422 => serverError ?? 'Check your input. The server rejected this request.',
           _ => 'Server unavailable. Check the connection and refresh.',
         };
         throw ApiFailure(message, status: response.statusCode, uncertain: write && response.statusCode >= 500);
@@ -63,7 +79,17 @@ class Api {
       return jsonDecode(response.body);
     } on ApiFailure {
       rethrow;
-    } catch (_) {
+    } catch (e) {
+      final errStr = e.toString();
+      final isConnectionError = errStr.contains('SocketException') ||
+          errStr.contains('ClientException') ||
+          errStr.contains('Connection refused') ||
+          errStr.contains('Network is unreachable') ||
+          errStr.contains('Cleartext HTTP') ||
+          errStr.contains('Failed host lookup');
+      if (isConnectionError) {
+        throw ApiFailure('Cannot connect to backend API (${base.origin}). Ensure backend is running and accessible.', uncertain: false);
+      }
       throw ApiFailure(write ? 'Result unknown. Check history or the same run ID before retrying.' : 'Could not load data. Check your connection.', uncertain: write);
     }
   }

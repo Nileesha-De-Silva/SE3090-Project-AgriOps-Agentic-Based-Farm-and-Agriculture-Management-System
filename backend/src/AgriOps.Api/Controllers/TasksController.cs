@@ -58,12 +58,17 @@ public class TasksController : ControllerBase
     {
         var task = new FarmTask
         {
+            Title = dto.Title,
             FieldId = dto.FieldId,
             CropSeasonId = dto.CropSeasonId,
-            TaskType = dto.TaskType,
-            Priority = dto.Priority,
-            Description = dto.Description,
-            TargetDate = dto.TargetDate,
+            TaskType = string.IsNullOrWhiteSpace(dto.TaskType) ? "CropMonitoring" : dto.TaskType,
+            Priority = string.IsNullOrWhiteSpace(dto.Priority) ? "Medium" : dto.Priority,
+            Description = dto.Description ?? string.Empty,
+            TargetDate = dto.TargetDate.HasValue 
+                ? (dto.TargetDate.Value.Kind == DateTimeKind.Unspecified 
+                    ? DateTime.SpecifyKind(dto.TargetDate.Value, DateTimeKind.Utc) 
+                    : dto.TargetDate.Value.ToUniversalTime())
+                : DateTime.UtcNow.AddDays(1),
             Status = "Pending"
         };
 
@@ -205,6 +210,7 @@ public class TasksController : ControllerBase
             task.Id,
             task.FieldId,
             task.CropSeasonId,
+            task.Title,
             task.TaskType,
             task.Priority,
             task.Description,

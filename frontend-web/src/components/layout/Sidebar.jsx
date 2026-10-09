@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useAuth } from '../../contexts/authcontext';
 import { 
   Kanban, 
   Inbox, 
@@ -8,7 +9,14 @@ import {
   FileCheck2, 
   Activity,
   X,
-  ChevronLeft
+  ChevronLeft,
+  MapPin,
+  Sprout,
+  Bot,
+  Package,
+  BarChart3,
+  Shield,
+  UserCog
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -17,14 +25,49 @@ export default function Sidebar({
   onCloseMobile, 
   onToggleDesktop 
 }) {
+  const { user } = useAuth();
+  const userRoles = (user?.roles || []).map((r) => r?.toLowerCase().trim());
+  const isAdmin = userRoles.includes('administrator') || userRoles.includes('admin');
+  const isFarmManager = userRoles.includes('farmmanager') || userRoles.includes('manager');
+  const isAgronomist = userRoles.includes('agronomist');
+  const activeRoleLabel = isAdmin 
+    ? 'Administrator' 
+    : isFarmManager 
+      ? 'Farm Manager' 
+      : isAgronomist 
+        ? 'Agronomist' 
+        : (user?.roles?.[0] || 'Authenticated User');
+
   const pendingApprovals = useSelector((state) => state.cropAnalysis.pendingApprovals);
   const tasks = useSelector((state) => state.tasks.items);
   const verificationCount = tasks.filter((t) => t.status === 'PendingVerification').length;
 
+  const farmNavItems = [
+    {
+      name: 'Farms & Land',
+      path: '/farms',
+      icon: MapPin,
+      badge: null,
+    },
+    {
+      name: 'Crops & Seasons',
+      path: '/crops',
+      icon: Sprout,
+      badge: null,
+    },
+    {
+      name: 'Farm Planner',
+      path: '/agent-planner',
+      icon: Bot,
+      badge: 'Agent 1',
+      badgeColor: 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-200',
+    },
+  ];
+
   const navItems = [
     {
       name: 'Task Kanban Board',
-      path: '/',
+      path: '/workspace',
       icon: Kanban,
       badge: tasks.length,
       badgeColor: 'bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold',
@@ -51,12 +94,71 @@ export default function Sidebar({
     },
   ];
 
+  const inventoryNavItems = [
+    {
+      name: 'Inventory & Supplies',
+      path: '/inventory',
+      icon: Package,
+      badge: 'Agent 3',
+      badgeColor: 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-200',
+    },
+  ];
+
+  const adminNavItems = [
+    {
+      name: 'Production Analytics',
+      path: '/analytics',
+      icon: BarChart3,
+      badge: null,
+    },
+    {
+      name: 'Audit Logs',
+      path: '/audit-logs',
+      icon: Shield,
+      badge: 'Agent 4',
+      badgeColor: 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-200',
+    },
+    {
+      name: 'User Management',
+      path: '/users',
+      icon: UserCog,
+      badge: null,
+    },
+  ];
+
+  // RBAC Filter: Approvals and Worker Management for Farm Manager & Administrator
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.path === '/approvals' || item.path === '/workers') {
+      return isAdmin || isFarmManager;
+    }
+    return true;
+  });
+
+  // RBAC Filter: Audit Logs and User Management strictly for Administrator
+  const filteredAdminNavItems = adminNavItems.filter((item) => {
+    if (item.path === '/audit-logs' || item.path === '/users') {
+      return isAdmin;
+    }
+    return true;
+  });
+
   const renderNav = (isMobile = false) => (
-    <div className="space-y-6">
-      {/* Navigation Group */}
+    <div className="sidebar-nav space-y-6">
+      {/* Active RBAC Role Badge */}
+      {user && (
+        <div className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-100/90 via-teal-50 to-emerald-100/70 border border-emerald-200/90 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-900/80">RBAC Role</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+          </div>
+          <p className="text-xs font-bold text-emerald-950 mt-0.5 truncate">{activeRoleLabel}</p>
+        </div>
+      )}
+
+      {/* Farm & Crop Management Group */}
       <div>
-        <div className="px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
-          <span>Operations & Tasks</span>
+        <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+          <span>Farm Management</span>
           {!isMobile && onToggleDesktop && (
             <button
               type="button"
@@ -69,34 +171,34 @@ export default function Sidebar({
             </button>
           )}
         </div>
-        <nav className="space-y-1.5">
-          {navItems.map((item) => {
+        <nav className="sidebar-links space-y-1.5">
+          {farmNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.path}
+                title={item.name}
                 to={item.path}
-                end={item.path === '/'}
                 onClick={() => {
                   if (isMobile && onCloseMobile) {
                     onCloseMobile();
                   }
                 }}
                 className={({ isActive }) =>
-                  `group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                  `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
                     isActive
                       ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
                       : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
                   }`
                 }
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className="w-4 h-4 transition-colors" />
-                  <span>{item.name}</span>
+                <div className="sidebar-link-content flex items-center space-x-3">
+                  <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                  <span className="sidebar-label">{item.name}</span>
                 </div>
                 {item.badge !== null && item.badge !== undefined && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
+                    className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
                       item.badgeColor || 'bg-white/20 text-white'
                     }`}
                   >
@@ -108,6 +210,144 @@ export default function Sidebar({
           })}
         </nav>
       </div>
+
+      {/* Operations & Tasks Navigation Group */}
+      <div>
+        <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+          <span>Operations & Tasks</span>
+        </div>
+        <nav className="sidebar-links space-y-1.5">
+          {filteredNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                title={item.name}
+                to={item.path}
+                end={item.path === '/'}
+                onClick={() => {
+                  if (isMobile && onCloseMobile) {
+                    onCloseMobile();
+                  }
+                }}
+                className={({ isActive }) =>
+                  `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
+                      : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
+                  }`
+                }
+              >
+                <div className="sidebar-link-content flex items-center space-x-3">
+                  <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                  <span className="sidebar-label">{item.name}</span>
+                </div>
+                {item.badge !== null && item.badge !== undefined && (
+                  <span
+                    className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
+                      item.badgeColor || 'bg-white/20 text-white'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Inventory & Supply Chain Group (Component 3 - Dinali / Thisara) */}
+      <div>
+        <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+          <span>Inventory & Supply</span>
+        </div>
+        <nav className="sidebar-links space-y-1.5">
+          {inventoryNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                title={item.name}
+                to={item.path}
+                onClick={() => {
+                  if (isMobile && onCloseMobile) {
+                    onCloseMobile();
+                  }
+                }}
+                className={({ isActive }) =>
+                  `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
+                      : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
+                  }`
+                }
+              >
+                <div className="sidebar-link-content flex items-center space-x-3">
+                  <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                  <span className="sidebar-label">{item.name}</span>
+                </div>
+                {item.badge !== null && item.badge !== undefined && (
+                  <span
+                    className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
+                      item.badgeColor || 'bg-white/20 text-white'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Analytics & Governance Group (Component 4 - Sahas) */}
+      {filteredAdminNavItems.length > 0 && (
+        <div>
+          <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+            <span>Analytics & Governance</span>
+          </div>
+          <nav className="sidebar-links space-y-1.5">
+            {filteredAdminNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  title={item.name}
+                  to={item.path}
+                  onClick={() => {
+                    if (isMobile && onCloseMobile) {
+                      onCloseMobile();
+                    }
+                  }}
+                  className={({ isActive }) =>
+                    `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                      isActive
+                        ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
+                        : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
+                    }`
+                  }
+                >
+                  <div className="sidebar-link-content flex items-center space-x-3">
+                    <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                    <span className="sidebar-label">{item.name}</span>
+                  </div>
+                  {item.badge !== null && item.badge !== undefined && (
+                    <span
+                      className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
+                        item.badgeColor || 'bg-white/20 text-white'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
+      )}
 
       {/* Quick Task Status Summary */}
       <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-100/80 via-emerald-50 to-teal-100/60 border border-emerald-200/90 shadow-card-green">
@@ -153,16 +393,16 @@ export default function Sidebar({
     <>
       {/* Desktop Sidebar with Smooth Collapse / Expand Animation */}
       <aside
-        className={`bg-emerald-50/80 backdrop-blur-md border-r border-emerald-200/90 min-h-[calc(100vh-4rem)] flex-col justify-between hidden md:flex shadow-xs transition-all duration-300 ease-in-out shrink-0 ${
+        className={`app-sidebar bg-emerald-50/80 backdrop-blur-md border-r border-emerald-200/90 min-h-[calc(100vh-4rem)] flex-col justify-between hidden md:flex shadow-xs transition-all duration-300 ease-in-out shrink-0 ${
           isOpen
             ? 'w-64 p-4 opacity-100'
             : 'w-0 p-0 opacity-0 overflow-hidden border-r-0 pointer-events-none'
         }`}
       >
-        <div className="w-56">
+        <div className="sidebar-inner w-56">
           {renderNav(false)}
         </div>
-        <div className="w-56 mt-6">
+        <div className="sidebar-inner w-56 mt-6">
           {renderFooter()}
         </div>
       </aside>
@@ -171,14 +411,14 @@ export default function Sidebar({
       {isMobileOpen && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-emerald-950/60 backdrop-blur-xs transition-opacity md:hidden animate-in fade-in duration-200"
+          className="sidebar-backdrop fixed inset-0 z-40 bg-emerald-950/60 backdrop-blur-xs transition-opacity md:hidden animate-in fade-in duration-200"
           aria-hidden="true"
         />
       )}
 
       {/* Mobile Slide-Out Drawer */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-emerald-50/98 via-white/95 to-teal-50/95 backdrop-blur-xl border-r border-emerald-300 p-5 shadow-2xl flex flex-col justify-between md:hidden transition-transform duration-300 ease-out ${
+        className={`mobile-sidebar fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-emerald-50/98 via-white/95 to-teal-50/95 backdrop-blur-xl border-r border-emerald-300 p-5 shadow-2xl flex flex-col justify-between md:hidden transition-transform duration-300 ease-out ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

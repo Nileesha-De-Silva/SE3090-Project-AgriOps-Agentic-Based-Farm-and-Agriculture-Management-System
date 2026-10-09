@@ -1,27 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addTask } from '../store/slices/taskSlice';
+import { getFields } from '../services/farmApi';
 import { 
   ArrowLeft, 
   PlusCircle, 
   Calculator, 
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 export default function TaskCreationPage() {
   const dispatch = useDispatch();
 
+  const [fields, setFields] = useState([]);
+  const [errorMessage, setErrorMessage] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     taskType: 'PesticideApplication',
     priority: 'High',
-    fieldId: 'field-north-plot-99',
+    fieldId: '',
     cropVariety: 'Tomato',
     estimatedHours: 3.5,
     dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
   });
+
+  useEffect(() => {
+    async function loadFields() {
+      try {
+        const data = await getFields();
+        if (data && Array.isArray(data)) {
+          setFields(data);
+          if (data.length > 0) {
+            setFormData((prev) => ({ ...prev, fieldId: data[0].id }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load fields:', err);
+      }
+    }
+    loadFields();
+  }, []);
 
   // Built-in Agrochemical Dosage Calculator Helper
   const [calcHectares, setCalcHectares] = useState(2.0);
@@ -33,15 +54,21 @@ export default function TaskCreationPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title) return;
+    setErrorMessage(null);
 
-    const res = await dispatch(
-      addTask({
-        ...formData,
-        description: formData.description + ` [Dosage calculated: ${calculatedTotalDose} units for ${calcHectares} ha]`,
-      })
-    );
+    try {
+      const res = await dispatch(
+        addTask({
+          ...formData,
+          description: formData.description + ` [Dosage calculated: ${calculatedTotalDose} units for ${calcHectares} ha]`,
+        })
+      ).unwrap();
 
-    setSubmittedTask(res.payload);
+      setSubmittedTask(res);
+    } catch (err) {
+      console.error('Failed to create task:', err);
+      setErrorMessage(err.message || 'Failed to create task in PostgreSQL database.');
+    }
   };
 
   if (submittedTask) {
@@ -62,7 +89,7 @@ export default function TaskCreationPage() {
             View Task in New Tab
           </Link>
           <Link
-            to="/"
+            to="/workspace"
             className="px-5 py-2.5 rounded-xl border border-emerald-300 bg-emerald-100/80 hover:bg-emerald-200/90 text-emerald-950 text-xs font-bold shadow-2xs transition-colors"
           >
             Return to Kanban Board
@@ -79,7 +106,7 @@ export default function TaskCreationPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Link
-            to="/"
+            to="/workspace"
             className="p-2 rounded-xl bg-emerald-100/80 border border-emerald-300 text-emerald-900 hover:bg-emerald-200/90 hover:text-emerald-950 transition-colors shadow-2xs"
             title="Back to Kanban"
           >
@@ -96,6 +123,16 @@ export default function TaskCreationPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         
+        {errorMessage && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-center space-x-2">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            <div>
+              <p className="font-bold">Error creating task:</p>
+              <p>{errorMessage}</p>
+            </div>
+          </div>
+        )}
+
         {/* Main Task Form Card */}
         <div className="bg-gradient-to-br from-emerald-50/80 via-white/80 to-teal-50/70 rounded-2xl border border-emerald-200/90 p-6 shadow-card-green space-y-5 text-xs">
           <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-900/60">
@@ -161,14 +198,19 @@ export default function TaskCreationPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block font-bold text-emerald-950 mb-1">Field Plot ID</label>
-              <input
-                type="text"
-                required
+              <label className="block font-bold text-emerald-950 mb-1">Target Field Plot *</label>
+              <select
                 value={formData.fieldId}
                 onChange={(e) => setFormData({ ...formData, fieldId: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/50 focus:bg-emerald-50 focus:ring-2 focus:ring-emerald-500 font-mono text-emerald-950"
-              />
+                className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/50 focus:bg-emerald-50 focus:ring-2 focus:ring-emerald-500 font-medium text-emerald-950"
+              >
+                <option value="">-- General Operation (No Field) --</option>
+                {fields.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.fieldName} ({f.soilType || 'Soil'}, {f.areaSize || 0} ha)
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -251,7 +293,7 @@ export default function TaskCreationPage() {
         {/* Submit Bar */}
         <div className="flex items-center justify-end space-x-3 pt-2">
           <Link
-            to="/"
+            to="/workspace"
             className="px-5 py-2.5 rounded-xl border border-emerald-300 bg-emerald-100/60 hover:bg-emerald-200/80 text-emerald-950 text-xs font-bold shadow-2xs transition-colors"
           >
             Cancel

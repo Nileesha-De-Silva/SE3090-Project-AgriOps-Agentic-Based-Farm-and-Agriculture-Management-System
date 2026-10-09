@@ -133,6 +133,7 @@ public class CropAnalysisController : ControllerBase
                 task.Id,
                 task.FieldId,
                 task.CropSeasonId,
+                task.Title,
                 task.TaskType,
                 task.Priority,
                 task.Description,

@@ -12,15 +12,25 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 
 class AskRequest(BaseModel):
-    """Input payload to trigger Agent 2 diagnostic workflow."""
+    """Input payload to trigger Agent 2 diagnostic workflow (PRD Section 4 & ADR-003)."""
     field_id: str = Field(..., description="ID of the field being inspected")
-    crop_variety: str = Field(..., description="Crop name, e.g. Tomato, Paddy")
-    growth_stage: str = Field(default="Vegetative", description="Growth stage, e.g. Seedling, Vegetative, Flowering")
-    observation: str = Field(..., description="Observed symptom notes on leaves, soil, or equipment")
-    image_url: Optional[str] = Field(default="", description="URL to photo evidence")
-    thread_id: str = Field(default="demo", description="Thread ID for stateful checkpointer memory")
-    submitted_by_user_id: str = Field(default="worker-01", description="User ID submitting observation")
+    crop_variety: str = Field(..., description="Crop name/variety, e.g. Tomato (Roma), Paddy")
+    growth_stage: str = Field(default="Vegetative", description="Growth stage, e.g. Seedling, Vegetative, Flowering, Fruiting")
+    observation: Optional[str] = Field(default=None, description="Observed symptom notes on leaves, soil, or equipment")
+    observation_text: Optional[str] = Field(default=None, description="PRD alias for observation")
+    image_url: Optional[str] = Field(default="", description="URL to photo evidence or uploaded crop image")
+    thread_id: Optional[str] = Field(default="demo", description="Thread ID for stateful checkpointer memory")
+    workflow_id: Optional[str] = Field(default=None, description="PRD alias for thread_id / workflow tracking")
+    submitted_by_user_id: Optional[str] = Field(default="worker-01", description="User ID submitting observation")
     max_iterations: int = Field(5, ge=1, le=10, description="Iteration cap enforced at API edge")
+
+    def get_observation(self) -> str:
+        return self.observation or self.observation_text or "General crop observation"
+
+    def get_thread_id(self) -> str:
+        if self.workflow_id:
+            return self.workflow_id
+        return self.thread_id or "demo"
 
 
 class ResumeRequest(BaseModel):
@@ -52,6 +62,12 @@ class GraphResponse(BaseModel):
     interrupt: Optional[Dict[str, Any]] = None
     nodes: List[str] = Field(default_factory=list, description="Nodes that ran, in order (the trajectory).")
     thread_id: str
+    primary_indicator: Optional[str] = None
+    risk_level: Optional[str] = None
+    suggested_task_type: Optional[str] = None
+    priority: Optional[str] = None
+    recommended_protocol: Optional[str] = None
+    stress_factors: List[str] = Field(default_factory=list)
     total_tokens: int = 0
     messages: int = 0
     seconds: float = 0.0
@@ -74,14 +90,15 @@ class DiagnosisGrade(BaseModel):
 
 
 class StructuredDiagnosis(BaseModel):
-    """Model used to extract typed diagnosis and task recommendation from the model."""
-    primary_indicator: str = Field(..., description="Main diagnosed issue or pest/disease identity")
-    category: str = Field(..., description="Pest, Disease, NutrientDeficiency, WaterStress, Environmental")
+    """Model used to extract typed diagnosis and task recommendation from the model (PRD Section 4)."""
+    primary_indicator: str = Field(..., description="Main diagnosed stress indicator or physiological marker")
+    category: str = Field(..., description="Pest, Disease, NutrientDeficiency, WaterStress, Environmental, EquipmentMaintenance")
     risk_level: Literal["Low", "Medium", "High", "Critical"] = Field(..., description="Assessed risk level")
     suggested_task_type: Literal[
         "Watering", "Fertilization", "Weeding", "PestInspection",
         "CropMonitoring", "Harvesting", "EquipmentMaintenance"
     ] = Field(..., description="Standardized C# backend task type")
     priority: Literal["Low", "Medium", "High", "Critical"] = Field(..., description="Task priority")
-    recommended_protocol: str = Field(..., description="Clear actionable treatment instructions")
+    recommended_protocol: str = Field(..., description="Clear actionable non-pathological remediation protocol")
     confidence_score: float = Field(default=0.90, ge=0.0, le=1.0)
+    stress_factors: List[str] = Field(default_factory=list, description="Specific stress markers identified (chlorosis, wilting, necrosis, etc.)")

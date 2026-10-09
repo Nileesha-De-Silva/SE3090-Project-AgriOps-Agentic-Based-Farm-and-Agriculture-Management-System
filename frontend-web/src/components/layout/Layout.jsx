@@ -8,12 +8,15 @@ export default function Layout({ children }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const handleToggleSidebar = () => {
+    if (window.matchMedia?.('(max-width: 1023px)').matches) {
+      setMobileSidebarOpen((prev) => !prev);
+      return;
+    }
     setSidebarOpen((prev) => !prev);
-    setMobileSidebarOpen((prev) => !prev);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-100/70 via-emerald-50/60 to-teal-100/60 flex flex-col relative selection:bg-emerald-300 selection:text-emerald-950">
+    <div className={`app-shell ${sidebarOpen ? 'sidebar-expanded' : 'sidebar-collapsed'} ${mobileSidebarOpen ? 'mobile-sidebar-open' : ''}`}>
       {/* Ambient background decoration */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-45">
         <div className="absolute -top-40 left-1/4 h-96 w-96 rounded-full bg-emerald-300/60 blur-3xl"></div>
@@ -22,16 +25,18 @@ export default function Layout({ children }) {
       </div>
 
       <Navbar onToggleSidebar={handleToggleSidebar} isSidebarOpen={sidebarOpen} />
-      <div className="relative z-10 flex flex-1 max-w-7xl w-full mx-auto">
+      <div className="app-body">
         <Sidebar 
           isOpen={sidebarOpen} 
           isMobileOpen={mobileSidebarOpen}
           onCloseMobile={() => setMobileSidebarOpen(false)}
           onToggleDesktop={() => setSidebarOpen((prev) => !prev)}
         />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {children}
-        </main>
+        <div className="app-content">
+          <main className="app-main">
+            <div className="content-container">{children}</div>
+          </main>
+        </div>
       </div>
       <Footer />
     </div>

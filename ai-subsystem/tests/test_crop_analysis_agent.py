@@ -45,7 +45,8 @@ class TestAgent2Subsystem(unittest.TestCase):
             "symptom": "yellowing leaves",
         })
         self.assertIn("[Tomato-Handbook]", result)
-        self.assertIn("Nitrogen / Iron Chlorosis", result)
+        self.assertIn("Chlorosis", result)
+        self.assertIn("Fertilization", result)
 
         calc_result = calculate_treatment_dosage.invoke({
             "area_hectares": 2.0,
@@ -67,10 +68,10 @@ class TestAgent2Subsystem(unittest.TestCase):
 
         self.assertEqual(response.status, "completed")
         self.assertIn("input_guard", response.nodes)
-        self.assertIn("retrieve", response.nodes)
-        self.assertIn("grade", response.nodes)
-        self.assertIn("dispatch_task", response.nodes)
+        self.assertIn("diagnose", response.nodes)
+        self.assertIn("grade_assessment", response.nodes)
         self.assertNotIn("human_gate", response.nodes)
+        self.assertNotIn("create_task", response.nodes)
         self.assertIsNotNone(response.answer)
 
     def test_04_high_risk_human_in_the_loop_pause_and_approval(self):
@@ -89,13 +90,14 @@ class TestAgent2Subsystem(unittest.TestCase):
         self.assertEqual(turn1_response.status, "awaiting_approval")
         self.assertIsNotNone(turn1_response.interrupt)
         self.assertIn("field-pest-99", turn1_response.interrupt["ask"])
-        self.assertIn("generate_diagnosis", turn1_response.nodes)
+        self.assertIn("diagnose", turn1_response.nodes)
+        self.assertIn("grade_assessment", turn1_response.nodes)
 
         # Turn 2: Manager approves the high-risk action
         turn2_response = run_agent2_workflow(Command(resume="approve"), thread_id=thread_id)
         self.assertEqual(turn2_response.status, "completed")
         self.assertIn("human_gate", turn2_response.nodes)
-        self.assertIn("dispatch_task", turn2_response.nodes)
+        self.assertIn("create_task", turn2_response.nodes)
         self.assertIn("APPROVED & DISPATCHED", turn2_response.answer)
 
     def test_05_high_risk_human_gate_rejection(self):
@@ -116,6 +118,7 @@ class TestAgent2Subsystem(unittest.TestCase):
         # Turn 2: Manager denies the proposal
         turn2 = run_agent2_workflow(Command(resume="deny"), thread_id=thread_id)
         self.assertEqual(turn2.status, "completed")
+        self.assertIn("human_gate", turn2.nodes)
         self.assertIn("log_rejection", turn2.nodes)
         self.assertIn("REJECTED", turn2.answer)
 
@@ -130,6 +133,38 @@ class TestAgent2Subsystem(unittest.TestCase):
         # Unused threads should have empty values
         self.assertEqual(len(state_a.values), 0)
         self.assertEqual(len(state_b.values), 0)
+
+    def test_07_rewrite_self_correction_loop(self):
+        """Vague observation triggers rewrite loop (Max 2 retries) back to diagnose."""
+        thread_id = "test-rewrite-007"
+        input_data = {
+            "field_id": "field-rewrite-test",
+            "crop_variety": "Tomato",
+            "growth_stage": "Vegetative",
+            "observation": "vague unknown symptoms observed",
+            "image_url": "",
+        }
+        response = run_agent2_workflow(input_data, thread_id=thread_id)
+        self.assertIn("rewrite", response.nodes)
+        self.assertIn("diagnose", response.nodes)
+
+    def test_08_multimodal_prd_payload(self):
+        """Test exact PRD Section 4 multimodal payload with observation_text and image_url."""
+        thread_id = "test-prd-multimodal-008"
+        input_data = {
+            "field_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+            "crop_variety": "Tomato (Roma)",
+            "growth_stage": "Vegetative",
+            "observation": "Lower leaves show yellowing between veins, slight curling along margins.",
+            "image_url": "https://storage.agriops.ai/evidence/2026/08/fieldA_leaf01.jpg",
+        }
+        response = run_agent2_workflow(input_data, thread_id=thread_id)
+        self.assertEqual(response.status, "completed")
+        self.assertIn("Chlorosis", response.answer)
+        self.assertEqual(response.suggested_task_type, "Fertilization")
+        self.assertIn("diagnose", response.nodes)
+        self.assertIn("grade_assessment", response.nodes)
+        self.assertIsNotNone(response.stress_factors)
 
 
 if __name__ == "__main__":

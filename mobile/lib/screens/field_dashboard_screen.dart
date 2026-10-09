@@ -1,3 +1,4 @@
+import '../widgets/app_theme.dart';
 import 'package:flutter/material.dart';
 import '../api/component1_api.dart';
 import '../models/field.dart';
@@ -78,7 +79,7 @@ class _FieldDashboardScreenState extends State<FieldDashboardScreen> {
                     children: [
                       // The main "at a glance" dashboard card
                       Card(
-                        color: Colors.green.shade50,
+                        color: AppTheme.background,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
