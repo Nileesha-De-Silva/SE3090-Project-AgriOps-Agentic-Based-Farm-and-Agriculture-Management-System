@@ -13,7 +13,8 @@ import 'crops_screen.dart';
 import 'analytics_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  final Workspace? workspace;
+  const MainNavigationScreen({super.key, this.workspace});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -32,12 +33,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   void dispose() {
-    _workspace?.dispose();
+    if (widget.workspace == null) {
+      _workspace?.dispose();
+    }
     super.dispose();
   }
 
   Workspace _getWorkspace() {
+    if (widget.workspace != null) return widget.workspace!;
     if (_workspace != null) return _workspace!;
+
     String url = ApiConfig.baseUrl;
     if (!url.endsWith('/')) url = '$url/';
     final api = Api(url, allowLocalHttp: true);
@@ -638,8 +643,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             tooltip: 'Backend API Connection',
             onPressed: _showApiSettingsDialog,
           ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: 'Sign Out / Disconnect',
+            onPressed: () async {
+              ApiConfig.clearSession();
+              final ws = _getWorkspace();
+              await ws.disconnect();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Signed out successfully.')),
+                );
+              }
+            },
+          ),
         ],
       ),
+
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,

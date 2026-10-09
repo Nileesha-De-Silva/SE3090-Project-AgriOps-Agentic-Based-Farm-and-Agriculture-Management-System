@@ -41,27 +41,106 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('AgriOps · Inventory & Ops')),
+    appBar: AppBar(
+      title: const Text('AgriOps AI Mobile'),
+      centerTitle: true,
+    ),
     body: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: ListView(
           shrinkWrap: true,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           children: [
-            const Icon(Icons.eco_outlined, size: 60),
-            const SizedBox(height: 16),
-            Text(
-              isRegister ? 'Register Mobile Client' : 'Your farm, on hand',
-              style: Theme.of(context).textTheme.headlineMedium,
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.eco, size: 52, color: Colors.green),
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            Text(
+              'AgriOps AI Mobile',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Field Worker & Farmer Gateway',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+            ),
+            const SizedBox(height: 20),
+            // Prominent Segmented Toggle for Sign In & Sign Up
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(
+                  value: false,
+                  label: Text('Sign In'),
+                  icon: Icon(Icons.login),
+                ),
+                ButtonSegment(
+                  value: true,
+                  label: Text('Sign Up'),
+                  icon: Icon(Icons.person_add_alt_1),
+                ),
+              ],
+              selected: {isRegister},
+              onSelectionChanged: (set) => setState(() {
+                isRegister = set.first;
+                localError = null;
+              }),
+            ),
+            const SizedBox(height: 16),
             Text(
               isRegister
-                  ? 'Sign up as a Field Worker or Farmer. Once registered in the database, sign in is unlocked.'
+                  ? 'Create an account as a Field Worker or Farmer. Once registered in the database, sign in is unlocked.'
                   : 'Sign in with your registered account. Unregistered users must sign up first before signing in.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
             ),
             const SizedBox(height: 16),
+            if (!isRegister) ...[
+              // Quick demo fill buttons for faster evaluation
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                alignment: WrapAlignment.center,
+                children: [
+                  ActionChip(
+                    avatar: const Icon(Icons.engineering, size: 14),
+                    label: const Text('Fill Field Worker', style: TextStyle(fontSize: 11)),
+                    onPressed: () {
+                      setState(() {
+                        username.text = 'worker_kamal';
+                        password.text = 'NileesHa2003#';
+                        localError = null;
+                      });
+                    },
+                  ),
+                  ActionChip(
+                    avatar: const Icon(Icons.agriculture, size: 14),
+                    label: const Text('Fill Farmer', style: TextStyle(fontSize: 11)),
+                    onPressed: () {
+                      setState(() {
+                        username.text = 'farmer_sunil';
+                        password.text = 'NileesHa2003#';
+                        localError = null;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
             if (isRegister) ...[
               const Text('Select Role:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 6),
@@ -83,21 +162,51 @@ class _ConnectScreenState extends State<ConnectScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              TextField(controller: fullName, decoration: const InputDecoration(labelText: 'Full Name *', prefixIcon: Icon(Icons.badge_outlined))),
+              TextField(
+                controller: fullName,
+                decoration: const InputDecoration(
+                  labelText: 'Full Name *',
+                  prefixIcon: Icon(Icons.badge_outlined),
+                ),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email *', prefixIcon: Icon(Icons.email_outlined))),
+              TextField(
+                controller: email,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email *',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Contact Number (Optional)', prefixIcon: Icon(Icons.phone_outlined))),
+              TextField(
+                controller: phone,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Contact Number (Optional)',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+              ),
               const SizedBox(height: 12),
             ],
-            TextField(controller: username, decoration: const InputDecoration(labelText: 'Username *', prefixIcon: Icon(Icons.person_outline))),
+            TextField(
+              controller: username,
+              decoration: const InputDecoration(
+                labelText: 'Username *',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: password,
               obscureText: true,
               autocorrect: false,
               enableSuggestions: false,
-              decoration: const InputDecoration(labelText: 'Password', helperText: 'Min 8 characters', prefixIcon: Icon(Icons.lock_outline)),
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                helperText: 'Min 8 characters',
+                prefixIcon: Icon(Icons.lock_outline),
+              ),
             ),
             if (isRegister) ...[
               const SizedBox(height: 12),
@@ -106,15 +215,19 @@ class _ConnectScreenState extends State<ConnectScreen> {
                 obscureText: true,
                 autocorrect: false,
                 enableSuggestions: false,
-                decoration: const InputDecoration(labelText: 'Confirm Password *', prefixIcon: Icon(Icons.check_circle_outline)),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password *',
+                  prefixIcon: Icon(Icons.check_circle_outline),
+                ),
               ),
             ],
             if (localError != null) ...[
               const SizedBox(height: 10),
               Notice(localError!),
             ],
-            const SizedBox(height: 16),
-            FilledButton(
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              icon: Icon(isRegister ? Icons.person_add : Icons.login),
               onPressed: widget.workspace.busy ? null : () async {
                 setState(() => localError = null);
                 final user = username.text.trim();
@@ -168,7 +281,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   if (mounted && ok) password.clear();
                 }
               },
-              child: Text(isRegister ? 'Register & Connect' : 'Sign in'),
+              label: Text(isRegister ? 'Register & Sign In' : 'Sign In'),
             ),
             const SizedBox(height: 8),
             TextButton(
@@ -178,13 +291,16 @@ class _ConnectScreenState extends State<ConnectScreen> {
                         isRegister = !isRegister;
                         localError = null;
                       }),
-              child: Text(isRegister ? 'Already have an account? Sign in' : 'New user? Register as Field Worker or Farmer'),
+              child: Text(isRegister ? 'Already have an account? Sign In' : 'New user? Sign Up as Field Worker or Farmer'),
             ),
-            if (widget.workspace.busy) const LinearProgressIndicator(),
+            if (widget.workspace.busy) ...[
+              const SizedBox(height: 8),
+              const LinearProgressIndicator(),
+            ],
             if (widget.workspace.error != null) Notice(widget.workspace.error!),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             const Text(
-              'The token is stored in device secure storage and removed when you disconnect.',
+              'Session credentials are authenticated via ASP.NET Core JWT backend.',
               style: TextStyle(fontSize: 11, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
