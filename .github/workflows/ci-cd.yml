@@ -75,8 +75,8 @@ jobs:
         run: |
           sudo apt-get install -y postgresql-client
           export PGPASSWORD="${{ env.PG_PASSWORD }}"
-          psql -h localhost -U ${{ env.PG_USER }} -c "CREATE DATABASE agriops_test_db;"
-          psql -h localhost -U ${{ env.PG_USER }} -c "CREATE DATABASE agriops_integration_test_db;"
+          psql -h localhost -U ${{ env.PG_USER }} -c "CREATE DATABASE agriops_test_db;" || true
+          psql -h localhost -U ${{ env.PG_USER }} -c "CREATE DATABASE agriops_integration_test_db;" || true
           echo "PostgreSQL test databases provisioned."
 
       - name: Restore NuGet Dependencies
@@ -169,7 +169,7 @@ jobs:
 
       - name: Run Pytest Test Suite
         run: |
-          python -m pytest tests -v --junitxml=junit-report.xml
+          python -m pytest tests -v --import-mode=importlib --junitxml=junit-report.xml
 
       - name: Upload Agent Test Results
         if: always()

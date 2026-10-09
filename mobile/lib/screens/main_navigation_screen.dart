@@ -618,12 +618,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.eco, color: AppTheme.primaryGreen),
-            SizedBox(width: 8),
-            Text(
-              'AgriOps AI Mobile',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            Icon(Icons.eco, color: AppTheme.primaryGreen, size: 20),
+            SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                'AgriOps AI',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

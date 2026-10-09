@@ -18,24 +18,32 @@
 ._*
 .Spotlight-V100
 .Trashes
+**/.DS_Store
 ehthumbs.db
 Thumbs.db
+**/Thumbs.db
 Desktop.ini
+**/Desktop.ini
 Library/
 **/Library/Application Support/
 
 # Visual Studio Code
 .vscode/
+**/.vscode/
 *.code-workspace
+**/*.code-workspace
 
 # Visual Studio & JetBrains
 .vs/
+**/.vs/
 .idea/
+**/.idea/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 *.iml
+**/*.iml
 *.ipr
 *.iws
 
@@ -50,12 +58,19 @@ Library/
 
 # AI Editor & Assistant Caches
 .cursor/
+**/.cursor/
 .gemini/
+**/.gemini/
 .claude/
+**/.claude/
 .windsurf/
+**/.windsurf/
 .copilot/
+**/.copilot/
 .antigravity/
+**/.antigravity/
 scratch/
+**/scratch/
 *.patch
 
 # ------------------------------------------------------------------------------
@@ -67,19 +82,25 @@ scratch/
 **/.env.local
 **/.env.*.local
 *.local.json
+**/*.local.json
 *.env.backup
+**/*.env.backup
 
 # Always allow commit of tracked example/template files
 !**/.env.example
 !**/.env.template
+!**/.env.sample
 
 # Cloud, Mobile & Service Account Secrets
 secrets/
 **/secrets/
 **/secrets.json
 service-account*.json
+**/service-account*.json
 *credentials*.json
+**/*credentials*.json
 client_secret*.json
+**/client_secret*.json
 **/android/app/google-services.json
 **/ios/Runner/GoogleService-Info.plist
 
@@ -107,6 +128,7 @@ client_secret*.json
 publish/
 **/publish/
 out/
+**/out/
 artifacts/
 **/artifacts/
 
@@ -134,6 +156,8 @@ backend/src/AgriOps.Api/appsettings.Local.json
 backend/src/AgriOps.Api/appsettings.*.local.json
 appsettings.Local.json
 appsettings.*.local.json
+**/appsettings.Local.json
+**/appsettings.*.local.json
 
 # Test results & coverage
 TestResults/
@@ -143,6 +167,7 @@ coverage/
 coverage.xml
 coverage.cobertura.xml
 htmlcov/
+**/htmlcov/
 *.trx
 
 # Local databases
@@ -154,7 +179,7 @@ htmlcov/
 *.db-journal
 
 # ------------------------------------------------------------------------------
-# 4. Python AI Subsystems & Agents (All 4 AI Agents)
+# 4. Python AI Subsystems & Agents (All 4 AI Agents & ai-subsystem)
 # ------------------------------------------------------------------------------
 # Bytecode & Caches
 __pycache__/
@@ -171,12 +196,15 @@ env/
 ENV/
 **/.venv/
 **/venv/
+**/env/
+**/ENV/
 .python-version
 .Python
 pip-wheel-metadata/
 poetry.lock
 poetry.toml
 .uv/
+**/.uv/
 
 # Testing & Linting Caches
 .pytest_cache/
@@ -185,6 +213,8 @@ poetry.toml
 **/.mypy_cache/
 .ruff_cache/
 **/.ruff_cache/
+.hypothesis/
+**/.hypothesis/
 .coverage
 .coverage.*
 
@@ -239,12 +269,21 @@ vectorstores/
 
 # Jupyter Notebook Checkpoints
 .ipynb_checkpoints/
+**/.ipynb_checkpoints/
 
 # Evidence & Diagnostic Image Uploads
 uploads/
 **/uploads/
 evidence_uploads/
+**/evidence_uploads/
 temp_images/
+**/temp_images/
+
+# Python packaging & distribution
+*.egg-info/
+**/*.egg-info/
+*.egg
+.eggs/
 
 # ------------------------------------------------------------------------------
 # 5. Frontend Web Dashboard (React 18 / Vite / Tailwind)
@@ -258,7 +297,9 @@ node_modules/
 .yarn/unplugged/
 .parcel-cache/
 .next/
+**/.next/
 .turbo/
+**/.turbo/
 .eslintcache
 bun.lockb
 
@@ -270,6 +311,7 @@ frontend-web/.vite/
 dist/
 **/dist/
 .vite/
+**/.vite/
 *.tsbuildinfo
 
 # Node Logs
@@ -289,10 +331,15 @@ pnpm-debug.log*
 .dart_tool/
 **/.dart_tool/
 .packages
+**/.packages
 .pub-cache/
+**/.pub-cache/
 .pub/
+**/.pub/
 .flutter-plugins
 .flutter-plugins-dependencies
+.flutter-plugins*
+**/.flutter-plugins*
 .widget_preview/
 .mobile-configuration
 
@@ -305,16 +352,22 @@ build/
 **/android/local.properties
 **/android/key.properties
 **/android/.gradle/
+**/.gradle/
 **/android/app/build/
 **/android/app/debug/
 **/android/app/profile/
 **/android/app/release/
 **/android/captures/
 .externalNativeBuild/
+**/.externalNativeBuild/
 .cxx/
+**/.cxx/
 *.apk
 *.aab
 *.ap_
+**/GeneratedPluginRegistrant.java
+**/GeneratedPluginRegistrant.h
+**/GeneratedPluginRegistrant.m
 
 # iOS-specific build & dependency files
 **/ios/Pods/
@@ -324,23 +377,52 @@ build/
 **/ios/Flutter/Flutter.framework
 **/ios/Flutter/Flutter.podspec
 **/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
 **/ios/Flutter/app.framework
 *.ipa
 *.dSYM.zip
+
+# Desktop Platform Ephemerals
+**/macos/Flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
 
 # Lockfile: Keep pubspec.lock tracked
 !pubspec.lock
 !mobile/pubspec.lock
 
+# Whitelist Flutter source assets
+!mobile/assets/**
+
 # ------------------------------------------------------------------------------
 # 7. Docker & Container Artifacts
 # ------------------------------------------------------------------------------
 .docker/
+**/.docker/
 docker-compose.override.yml
 *.docker.log
+postgres_data/
+**/postgres_data/
+pgdata/
+**/pgdata/
 
 # ------------------------------------------------------------------------------
-# 8. Packaging, Deployment & Releases
+# 8. Automated Testing, E2E & Non-Functional Reports
+# ------------------------------------------------------------------------------
+reports/
+**/reports/
+newman/
+**/newman/
+tests/e2e/reports/
+tests/non-functional/reports/
+tests/non-functional/performance/report*.html
+tests/non-functional/performance/summary*.json
+tests/non-functional/accessibility/report*.html
+tests/non-functional/security/zap-report*.html
+*.html.report
+
+# ------------------------------------------------------------------------------
+# 9. Packaging, Deployment & Releases
 # ------------------------------------------------------------------------------
 release/
 **/release/
@@ -350,17 +432,19 @@ release-backend/
 release-frontend/
 
 # ------------------------------------------------------------------------------
-# 9. General Temporary & Log Files
+# 10. General Temporary & Log Files
 # ------------------------------------------------------------------------------
 *.log
 logs/
 **/logs/
 tmp/
+**/tmp/
 temp/
+**/temp/
 Documentations/generated/
 
 # ------------------------------------------------------------------------------
-# 10. Whitelist Explicitly Tracked Schema & Migration Files
+# 11. Whitelist Explicitly Tracked Schema & Migration Files
 # ------------------------------------------------------------------------------
 !*.sql
 !backend/*.sql
@@ -368,7 +452,7 @@ Documentations/generated/
 !backend/component_3_and_4_migration.sql
 
 # ------------------------------------------------------------------------------
-# 11. Documentation Directory & Reports (Ignore Entire docs/ Folder)
+# 12. Documentation Directory & Reports (Ignore Entire docs/ Folder)
 # ------------------------------------------------------------------------------
 docs/
 docs/**

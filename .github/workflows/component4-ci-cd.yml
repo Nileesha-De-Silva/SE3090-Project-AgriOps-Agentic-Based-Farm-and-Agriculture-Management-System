@@ -8,16 +8,22 @@ on:
       - 'feature/**'
     paths:
       - 'backend/src/AgriOps.Api/Controllers/Analytics*'
+      - 'backend/src/AgriOps.Api/Controllers/ValidationSafety*'
+      - 'backend/src/AgriOps.Api/Controllers/MultiAgentAssessedWorkflow*'
       - 'backend/src/AgriOps.Api/Controllers/InventoryAgent*'
-      - 'backend/src/AgriOps.Api/**'
-      - 'backend/src/AgriOps.Core/**'
+      - 'backend/src/AgriOps.Infrastructure/Services/ValidationSafety*'
+      - 'backend/src/AgriOps.Infrastructure/Services/WeatherService*'
+      - 'backend/src/AgriOps.Core/Entities/ValidationResult*'
+      - 'backend/src/AgriOps.Core/Entities/AuditLogs*'
       - 'agents/analytics-sentinel-agent/**'
-      - 'frontend-web/src/pages/ProductionDashboard*'
-      - 'frontend-web/src/pages/SentinelAudit*'
+      - 'frontend-web/src/pages/Analatics*'
       - 'frontend-web/src/components/analytics/**'
-      - 'frontend-web/**'
+      - 'frontend-web/src/services/validationSafetyApi.js'
+      - 'frontend-web/src/services/multiAgentWorkflowApi.js'
       - 'mobile/lib/screens/analytics_screen.dart'
+      - 'mobile/lib/api/analytics_api.dart'
       - 'mobile/test/analytics_screen_test.dart'
+      - 'mobile/test/api/analytics_api_test.dart'
       - '.github/workflows/component4-ci-cd.yml'
   pull_request:
     branches:
@@ -25,16 +31,22 @@ on:
       - development
     paths:
       - 'backend/src/AgriOps.Api/Controllers/Analytics*'
+      - 'backend/src/AgriOps.Api/Controllers/ValidationSafety*'
+      - 'backend/src/AgriOps.Api/Controllers/MultiAgentAssessedWorkflow*'
       - 'backend/src/AgriOps.Api/Controllers/InventoryAgent*'
-      - 'backend/src/AgriOps.Api/**'
-      - 'backend/src/AgriOps.Core/**'
+      - 'backend/src/AgriOps.Infrastructure/Services/ValidationSafety*'
+      - 'backend/src/AgriOps.Infrastructure/Services/WeatherService*'
+      - 'backend/src/AgriOps.Core/Entities/ValidationResult*'
+      - 'backend/src/AgriOps.Core/Entities/AuditLogs*'
       - 'agents/analytics-sentinel-agent/**'
-      - 'frontend-web/src/pages/ProductionDashboard*'
-      - 'frontend-web/src/pages/SentinelAudit*'
+      - 'frontend-web/src/pages/Analatics*'
       - 'frontend-web/src/components/analytics/**'
-      - 'frontend-web/**'
+      - 'frontend-web/src/services/validationSafetyApi.js'
+      - 'frontend-web/src/services/multiAgentWorkflowApi.js'
       - 'mobile/lib/screens/analytics_screen.dart'
+      - 'mobile/lib/api/analytics_api.dart'
       - 'mobile/test/analytics_screen_test.dart'
+      - 'mobile/test/api/analytics_api_test.dart'
       - '.github/workflows/component4-ci-cd.yml'
   workflow_dispatch:
 
@@ -100,7 +112,7 @@ jobs:
 
       - name: Test Agent 4 (Sentinel Workflow & Rule Engine)
         working-directory: agents/analytics-sentinel-agent
-        run: python -m pytest tests -v --junitxml=sentinel-test-results.xml
+        run: python -m pytest tests -v --import-mode=importlib --junitxml=sentinel-test-results.xml
 
       - name: Upload Sentinel Test Results
         if: always()
@@ -171,7 +183,7 @@ jobs:
         run: flutter pub get
 
       - name: Test Analytics Screen Widget & State
-        run: flutter test test/analytics_screen_test.dart
+        run: flutter test test/analytics_screen_test.dart test/api/analytics_api_test.dart
 
   # ========================================================
   # Job 5: Continuous Deployment

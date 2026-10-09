@@ -8,16 +8,27 @@ on:
     paths:
       - 'backend/src/AgriOps.Api/Controllers/Tasks*'
       - 'backend/src/AgriOps.Api/Controllers/Workers*'
-      - 'backend/src/AgriOps.Core/Models/Task*'
-      - 'backend/src/AgriOps.Core/Models/Worker*'
+      - 'backend/src/AgriOps.Api/Controllers/CropAnalysis*'
+      - 'backend/src/AgriOps.Core/Entities/Task*'
+      - 'backend/src/AgriOps.Core/Entities/Worker*'
+      - 'backend/src/AgriOps.Core/Entities/CropAnalysis*'
+      - 'backend/src/AgriOps.Infrastructure/Services/TaskService*'
+      - 'backend/src/AgriOps.Infrastructure/Services/WorkerService*'
+      - 'backend/src/AgriOps.Infrastructure/Services/CropAnalysisService*'
+      - 'backend/src/AgriOps.Infrastructure/Services/WorkerSkillMatcher*'
       - 'ai-subsystem/**'
-      - 'frontend-web/src/pages/TaskBoard*'
-      - 'frontend-web/src/pages/CropAnalysis*'
+      - 'frontend-web/src/pages/Task*'
+      - 'frontend-web/src/pages/ApprovalDossier*'
+      - 'frontend-web/src/pages/WorkerProfile*'
       - 'frontend-web/src/components/crop-analysis/**'
       - 'frontend-web/src/components/tasks/**'
-      - 'mobile/lib/screens/tasks*'
-      - 'mobile/lib/screens/crop_analysis*'
-      - 'mobile/lib/screens/task_evidence*'
+      - 'mobile/lib/screens/tasks_screen.dart'
+      - 'mobile/lib/screens/crop_analysis_screen.dart'
+      - 'mobile/lib/screens/task_evidence_upload_screen.dart'
+      - 'mobile/lib/api/task_api.dart'
+      - 'mobile/lib/api/crop_analysis_api.dart'
+      - 'mobile/lib/models/farm_task.dart'
+      - 'mobile/lib/models/crop_analysis_assessment.dart'
       - 'mobile/test/forms/task_evidence_form_test.dart'
       - 'mobile/test/widgets/crop_analysis_screen_widget_test.dart'
       - 'mobile/test/widgets/tasks_screen_widget_test.dart'
@@ -29,16 +40,27 @@ on:
     paths:
       - 'backend/src/AgriOps.Api/Controllers/Tasks*'
       - 'backend/src/AgriOps.Api/Controllers/Workers*'
-      - 'backend/src/AgriOps.Core/Models/Task*'
-      - 'backend/src/AgriOps.Core/Models/Worker*'
+      - 'backend/src/AgriOps.Api/Controllers/CropAnalysis*'
+      - 'backend/src/AgriOps.Core/Entities/Task*'
+      - 'backend/src/AgriOps.Core/Entities/Worker*'
+      - 'backend/src/AgriOps.Core/Entities/CropAnalysis*'
+      - 'backend/src/AgriOps.Infrastructure/Services/TaskService*'
+      - 'backend/src/AgriOps.Infrastructure/Services/WorkerService*'
+      - 'backend/src/AgriOps.Infrastructure/Services/CropAnalysisService*'
+      - 'backend/src/AgriOps.Infrastructure/Services/WorkerSkillMatcher*'
       - 'ai-subsystem/**'
-      - 'frontend-web/src/pages/TaskBoard*'
-      - 'frontend-web/src/pages/CropAnalysis*'
+      - 'frontend-web/src/pages/Task*'
+      - 'frontend-web/src/pages/ApprovalDossier*'
+      - 'frontend-web/src/pages/WorkerProfile*'
       - 'frontend-web/src/components/crop-analysis/**'
       - 'frontend-web/src/components/tasks/**'
-      - 'mobile/lib/screens/tasks*'
-      - 'mobile/lib/screens/crop_analysis*'
-      - 'mobile/lib/screens/task_evidence*'
+      - 'mobile/lib/screens/tasks_screen.dart'
+      - 'mobile/lib/screens/crop_analysis_screen.dart'
+      - 'mobile/lib/screens/task_evidence_upload_screen.dart'
+      - 'mobile/lib/api/task_api.dart'
+      - 'mobile/lib/api/crop_analysis_api.dart'
+      - 'mobile/lib/models/farm_task.dart'
+      - 'mobile/lib/models/crop_analysis_assessment.dart'
       - 'mobile/test/forms/task_evidence_form_test.dart'
       - 'mobile/test/widgets/crop_analysis_screen_widget_test.dart'
       - 'mobile/test/widgets/tasks_screen_widget_test.dart'
@@ -80,7 +102,7 @@ jobs:
 
       - name: Test Agent 2 (Crop Doctor Agent - 39 tests)
         working-directory: ai-subsystem
-        run: python -m pytest tests -v --junitxml=agent2-test-results.xml
+        run: python -m pytest tests -v --import-mode=importlib --junitxml=agent2-test-results.xml
 
       - name: Upload Agent 2 Test Artifact
         if: always()
@@ -120,4 +142,4 @@ jobs:
 
       - name: Test Mobile Tasks, Evidence & Crop Doctor Screens
         working-directory: mobile
-        run: flutter test test/widgets/tasks_screen_widget_test.dart test/widgets/crop_analysis_screen_widget_test.dart test/forms/task_evidence_form_test.dart
+        run: flutter test test/widgets/tasks_screen_widget_test.dart test/widgets/crop_analysis_screen_widget_test.dart test/forms/task_evidence_form_test.dart test/api/task_api_test.dart test/api/crop_analysis_api_test.dart test/navigation/task_navigation_test.dart test/unit/farm_task_model_test.dart test/unit/crop_analysis_model_test.dart

@@ -7,20 +7,27 @@ on:
       - development
     paths:
       - 'backend/src/AgriOps.Api/Controllers/Inventory*'
-      - 'backend/src/AgriOps.Api/Controllers/Suppliers*'
-      - 'backend/src/AgriOps.Api/Controllers/PurchaseRequests*'
-      - 'backend/src/AgriOps.Api/Controllers/ReorderRecommendations*'
-      - 'backend/src/AgriOps.Core/Models/Inventory*'
+      - 'backend/src/AgriOps.Api/Controllers/Supplier*'
+      - 'backend/src/AgriOps.Api/Controllers/PurchaseRequest*'
+      - 'backend/src/AgriOps.Api/Controllers/ReorderRecommendation*'
+      - 'backend/src/AgriOps.Core/Entities/Inventory*'
+      - 'backend/src/AgriOps.Core/Entities/Supplier*'
+      - 'backend/src/AgriOps.Core/Entities/PurchaseRequest*'
+      - 'backend/src/AgriOps.Core/Entities/ReorderRecommendation*'
       - 'backend/src/AgriOps.Infrastructure/Data/**'
       - 'agents/inventory-agent/**'
       - 'frontend-web/src/pages/Inventory*'
       - 'frontend-web/src/pages/Suppliers*'
       - 'frontend-web/src/components/inventory/**'
       - 'frontend-web/src/__tests__/inventoryPermissions.test.jsx'
-      - 'mobile/lib/screens/inventory*'
-      - 'mobile/lib/screens/scanner.dart'
-      - 'mobile/lib/screens/inventory_views.dart'
+      - 'mobile/lib/inventory_views.dart'
+      - 'mobile/lib/scanner.dart'
+      - 'mobile/lib/api.dart'
+      - 'mobile/lib/workspace.dart'
       - 'mobile/test/inventory*'
+      - 'mobile/test/api_test.dart'
+      - 'mobile/test/app_test.dart'
+      - 'mobile/test/workspace_test.dart'
       - '.github/workflows/component3-ci.yml'
   pull_request:
     branches:
@@ -28,20 +35,27 @@ on:
       - development
     paths:
       - 'backend/src/AgriOps.Api/Controllers/Inventory*'
-      - 'backend/src/AgriOps.Api/Controllers/Suppliers*'
-      - 'backend/src/AgriOps.Api/Controllers/PurchaseRequests*'
-      - 'backend/src/AgriOps.Api/Controllers/ReorderRecommendations*'
-      - 'backend/src/AgriOps.Core/Models/Inventory*'
+      - 'backend/src/AgriOps.Api/Controllers/Supplier*'
+      - 'backend/src/AgriOps.Api/Controllers/PurchaseRequest*'
+      - 'backend/src/AgriOps.Api/Controllers/ReorderRecommendation*'
+      - 'backend/src/AgriOps.Core/Entities/Inventory*'
+      - 'backend/src/AgriOps.Core/Entities/Supplier*'
+      - 'backend/src/AgriOps.Core/Entities/PurchaseRequest*'
+      - 'backend/src/AgriOps.Core/Entities/ReorderRecommendation*'
       - 'backend/src/AgriOps.Infrastructure/Data/**'
       - 'agents/inventory-agent/**'
       - 'frontend-web/src/pages/Inventory*'
       - 'frontend-web/src/pages/Suppliers*'
       - 'frontend-web/src/components/inventory/**'
       - 'frontend-web/src/__tests__/inventoryPermissions.test.jsx'
-      - 'mobile/lib/screens/inventory*'
-      - 'mobile/lib/screens/scanner.dart'
-      - 'mobile/lib/screens/inventory_views.dart'
+      - 'mobile/lib/inventory_views.dart'
+      - 'mobile/lib/scanner.dart'
+      - 'mobile/lib/api.dart'
+      - 'mobile/lib/workspace.dart'
       - 'mobile/test/inventory*'
+      - 'mobile/test/api_test.dart'
+      - 'mobile/test/app_test.dart'
+      - 'mobile/test/workspace_test.dart'
       - '.github/workflows/component3-ci.yml'
   workflow_dispatch:
 
@@ -76,11 +90,16 @@ jobs:
         working-directory: agents/inventory-agent
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          else
+            pip install -r requirements.txt
+          fi
+          pip install pytest
 
       - name: Test Agent 3 (Inventory Reorder Agent - 35 tests)
         working-directory: agents/inventory-agent
-        run: python -m pytest tests -v --junitxml=agent3-test-results.xml
+        run: python -m pytest tests -v --import-mode=importlib --junitxml=agent3-test-results.xml
 
       - name: Upload Agent 3 Test Artifact
         if: always()

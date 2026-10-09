@@ -41,272 +41,418 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('AgriOps AI Mobile'),
-      centerTitle: true,
-    ),
-    body: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          children: [
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.eco, size: 52, color: Colors.green),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'AgriOps AI Mobile',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Field Worker & Farmer Gateway',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
-            ),
-            const SizedBox(height: 20),
-            // Prominent Segmented Toggle for Sign In & Sign Up
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(
-                  value: false,
-                  label: Text('Sign In'),
-                  icon: Icon(Icons.login),
-                ),
-                ButtonSegment(
-                  value: true,
-                  label: Text('Sign Up'),
-                  icon: Icon(Icons.person_add_alt_1),
-                ),
-              ],
-              selected: {isRegister},
-              onSelectionChanged: (set) => setState(() {
-                isRegister = set.first;
-                localError = null;
-              }),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              isRegister
-                  ? 'Create an account as a Field Worker or Farmer. Once registered in the database, sign in is unlocked.'
-                  : 'Sign in with your registered account. Unregistered users must sign up first before signing in.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-            ),
-            const SizedBox(height: 16),
-            if (!isRegister) ...[
-              // Quick demo fill buttons for faster evaluation
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                alignment: WrapAlignment.center,
-                children: [
-                  ActionChip(
-                    avatar: const Icon(Icons.engineering, size: 14),
-                    label: const Text('Fill Field Worker', style: TextStyle(fontSize: 11)),
-                    onPressed: () {
-                      setState(() {
-                        username.text = 'worker_kamal';
-                        password.text = 'NileesHa2003#';
-                        localError = null;
-                      });
-                    },
-                  ),
-                  ActionChip(
-                    avatar: const Icon(Icons.agriculture, size: 14),
-                    label: const Text('Fill Farmer', style: TextStyle(fontSize: 11)),
-                    onPressed: () {
-                      setState(() {
-                        username.text = 'farmer_sunil';
-                        password.text = 'NileesHa2003#';
-                        localError = null;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (isRegister) ...[
-              const Text('Select Role:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  ChoiceChip(
-                    avatar: const Icon(Icons.engineering, size: 16),
-                    label: const Text('Field Worker'),
-                    selected: selectedRole == 'FieldWorker',
-                    onSelected: (val) { if (val) setState(() => selectedRole = 'FieldWorker'); },
-                  ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    avatar: const Icon(Icons.agriculture, size: 16),
-                    label: const Text('Farmer'),
-                    selected: selectedRole == 'Farmer',
-                    onSelected: (val) { if (val) setState(() => selectedRole = 'Farmer'); },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: fullName,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name *',
-                  prefixIcon: Icon(Icons.badge_outlined),
+    body: Stack(
+      children: [
+        // 1. Farmland Wallpaper matching Frontend Web
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/agriops-hero.jpg',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF064E3B), Color(0xFF0F172A)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email *',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phone,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Contact Number (Optional)',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-            TextField(
-              controller: username,
-              decoration: const InputDecoration(
-                labelText: 'Username *',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: password,
-              obscureText: true,
-              autocorrect: false,
-              enableSuggestions: false,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                helperText: 'Min 8 characters',
-                prefixIcon: Icon(Icons.lock_outline),
-              ),
-            ),
-            if (isRegister) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: confirmPassword,
-                obscureText: true,
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm Password *',
-                  prefixIcon: Icon(Icons.check_circle_outline),
-                ),
-              ),
-            ],
-            if (localError != null) ...[
-              const SizedBox(height: 10),
-              Notice(localError!),
-            ],
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              icon: Icon(isRegister ? Icons.person_add : Icons.login),
-              onPressed: widget.workspace.busy ? null : () async {
-                setState(() => localError = null);
-                final user = username.text.trim();
-                final pass = password.text;
-
-                if (user.isEmpty) {
-                  setState(() => localError = 'Username is required.');
-                  return;
-                }
-                if (pass.isEmpty) {
-                  setState(() => localError = 'Password is required.');
-                  return;
-                }
-
-                if (isRegister) {
-                  final name = fullName.text.trim();
-                  final mail = email.text.trim();
-                  final confirm = confirmPassword.text;
-
-                  if (name.isEmpty) {
-                    setState(() => localError = 'Full Name is required.');
-                    return;
-                  }
-                  if (mail.isEmpty || !mail.contains('@')) {
-                    setState(() => localError = 'Valid email is required.');
-                    return;
-                  }
-                  if (pass.length < 8) {
-                    setState(() => localError = 'Password must be at least 8 characters.');
-                    return;
-                  }
-                  if (pass != confirm) {
-                    setState(() => localError = 'Passwords do not match.');
-                    return;
-                  }
-
-                  final ok = await widget.workspace.register(
-                    username: user,
-                    password: pass,
-                    fullName: name,
-                    roleName: selectedRole,
-                    email: mail,
-                    contactNumber: phone.text.trim(),
-                  );
-                  if (mounted && ok) {
-                    password.clear();
-                    confirmPassword.clear();
-                  }
-                } else {
-                  final ok = await widget.workspace.login(user, pass);
-                  if (mounted && ok) password.clear();
-                }
-              },
-              label: Text(isRegister ? 'Register & Sign In' : 'Sign In'),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: widget.workspace.busy
-                  ? null
-                  : () => setState(() {
-                        isRegister = !isRegister;
-                        localError = null;
-                      }),
-              child: Text(isRegister ? 'Already have an account? Sign In' : 'New user? Sign Up as Field Worker or Farmer'),
-            ),
-            if (widget.workspace.busy) ...[
-              const SizedBox(height: 8),
-              const LinearProgressIndicator(),
-            ],
-            if (widget.workspace.error != null) Notice(widget.workspace.error!),
-            const SizedBox(height: 12),
-            const Text(
-              'Session credentials are authenticated via ASP.NET Core JWT backend.',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
-      ),
+        // 2. High-contrast ambient overlay for readability
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withValues(alpha: 0.55),
+                  const Color(0xFF0A2E23).withValues(alpha: 0.70),
+                  Colors.black.withValues(alpha: 0.88),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+        // 3. Central Login / Registration Card
+        SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Container(
+                  padding: const EdgeInsets.all(26),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E2B27).withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.22),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        blurRadius: 32,
+                        offset: const Offset(0, 16),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF34D399).withValues(alpha: 0.4),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: const Icon(Icons.eco, size: 40, color: Color(0xFF34D399)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'AgriOps AI Mobile',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Field Operations & Mobile Gateway',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.75),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Prominent Segmented Toggle for Sign In & Sign Up
+                      SegmentedButton<bool>(
+                        style: SegmentedButton.styleFrom(
+                          selectedBackgroundColor: const Color(0xFF059669),
+                          selectedForegroundColor: Colors.white,
+                          foregroundColor: Colors.white70,
+                          backgroundColor: Colors.white.withValues(alpha: 0.08),
+                        ),
+                        segments: const [
+                          ButtonSegment(
+                            value: false,
+                            label: Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold)),
+                            icon: Icon(Icons.login),
+                          ),
+                          ButtonSegment(
+                            value: true,
+                            label: Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold)),
+                            icon: Icon(Icons.person_add_alt_1),
+                          ),
+                        ],
+                        selected: {isRegister},
+                        onSelectionChanged: (set) => setState(() {
+                          isRegister = set.first;
+                          localError = null;
+                        }),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        isRegister
+                            ? 'Register as a Field Worker or Farmer. Once registered in the database, sign in is unlocked.'
+                            : 'Sign in with your registered account. Unregistered users must sign up first before signing in.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.75)),
+                      ),
+                      const SizedBox(height: 14),
+                      if (!isRegister) ...[
+                        // Quick demo fill buttons
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            ActionChip(
+                              backgroundColor: Colors.white.withValues(alpha: 0.12),
+                              side: BorderSide(color: const Color(0xFF34D399).withValues(alpha: 0.5)),
+                              avatar: const Icon(Icons.engineering, size: 14, color: Color(0xFF34D399)),
+                              label: const Text('Fill Field Worker', style: TextStyle(fontSize: 11, color: Colors.white)),
+                              onPressed: () {
+                                setState(() {
+                                  username.text = 'worker_kamal';
+                                  password.text = 'NileesHa2003#';
+                                  localError = null;
+                                });
+                              },
+                            ),
+                            ActionChip(
+                              backgroundColor: Colors.white.withValues(alpha: 0.12),
+                              side: BorderSide(color: const Color(0xFF34D399).withValues(alpha: 0.5)),
+                              avatar: const Icon(Icons.agriculture, size: 14, color: Color(0xFF34D399)),
+                              label: const Text('Fill Farmer', style: TextStyle(fontSize: 11, color: Colors.white)),
+                              onPressed: () {
+                                setState(() {
+                                  username.text = 'farmer_sunil';
+                                  password.text = 'NileesHa2003#';
+                                  localError = null;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      if (isRegister) ...[
+                        const Text(
+                          'Select Mobile Role:',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            ChoiceChip(
+                              avatar: Icon(Icons.engineering, size: 16, color: selectedRole == 'FieldWorker' ? Colors.white : const Color(0xFF34D399)),
+                              label: const Text('Field Worker'),
+                              selected: selectedRole == 'FieldWorker',
+                              selectedColor: const Color(0xFF059669),
+                              backgroundColor: Colors.white.withValues(alpha: 0.12),
+                              side: BorderSide(color: selectedRole == 'FieldWorker' ? const Color(0xFF34D399) : Colors.white24),
+                              labelStyle: TextStyle(
+                                color: selectedRole == 'FieldWorker' ? Colors.white : Colors.white70,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              onSelected: (val) { if (val) setState(() => selectedRole = 'FieldWorker'); },
+                            ),
+                            const SizedBox(width: 8),
+                            ChoiceChip(
+                              avatar: Icon(Icons.agriculture, size: 16, color: selectedRole == 'Farmer' ? Colors.white : const Color(0xFF34D399)),
+                              label: const Text('Farmer'),
+                              selected: selectedRole == 'Farmer',
+                              selectedColor: const Color(0xFF059669),
+                              backgroundColor: Colors.white.withValues(alpha: 0.12),
+                              side: BorderSide(color: selectedRole == 'Farmer' ? const Color(0xFF34D399) : Colors.white24),
+                              labelStyle: TextStyle(
+                                color: selectedRole == 'Farmer' ? Colors.white : Colors.white70,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              onSelected: (val) { if (val) setState(() => selectedRole = 'Farmer'); },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: fullName,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            labelText: 'Full Name *',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF34D399)),
+                            filled: true,
+                            fillColor: Colors.white.withValues(alpha: 0.08),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF34D399), width: 1.5)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: email,
+                          keyboardType: TextInputType.emailAddress,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            labelText: 'Email Address *',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF34D399)),
+                            filled: true,
+                            fillColor: Colors.white.withValues(alpha: 0.08),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF34D399), width: 1.5)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: phone,
+                          keyboardType: TextInputType.phone,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            labelText: 'Contact Number (Optional)',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF34D399)),
+                            filled: true,
+                            fillColor: Colors.white.withValues(alpha: 0.08),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF34D399), width: 1.5)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      TextField(
+                        controller: username,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'Username *',
+                          labelStyle: const TextStyle(color: Colors.white70),
+                          prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF34D399)),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.08),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2))),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF34D399), width: 1.5)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: password,
+                        obscureText: true,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          helperText: 'Min 8 characters',
+                          helperStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                          labelStyle: const TextStyle(color: Colors.white70),
+                          prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF34D399)),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.08),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2))),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF34D399), width: 1.5)),
+                        ),
+                      ),
+                      if (isRegister) ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: confirmPassword,
+                          obscureText: true,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            labelText: 'Confirm Password *',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            prefixIcon: const Icon(Icons.check_circle_outline, color: Color(0xFF34D399)),
+                            filled: true,
+                            fillColor: Colors.white.withValues(alpha: 0.08),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF34D399), width: 1.5)),
+                          ),
+                        ),
+                      ],
+                      if (localError != null) ...[
+                        const SizedBox(height: 10),
+                        Notice(localError!),
+                      ],
+                      const SizedBox(height: 18),
+                      FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF059669),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: Icon(isRegister ? Icons.person_add : Icons.login),
+                        onPressed: widget.workspace.busy ? null : () async {
+                          setState(() => localError = null);
+                          final user = username.text.trim();
+                          final pass = password.text;
+
+                          if (user.isEmpty) {
+                            setState(() => localError = 'Username is required.');
+                            return;
+                          }
+                          if (pass.isEmpty) {
+                            setState(() => localError = 'Password is required.');
+                            return;
+                          }
+
+                          if (isRegister) {
+                            final name = fullName.text.trim();
+                            final mail = email.text.trim();
+                            final confirm = confirmPassword.text;
+
+                            if (name.isEmpty) {
+                              setState(() => localError = 'Full Name is required.');
+                              return;
+                            }
+                            if (mail.isEmpty || !mail.contains('@')) {
+                              setState(() => localError = 'Valid email is required.');
+                              return;
+                            }
+                            if (pass.length < 8) {
+                              setState(() => localError = 'Password must be at least 8 characters.');
+                              return;
+                            }
+                            if (pass != confirm) {
+                              setState(() => localError = 'Passwords do not match.');
+                              return;
+                            }
+
+                            final ok = await widget.workspace.register(
+                              username: user,
+                              password: pass,
+                              fullName: name,
+                              roleName: selectedRole,
+                              email: mail,
+                              contactNumber: phone.text.trim(),
+                            );
+                            if (mounted && ok) {
+                              password.clear();
+                              confirmPassword.clear();
+                            }
+                          } else {
+                            final ok = await widget.workspace.login(user, pass);
+                            if (mounted && ok) password.clear();
+                          }
+                        },
+                        label: Text(
+                          isRegister ? 'Register & Sign In' : 'Sign In',
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: widget.workspace.busy
+                            ? null
+                            : () => setState(() {
+                                  isRegister = !isRegister;
+                                  localError = null;
+                                }),
+                        child: Text(
+                          isRegister ? 'Already have an account? Sign In' : 'New user? Sign Up as Field Worker or Farmer',
+                          style: const TextStyle(color: Color(0xFF6EE7B7), fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      if (widget.workspace.busy) ...[
+                        const SizedBox(height: 8),
+                        const LinearProgressIndicator(color: Color(0xFF34D399)),
+                      ],
+                      if (widget.workspace.error != null) Notice(widget.workspace.error!),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Session credentials authenticated via ASP.NET Core JWT backend.',
+                        style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.6)),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     ),
   );
 }
