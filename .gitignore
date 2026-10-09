@@ -332,8 +332,19 @@ Documentations/generated/
 !backend/src/AgriOps.Api/*.sql
 
 # ------------------------------------------------------------------------------
-# 10. Academic Submission Reports & Private Evaluation Documents
+# 10. Documentation Artifacts & Reports (All PDFs and .md files in docs/)
 # ------------------------------------------------------------------------------
+# Ignore all PDF and Markdown documents in docs/
+docs/*.pdf
+docs/*.md
+docs/**/*.pdf
+docs/**/*.md
+
+# VS Code Markdown PDF artifact folder
+\${workspaceFolder}/
+${workspaceFolder}/
+
+# Specific Academic Submission Reports & Private Evaluation Documents
 docs/FINAL_SE3090_CONSOLIDATED_SUBMISSION_REPORT.md
 *CONSOLIDATED_SUBMISSION_REPORT*
 *submission*.pdf
@@ -341,3 +352,31 @@ docs/FINAL_SE3090_CONSOLIDATED_SUBMISSION_REPORT.md
 *SE3090_*.pdf
 *SE3090_*.docx
 
+# Explicit Component 1 & 2 Testing Reports & Evaluation Artifacts
+docs/COMPONENT1_CONSOLIDATED_MASTER_REPORT.pdf
+docs/COMPONENT1_DEFECT_REPORT.md
+docs/COMPONENT1_DEFECT_REPORT.pdf
+docs/COMPONENT1_SOFTWARE_TESTING_REPORT.md
+docs/COMPONENT1_SOFTWARE_TESTING_REPORT.pdf
+docs/COMPONENT1_TEST_CASES.md
+docs/COMPONENT1_TEST_CASES.pdf
+docs/COMPONENT1_TEST_EXECUTION_SUMMARY.md
+docs/COMPONENT1_TEST_EXECUTION_SUMMARY.pdf
+docs/COMPONENT1_TEST_PLAN.md
+docs/COMPONENT1_TEST_PLAN.pdf
+docs/COMPONENT1_TOOL_GENERATED_EVALUATION_EVIDENCE.md
+docs/COMPONENT1_TOOL_GENERATED_EVALUATION_EVIDENCE.pdf
+docs/COMPONENT2_DEFECT_REPORT.md
+docs/COMPONENT2_DEFECT_REPORT.pdf
+docs/COMPONENT2_NILEESHA_TEST_PLAN_AND_EVALUATION_REPORT.md
+docs/COMPONENT2_NILEESHA_TEST_PLAN_AND_EVALUATION_REPORT.pdf
+docs/COMPONENT2_SOFTWARE_TESTING_REPORT.md
+docs/COMPONENT2_SOFTWARE_TESTING_REPORT.pdf
+docs/COMPONENT2_TEST_CASES.md
+docs/COMPONENT2_TEST_CASES.pdf
+docs/COMPONENT2_TEST_EXECUTION_SUMMARY.md
+docs/COMPONENT2_TEST_EXECUTION_SUMMARY.pdf
+docs/COMPONENT2_TEST_PLAN.md
+docs/COMPONENT2_TEST_PLAN.pdf
+docs/COMPONENT2_TOOL_GENERATED_EVALUATION_EVIDENCE.md
+docs/COMPONENT2_TOOL_GENERATED_EVALUATION_EVIDENCE.pdf
