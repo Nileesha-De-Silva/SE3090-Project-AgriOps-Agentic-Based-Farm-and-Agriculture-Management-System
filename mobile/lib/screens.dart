@@ -23,31 +23,176 @@ class ConnectScreen extends StatefulWidget {
 }
 class _ConnectScreenState extends State<ConnectScreen> {
   final username = TextEditingController(), password = TextEditingController();
+  final fullName = TextEditingController(), email = TextEditingController(), phone = TextEditingController(), confirmPassword = TextEditingController();
+  bool isRegister = false;
+  String selectedRole = 'FieldWorker';
+  String? localError;
+
   @override
-  void dispose() { username.dispose(); password.dispose(); super.dispose(); }
+  void dispose() {
+    username.dispose();
+    password.dispose();
+    fullName.dispose();
+    email.dispose();
+    phone.dispose();
+    confirmPassword.dispose();
+    super.dispose();
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('AgriOps · Inventory')),
-    body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: ListView(
-      shrinkWrap: true, padding: const EdgeInsets.all(24), children: [
-        const Icon(Icons.eco_outlined, size: 64), const SizedBox(height: 20),
-        Text('Your farm, on hand', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 12),
-        const Text('Sign in with your AgriOps account. Your role determines which inventory actions are available.'),
-        const SizedBox(height: 20),
-        TextField(controller: username, decoration: const InputDecoration(labelText: 'Username')),
-        const SizedBox(height: 12),
-        TextField(controller: password, obscureText: true, autocorrect: false, enableSuggestions: false,
-          decoration: const InputDecoration(labelText: 'Password')),
-        const SizedBox(height: 12),
-        FilledButton(onPressed: widget.workspace.busy ? null : () async {
-          if (username.text.trim().isEmpty || password.text.isEmpty) return;
-          final ok = await widget.workspace.login(username.text, password.text);
-          if (mounted && ok) password.clear();
-        }, child: const Text('Sign in')),
-        if (widget.workspace.busy) const LinearProgressIndicator(),
-        if (widget.workspace.error != null) Notice(widget.workspace.error!),
-        const Text('The token is stored in device secure storage and removed when you disconnect.'),
-      ]))));
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('AgriOps · Inventory & Ops')),
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(24),
+          children: [
+            const Icon(Icons.eco_outlined, size: 60),
+            const SizedBox(height: 16),
+            Text(
+              isRegister ? 'Register Mobile Client' : 'Your farm, on hand',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isRegister
+                  ? 'Sign up as a Field Worker or Farmer. Once registered in the database, sign in is unlocked.'
+                  : 'Sign in with your registered account. Unregistered users must sign up first before signing in.',
+            ),
+            const SizedBox(height: 16),
+            if (isRegister) ...[
+              const Text('Select Role:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  ChoiceChip(
+                    avatar: const Icon(Icons.engineering, size: 16),
+                    label: const Text('Field Worker'),
+                    selected: selectedRole == 'FieldWorker',
+                    onSelected: (val) { if (val) setState(() => selectedRole = 'FieldWorker'); },
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    avatar: const Icon(Icons.agriculture, size: 16),
+                    label: const Text('Farmer'),
+                    selected: selectedRole == 'Farmer',
+                    onSelected: (val) { if (val) setState(() => selectedRole = 'Farmer'); },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(controller: fullName, decoration: const InputDecoration(labelText: 'Full Name *', prefixIcon: Icon(Icons.badge_outlined))),
+              const SizedBox(height: 12),
+              TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email *', prefixIcon: Icon(Icons.email_outlined))),
+              const SizedBox(height: 12),
+              TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Contact Number (Optional)', prefixIcon: Icon(Icons.phone_outlined))),
+              const SizedBox(height: 12),
+            ],
+            TextField(controller: username, decoration: const InputDecoration(labelText: 'Username *', prefixIcon: Icon(Icons.person_outline))),
+            const SizedBox(height: 12),
+            TextField(
+              controller: password,
+              obscureText: true,
+              autocorrect: false,
+              enableSuggestions: false,
+              decoration: const InputDecoration(labelText: 'Password', helperText: 'Min 8 characters', prefixIcon: Icon(Icons.lock_outline)),
+            ),
+            if (isRegister) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmPassword,
+                obscureText: true,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: const InputDecoration(labelText: 'Confirm Password *', prefixIcon: Icon(Icons.check_circle_outline)),
+              ),
+            ],
+            if (localError != null) ...[
+              const SizedBox(height: 10),
+              Notice(localError!),
+            ],
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: widget.workspace.busy ? null : () async {
+                setState(() => localError = null);
+                final user = username.text.trim();
+                final pass = password.text;
+
+                if (user.isEmpty) {
+                  setState(() => localError = 'Username is required.');
+                  return;
+                }
+                if (pass.isEmpty) {
+                  setState(() => localError = 'Password is required.');
+                  return;
+                }
+
+                if (isRegister) {
+                  final name = fullName.text.trim();
+                  final mail = email.text.trim();
+                  final confirm = confirmPassword.text;
+
+                  if (name.isEmpty) {
+                    setState(() => localError = 'Full Name is required.');
+                    return;
+                  }
+                  if (mail.isEmpty || !mail.contains('@')) {
+                    setState(() => localError = 'Valid email is required.');
+                    return;
+                  }
+                  if (pass.length < 8) {
+                    setState(() => localError = 'Password must be at least 8 characters.');
+                    return;
+                  }
+                  if (pass != confirm) {
+                    setState(() => localError = 'Passwords do not match.');
+                    return;
+                  }
+
+                  final ok = await widget.workspace.register(
+                    username: user,
+                    password: pass,
+                    fullName: name,
+                    roleName: selectedRole,
+                    email: mail,
+                    contactNumber: phone.text.trim(),
+                  );
+                  if (mounted && ok) {
+                    password.clear();
+                    confirmPassword.clear();
+                  }
+                } else {
+                  final ok = await widget.workspace.login(user, pass);
+                  if (mounted && ok) password.clear();
+                }
+              },
+              child: Text(isRegister ? 'Register & Connect' : 'Sign in'),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: widget.workspace.busy
+                  ? null
+                  : () => setState(() {
+                        isRegister = !isRegister;
+                        localError = null;
+                      }),
+              child: Text(isRegister ? 'Already have an account? Sign in' : 'New user? Register as Field Worker or Farmer'),
+            ),
+            if (widget.workspace.busy) const LinearProgressIndicator(),
+            if (widget.workspace.error != null) Notice(widget.workspace.error!),
+            const SizedBox(height: 8),
+            const Text(
+              'The token is stored in device secure storage and removed when you disconnect.',
+              style: TextStyle(fontSize: 11, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class HomeScreen extends StatefulWidget {

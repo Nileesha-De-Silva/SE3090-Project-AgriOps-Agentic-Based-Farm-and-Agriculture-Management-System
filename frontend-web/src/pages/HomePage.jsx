@@ -56,7 +56,15 @@ function Logo({ light = false }) {
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useAuth();
-  const workspacePath = '/workspace';
+  const getRoleLandingPath = (currentUser) => {
+    if (!currentUser) return '/login';
+    const r = (currentUser.roles || []).map((x) => x?.toLowerCase().trim());
+    if (r.includes('administrator') || r.includes('admin')) return '/users';
+    if (r.includes('farmmanager') || r.includes('manager')) return '/workspace';
+    if (r.includes('agronomist')) return '/analysis';
+    return '/workspace';
+  };
+  const workspacePath = getRoleLandingPath(user);
   const authPath = user ? workspacePath : '/login';
   const authLabel = user ? 'Open workspace' : 'Sign in';
   const ctaLabel = user ? 'Open workspace' : 'Sign in to AgriOps';

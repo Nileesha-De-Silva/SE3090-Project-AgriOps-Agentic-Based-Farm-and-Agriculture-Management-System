@@ -1,13 +1,13 @@
 # ==============================================================================
 # AGRIOPS PLATFORM - CONSOLIDATED ROOT GITIGNORE (COMPONENTS 1, 2, 3 & 4)
 # Unified Ignore Rules for:
-#   - Component 1: Farm & Crop Management + Farm Planning Agent (Python / LangGraph)
-#   - Component 2: Autonomous Farm Tasks & Crop Diagnostics (FastAPI / LangGraph / Chroma)
-#   - Component 3: Inventory Management & Procurement Reorder Agent (FastAPI / LangGraph)
-#   - Component 4: User Administration, RBAC, Audit Logs, Historical Production Analytics
-#   - Backend Core: ASP.NET Core / .NET 10 / EF Core / PostgreSQL
-#   - Frontend Web: React 18 / Vite / Tailwind CSS
-#   - Mobile App: Flutter / Dart / Android / iOS
+#   - Component 1: Farm & Crop Management + Agent 1: Farm Planning Agent (FastAPI / LangGraph)
+#   - Component 2: Autonomous Tasks & Evidence + Agent 2: Crop Doctor Agent (FastAPI / LangGraph / Chroma)
+#   - Component 3: Inventory & Supply Chain + Agent 3: Inventory Reorder Agent (FastAPI / LangGraph)
+#   - Component 4: Analytics, Production & RBAC + Agent 4: Safety Sentinel Agent (FastAPI / LangGraph)
+#   - Backend Core: ASP.NET Core / .NET 10 / EF Core / PostgreSQL 17
+#   - Frontend Web: React 18 / Vite / Tailwind CSS / Redux Toolkit
+#   - Mobile Client: Flutter / Dart / Android / iOS
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -51,6 +51,11 @@ Library/
 # AI Editor & Assistant Caches
 .cursor/
 .gemini/
+.claude/
+.windsurf/
+.copilot/
+.antigravity/
+scratch/
 *.patch
 
 # ------------------------------------------------------------------------------
@@ -88,7 +93,7 @@ client_secret*.json
 *.p12
 
 # ------------------------------------------------------------------------------
-# 3. ASP.NET Core Backend & .NET 10 Solution
+# 3. ASP.NET Core Backend & .NET 10 Solution (Components 1 - 4)
 # ------------------------------------------------------------------------------
 # Build outputs & binaries
 [Bb]in/
@@ -103,6 +108,7 @@ publish/
 **/publish/
 out/
 artifacts/
+**/artifacts/
 
 # .NET compilation artifacts & caches
 *.cache
@@ -137,6 +143,7 @@ coverage/
 coverage.xml
 coverage.cobertura.xml
 htmlcov/
+*.trx
 
 # Local databases
 *.sqlite
@@ -147,7 +154,7 @@ htmlcov/
 *.db-journal
 
 # ------------------------------------------------------------------------------
-# 4. Python AI Subsystems & Agents (Components 1, 2, and 3)
+# 4. Python AI Subsystems & Agents (All 4 AI Agents)
 # ------------------------------------------------------------------------------
 # Bytecode & Caches
 __pycache__/
@@ -181,6 +188,20 @@ poetry.toml
 .coverage
 .coverage.*
 
+# Test Results & Evaluation Scorecards
+junit/
+**/junit/
+junit*.xml
+*test-results.xml
+sentinel-test-results.xml
+agent*-test-results.xml
+*.scorecard.json
+*.scorecard.txt
+evaluation_results/
+**/evaluation_results/
+benchmark_results/
+**/benchmark_results/
+
 # LangChain & LangGraph Stateful Checkpoints & Tracing
 .langchain/
 .langchain.db
@@ -192,9 +213,12 @@ poetry.toml
 ai-subsystem/checkpoints/
 agents/farm-planning-agent/checkpoints/
 agents/inventory-agent/checkpoints/
+agents/analytics-sentinel-agent/checkpoints/
 **/checkpoints/
 agent.db
 **/agent.db
+sentinel.db
+**/sentinel.db
 
 # Vector Databases & Embeddings
 chroma/
@@ -223,7 +247,7 @@ evidence_uploads/
 temp_images/
 
 # ------------------------------------------------------------------------------
-# 5. Frontend Web Dashboard (React / Vite / Tailwind)
+# 5. Frontend Web Dashboard (React 18 / Vite / Tailwind)
 # ------------------------------------------------------------------------------
 # Dependencies & Package Managers
 node_modules/
@@ -244,6 +268,7 @@ frontend-web/build/
 frontend-web/dist-ssr/
 frontend-web/.vite/
 dist/
+**/dist/
 .vite/
 *.tsbuildinfo
 
@@ -315,7 +340,17 @@ docker-compose.override.yml
 *.docker.log
 
 # ------------------------------------------------------------------------------
-# 8. General Temporary & Log Files
+# 8. Packaging, Deployment & Releases
+# ------------------------------------------------------------------------------
+release/
+**/release/
+release-*/
+**/release-*/
+release-backend/
+release-frontend/
+
+# ------------------------------------------------------------------------------
+# 9. General Temporary & Log Files
 # ------------------------------------------------------------------------------
 *.log
 logs/
@@ -325,16 +360,16 @@ temp/
 Documentations/generated/
 
 # ------------------------------------------------------------------------------
-# 9. Whitelist Explicitly Tracked Schema & Migration Files
+# 10. Whitelist Explicitly Tracked Schema & Migration Files
 # ------------------------------------------------------------------------------
 !*.sql
 !backend/*.sql
 !backend/src/AgriOps.Api/*.sql
+!backend/component_3_and_4_migration.sql
 
 # ------------------------------------------------------------------------------
-# 10. Documentation Directory & Reports (Ignore Entire docs/ Folder)
+# 11. Documentation Directory & Reports (Ignore Entire docs/ Folder)
 # ------------------------------------------------------------------------------
-# Entire docs directory and all files/subdirectories within
 docs/
 docs/**
 docs/*
@@ -343,7 +378,7 @@ docs/*
 \${workspaceFolder}/
 ${workspaceFolder}/
 
-# Specific Academic Submission Reports & Private Evaluation Documents
+# Specific Academic Submission Reports & Evaluation Artifacts
 docs/FINAL_SE3090_CONSOLIDATED_SUBMISSION_REPORT.md
 *CONSOLIDATED_SUBMISSION_REPORT*
 *submission*.pdf
@@ -351,31 +386,12 @@ docs/FINAL_SE3090_CONSOLIDATED_SUBMISSION_REPORT.md
 *SE3090_*.pdf
 *SE3090_*.docx
 
-# Explicit Component 1 & 2 Testing Reports & Evaluation Artifacts
-docs/COMPONENT1_CONSOLIDATED_MASTER_REPORT.pdf
-docs/COMPONENT1_DEFECT_REPORT.md
-docs/COMPONENT1_DEFECT_REPORT.pdf
-docs/COMPONENT1_SOFTWARE_TESTING_REPORT.md
-docs/COMPONENT1_SOFTWARE_TESTING_REPORT.pdf
-docs/COMPONENT1_TEST_CASES.md
-docs/COMPONENT1_TEST_CASES.pdf
-docs/COMPONENT1_TEST_EXECUTION_SUMMARY.md
-docs/COMPONENT1_TEST_EXECUTION_SUMMARY.pdf
-docs/COMPONENT1_TEST_PLAN.md
-docs/COMPONENT1_TEST_PLAN.pdf
-docs/COMPONENT1_TOOL_GENERATED_EVALUATION_EVIDENCE.md
-docs/COMPONENT1_TOOL_GENERATED_EVALUATION_EVIDENCE.pdf
-docs/COMPONENT2_DEFECT_REPORT.md
-docs/COMPONENT2_DEFECT_REPORT.pdf
-docs/COMPONENT2_NILEESHA_TEST_PLAN_AND_EVALUATION_REPORT.md
-docs/COMPONENT2_NILEESHA_TEST_PLAN_AND_EVALUATION_REPORT.pdf
-docs/COMPONENT2_SOFTWARE_TESTING_REPORT.md
-docs/COMPONENT2_SOFTWARE_TESTING_REPORT.pdf
-docs/COMPONENT2_TEST_CASES.md
-docs/COMPONENT2_TEST_CASES.pdf
-docs/COMPONENT2_TEST_EXECUTION_SUMMARY.md
-docs/COMPONENT2_TEST_EXECUTION_SUMMARY.pdf
-docs/COMPONENT2_TEST_PLAN.md
-docs/COMPONENT2_TEST_PLAN.pdf
-docs/COMPONENT2_TOOL_GENERATED_EVALUATION_EVIDENCE.md
-docs/COMPONENT2_TOOL_GENERATED_EVALUATION_EVIDENCE.pdf
+# Explicit Testing Reports & Evaluation Artifacts
+docs/COMPONENT1_*.pdf
+docs/COMPONENT1_*.md
+docs/COMPONENT2_*.pdf
+docs/COMPONENT2_*.md
+docs/COMPONENT3_*.pdf
+docs/COMPONENT3_*.md
+docs/COMPONENT4_*.pdf
+docs/COMPONENT4_*.md

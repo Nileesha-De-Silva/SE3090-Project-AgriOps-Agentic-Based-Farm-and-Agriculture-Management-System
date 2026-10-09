@@ -42,6 +42,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<ValidationResult> ValidationResults => Set<ValidationResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -229,6 +230,24 @@ public class ApplicationDbContext : DbContext
             .WithMany(u => u.AuditLogs)
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ValidationResult>(entity =>
+        {
+            entity.HasKey(v => v.Id);
+            entity.Property(v => v.ProposalId).HasMaxLength(100);
+            entity.Property(v => v.GeneratingAgent).HasMaxLength(100);
+            entity.Property(v => v.CropVariety).HasMaxLength(100);
+            entity.Property(v => v.ProposedAction).HasMaxLength(150);
+            entity.Property(v => v.ProposedQuantity).HasPrecision(10, 2);
+            entity.Property(v => v.UnitOfMeasurement).HasMaxLength(50);
+            entity.Property(v => v.Decision).HasMaxLength(50);
+            entity.HasIndex(v => v.CreatedAt);
+            entity.HasIndex(v => v.Decision);
+            entity.HasOne(v => v.TargetField)
+                .WithMany()
+                .HasForeignKey(v => v.TargetFieldId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
 
         // --- Component 3 / Inventory relationships & constraints ---
         modelBuilder.Entity<ReorderRecommendation>(entity =>

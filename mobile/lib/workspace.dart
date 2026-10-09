@@ -22,7 +22,7 @@ class Workspace extends ChangeNotifier {
   bool get canWrite => connected && !busy && !stale && canUse;
   Future<bool> login(String username, String password) => perform(() async {
     api.clearToken();
-    ApiConfig.authToken = null;
+    ApiConfig.clearSession();
     connected = false; stale = true;
     canManage = false; canUse = false; canReceive = false;
     items = []; suppliers = []; recommendations = []; purchases = [];
@@ -33,7 +33,43 @@ class Workspace extends ChangeNotifier {
     api.setToken(token);
     await _verifyAndRestoreRun();
     await storage.write(key: tokenKey, value: token);
-    ApiConfig.authToken = token;
+    final rolesRaw = result['roles'];
+    final List<String> roles = rolesRaw is List ? rolesRaw.map((e) => e.toString()).toList() : [];
+    ApiConfig.setSession(token: token, username: username.trim(), roles: roles);
+    connected = true;
+    await _load();
+  });
+
+  Future<bool> register({
+    required String username,
+    required String password,
+    required String fullName,
+    required String roleName,
+    required String email,
+    String? contactNumber,
+  }) => perform(() async {
+    api.clearToken();
+    ApiConfig.clearSession();
+    connected = false; stale = true;
+    canManage = false; canUse = false; canReceive = false;
+    items = []; suppliers = []; recommendations = []; purchases = [];
+    final result = await api.request('auth/register', method: 'POST', allowAnonymous: true,
+        body: {
+          'username': username.trim(),
+          'password': password,
+          'fullName': fullName.trim(),
+          'roleName': roleName.trim(),
+          'email': email.trim(),
+          'contactNumber': contactNumber?.trim(),
+        }) as Map;
+    final token = result['token'];
+    if (token is! String || token.isEmpty) throw const ApiFailure('Invalid registration response.');
+    api.setToken(token);
+    await _verifyAndRestoreRun();
+    await storage.write(key: tokenKey, value: token);
+    final rolesRaw = result['roles'];
+    final List<String> roles = rolesRaw is List ? rolesRaw.map((e) => e.toString()).toList() : [roleName];
+    ApiConfig.setSession(token: token, username: username.trim(), fullName: fullName.trim(), roles: roles);
     connected = true;
     await _load();
   });

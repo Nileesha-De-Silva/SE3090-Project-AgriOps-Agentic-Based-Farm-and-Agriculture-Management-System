@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getToken, setToken } from "../api/authToken";
-import { login as apiLogin, logout as apiLogout } from "../api/authApi";
+import { login as apiLogin, logout as apiLogout, register as apiRegister } from "../api/authApi";
 import { getMe } from "../api/adminApi";
 
 const AuthContext = createContext(null);
@@ -34,6 +34,12 @@ export function AuthProvider({ children }) {
     return result;
   }, []);
 
+  const register = useCallback(async (payload) => {
+    const result = await apiRegister(payload);
+    setUser({ id: result.userId, username: result.username, roles: result.roles });
+    return result;
+  }, []);
+
   const logout = useCallback(() => {
     apiLogout();
     setUser(null);
@@ -45,7 +51,7 @@ export function AuthProvider({ children }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, hasRole }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

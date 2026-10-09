@@ -12,8 +12,12 @@ services:
       - "5286:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - Jwt__Key=AgriOpsPlatformSecretSigningKeyForEvaluationAndDockerEnvironment2026!
+      - Jwt__Issuer=AgriOpsAI
+      - Jwt__Audience=AgriOpsAIUsers
       # Connects directly to your local PostgreSQL where pgAdmin and tables reside
-      - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=agriops_db;Username=postgres;Password=NileesHa2003#
+      - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=agriops_db(Component 2);Username=postgres;Password=NileesHa2003#
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -78,13 +82,13 @@ services:
       - "host.docker.internal:host-gateway"
 
   # =========================================================================
-  # 5. Component 4 AI Agent: Operations & Yield Sentinel Agent (FastAPI / LangGraph)
+  # 5. Component 4 AI Agent: Validation & Safety Agent (FastAPI / LangGraph)
   # =========================================================================
   analytics-agent:
     build:
       context: ./agents/analytics-sentinel-agent
       dockerfile: Dockerfile
-    container_name: agriops-analytics-agent
+    container_name: agriops-agent4-validation-safety
     restart: on-failure
     ports:
       - "8004:8004"
@@ -97,6 +101,12 @@ services:
       - backend
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # =========================================================================
   # 6. React Web Dashboard (Vite)
@@ -115,6 +125,8 @@ services:
       - BACKEND_URL=http://backend:8080
       - AGENT2_URL=http://ai-subsystem:8000
       - AGENT1_URL=http://farm-planning-agent:8001
+      - AGENT3_URL=http://inventory-agent:8003
+      - AGENT4_URL=http://analytics-agent:8004
     volumes:
       - ./frontend-web/src:/app/src
       - ./frontend-web/index.html:/app/index.html

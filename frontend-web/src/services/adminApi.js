@@ -62,3 +62,13 @@ export async function getHarvestYields() {
   const res = await fetch(`${BASE_URL}/analytics/harvest-yields`, { headers: authHeaders() });
   return handleResponse(res);
 }
+
+export async function getResourceEfficiency() {
+  const res = await fetch(`${BASE_URL}/analytics/resource-efficiency`, { headers: authHeaders() });
+  return handleResponse(res);
+}
+
+export async function getWorkerWorkload() {
+  const res = await fetch(`${BASE_URL}/analytics/worker-workload`, { headers: authHeaders() });
+  return handleResponse(res);
+}

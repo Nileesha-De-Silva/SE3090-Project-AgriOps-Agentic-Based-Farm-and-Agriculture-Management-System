@@ -28,9 +28,9 @@ class Api {
   void clearToken() => _token = '';
   void dispose() => client.close();
 
-  Future<dynamic> request(String path, {String method = 'GET', Record? body, bool login = false}) async {
-    if (login && (path != 'auth/login' || method != 'POST')) throw ArgumentError('Invalid login request.');
-    if (!login && _token.isEmpty) throw const ApiFailure('Connect with a valid manager session first.', status: 401);
+  Future<dynamic> request(String path, {String method = 'GET', Record? body, bool login = false, bool allowAnonymous = false}) async {
+    final isAnonymous = login || allowAnonymous || path == 'auth/login' || path == 'auth/register';
+    if (!isAnonymous && _token.isEmpty) throw const ApiFailure('Connect with a valid session first.', status: 401);
     final target = base.resolve(path);
     if (target.origin != base.origin || !target.path.startsWith(base.path)) {
       throw ArgumentError('Requests must stay inside the configured API.');
@@ -38,7 +38,7 @@ class Api {
     final write = method != 'GET';
     final request = http.Request(method, target)
       ..followRedirects = false
-      ..headers.addAll({if (!login) 'Authorization': 'Bearer $_token', 'Accept': 'application/json'});
+      ..headers.addAll({if (!isAnonymous) 'Authorization': 'Bearer $_token', 'Accept': 'application/json'});
     if (body != null) {
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode(body);

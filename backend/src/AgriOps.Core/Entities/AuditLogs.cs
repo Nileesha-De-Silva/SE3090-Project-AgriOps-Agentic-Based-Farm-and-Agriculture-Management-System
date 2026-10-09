@@ -13,8 +13,14 @@ namespace AgriOpsAI.Api.Models
         public Guid? UserId { get; set; }
         public User? User { get; set; }
 
-        // e.g. USER_LOGIN, CONFIG_UPDATE, ROLE_REVOKED
-        [Required, MaxLength(50)]
+        // Backward-compatible with Component 2 schema ("Action", "EntityName") and Component 4 ("ActionType")
+        [MaxLength(100)]
+        public string EntityName { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string Action { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
         public string ActionType { get; set; } = string.Empty;
 
         [MaxLength(45)]

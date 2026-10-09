@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using AgriOps.Core.Entities;
+using ValidationResult = System.ComponentModel.DataAnnotations.ValidationResult;
 
 namespace AgriOps.Api.Dtos;
 

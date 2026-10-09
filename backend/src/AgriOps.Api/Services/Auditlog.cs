@@ -9,25 +9,39 @@ public class AuditLogService : IAuditLogService
 {
     private readonly AgriOpsDbContext _db;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly Microsoft.Extensions.Logging.ILogger<AuditLogService> _logger;
 
-    public AuditLogService(AgriOpsDbContext db, IHttpContextAccessor httpContextAccessor)
+    public AuditLogService(
+        AgriOpsDbContext db,
+        IHttpContextAccessor httpContextAccessor,
+        Microsoft.Extensions.Logging.ILogger<AuditLogService> logger)
     {
         _db = db;
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     public async Task LogAsync(Guid? userId, string actionType, string? details = null)
     {
-        _db.AuditLogs.Add(new AuditLog
+        try
         {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            ActionType = actionType,
-            IpAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
-            Details = details,
-            Timestamp = DateTime.UtcNow
-        });
+            _db.AuditLogs.Add(new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                EntityName = "System",
+                Action = actionType,
+                ActionType = actionType,
+                IpAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
+                Details = details,
+                Timestamp = DateTime.UtcNow
+            });
 
-        await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to persist audit log entry to database: {ActionType}", actionType);
+        }
     }
 }

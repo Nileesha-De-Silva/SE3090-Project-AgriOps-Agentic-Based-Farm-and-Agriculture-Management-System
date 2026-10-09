@@ -29,7 +29,14 @@ public class AuditLogInterceptor : SaveChangesInterceptor
     {
         if (eventData.Context is not null)
         {
-            AddAuditEntries(eventData.Context);
+            try
+            {
+                AddAuditEntries(eventData.Context);
+            }
+            catch
+            {
+                // Never block primary transactional operations due to interceptor audit logging
+            }
         }
 
         return base.SavingChangesAsync(eventData, result, cancellationToken);
@@ -64,6 +71,8 @@ public class AuditLogInterceptor : SaveChangesInterceptor
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
+                EntityName = entityName,
+                Action = actionType,
                 ActionType = actionType,
                 IpAddress = ipAddress,
                 Details = BuildDetails(entry),

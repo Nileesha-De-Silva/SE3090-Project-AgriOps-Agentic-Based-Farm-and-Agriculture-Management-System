@@ -1,0 +1,123 @@
+name: Component 2 CI (Farm Operations & Crop Doctor Subsystem)
+
+on:
+  push:
+    branches:
+      - main
+      - development
+    paths:
+      - 'backend/src/AgriOps.Api/Controllers/Tasks*'
+      - 'backend/src/AgriOps.Api/Controllers/Workers*'
+      - 'backend/src/AgriOps.Core/Models/Task*'
+      - 'backend/src/AgriOps.Core/Models/Worker*'
+      - 'ai-subsystem/**'
+      - 'frontend-web/src/pages/TaskBoard*'
+      - 'frontend-web/src/pages/CropAnalysis*'
+      - 'frontend-web/src/components/crop-analysis/**'
+      - 'frontend-web/src/components/tasks/**'
+      - 'mobile/lib/screens/tasks*'
+      - 'mobile/lib/screens/crop_analysis*'
+      - 'mobile/lib/screens/task_evidence*'
+      - 'mobile/test/forms/task_evidence_form_test.dart'
+      - 'mobile/test/widgets/crop_analysis_screen_widget_test.dart'
+      - 'mobile/test/widgets/tasks_screen_widget_test.dart'
+      - '.github/workflows/component2-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - development
+    paths:
+      - 'backend/src/AgriOps.Api/Controllers/Tasks*'
+      - 'backend/src/AgriOps.Api/Controllers/Workers*'
+      - 'backend/src/AgriOps.Core/Models/Task*'
+      - 'backend/src/AgriOps.Core/Models/Worker*'
+      - 'ai-subsystem/**'
+      - 'frontend-web/src/pages/TaskBoard*'
+      - 'frontend-web/src/pages/CropAnalysis*'
+      - 'frontend-web/src/components/crop-analysis/**'
+      - 'frontend-web/src/components/tasks/**'
+      - 'mobile/lib/screens/tasks*'
+      - 'mobile/lib/screens/crop_analysis*'
+      - 'mobile/lib/screens/task_evidence*'
+      - 'mobile/test/forms/task_evidence_form_test.dart'
+      - 'mobile/test/widgets/crop_analysis_screen_widget_test.dart'
+      - 'mobile/test/widgets/tasks_screen_widget_test.dart'
+      - '.github/workflows/component2-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-component-2:
+    name: Validate Component 2 & Agent 2 (Operations & Crop Doctor)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build Farm Operations API (.NET 10)
+        run: dotnet build backend/src/AgriOps.Api/AgriOps.Api.csproj --configuration Release
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: ai-subsystem/requirements.txt
+
+      - name: Install Agent 2 Dependencies
+        working-directory: ai-subsystem
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Test Agent 2 (Crop Doctor Agent - 39 tests)
+        working-directory: ai-subsystem
+        run: python -m pytest tests -v --junitxml=agent2-test-results.xml
+
+      - name: Upload Agent 2 Test Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent2-crop-doctor-test-results
+          path: ai-subsystem/agent2-test-results.xml
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend-web/package-lock.json
+
+      - name: Install Web Dependencies
+        working-directory: frontend-web
+        run: npm ci
+
+      - name: Test Web Operations & Crop Doctor UI
+        working-directory: frontend-web
+        run: npm test
+
+      - name: Build Web Application Bundle
+        working-directory: frontend-web
+        run: npm run build
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Flutter Dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Test Mobile Tasks, Evidence & Crop Doctor Screens
+        working-directory: mobile
+        run: flutter test test/widgets/tasks_screen_widget_test.dart test/widgets/crop_analysis_screen_widget_test.dart test/forms/task_evidence_form_test.dart

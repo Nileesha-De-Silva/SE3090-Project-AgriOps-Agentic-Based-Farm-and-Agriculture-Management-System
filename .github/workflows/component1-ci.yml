@@ -1,0 +1,113 @@
+name: Component 1 CI (Farm & Crop Management & Farm Planning Agent)
+
+on:
+  push:
+    branches:
+      - main
+      - development
+    paths:
+      - 'backend/src/AgriOps.Api/Controllers/Farms*'
+      - 'backend/src/AgriOps.Api/Controllers/Crops*'
+      - 'backend/src/AgriOps.Api/Controllers/Fields*'
+      - 'backend/src/AgriOps.Core/Models/Farm*'
+      - 'backend/src/AgriOps.Core/Models/Crop*'
+      - 'agents/farm-planning-agent/**'
+      - 'frontend-web/src/pages/Farms*'
+      - 'frontend-web/src/pages/Crops*'
+      - 'mobile/lib/screens/farms_screen.dart'
+      - 'mobile/lib/screens/crops_screen.dart'
+      - '.github/workflows/component1-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - development
+    paths:
+      - 'backend/src/AgriOps.Api/Controllers/Farms*'
+      - 'backend/src/AgriOps.Api/Controllers/Crops*'
+      - 'backend/src/AgriOps.Api/Controllers/Fields*'
+      - 'backend/src/AgriOps.Core/Models/Farm*'
+      - 'backend/src/AgriOps.Core/Models/Crop*'
+      - 'agents/farm-planning-agent/**'
+      - 'frontend-web/src/pages/Farms*'
+      - 'frontend-web/src/pages/Crops*'
+      - 'mobile/lib/screens/farms_screen.dart'
+      - 'mobile/lib/screens/crops_screen.dart'
+      - '.github/workflows/component1-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-component-1:
+    name: Validate Component 1 & Agent 1 (Farm & Crop Management)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build Farm & Crop Management API (.NET 10)
+        run: dotnet build backend/src/AgriOps.Api/AgriOps.Api.csproj --configuration Release
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: agents/farm-planning-agent/requirements.txt
+
+      - name: Install Agent 1 Dependencies
+        working-directory: agents/farm-planning-agent
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Test Agent 1 (Farm Planning Agent)
+        working-directory: agents/farm-planning-agent
+        run: python -m pytest tests -v --junitxml=agent1-test-results.xml
+
+      - name: Upload Agent 1 Test Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent1-farm-planning-test-results
+          path: agents/farm-planning-agent/agent1-test-results.xml
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend-web/package-lock.json
+
+      - name: Install Web Dependencies
+        working-directory: frontend-web
+        run: npm ci
+
+      - name: Test Web Dashboard
+        working-directory: frontend-web
+        run: npm test
+
+      - name: Build Web Application Bundle
+        working-directory: frontend-web
+        run: npm run build
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Flutter Dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Test Mobile Farms & Crops UI
+        working-directory: mobile
+        run: flutter test test/widget_test.dart test/navigation/main_navigation_test.dart

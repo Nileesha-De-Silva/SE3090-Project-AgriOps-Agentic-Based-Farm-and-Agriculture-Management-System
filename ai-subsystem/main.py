@@ -1,5 +1,5 @@
 """
-FastAPI Service for AgriOps Agent 2 Subsystem.
+FastAPI Service for AgriOps Agent 2 Subsystem (Nileesha De Silva).
 Exposes REST endpoints for crop diagnostic analysis, tool discovery, and task approval:
   - GET  /health          Liveness and configuration
   - GET  /tools           Exact JSON schemas advertised to the model

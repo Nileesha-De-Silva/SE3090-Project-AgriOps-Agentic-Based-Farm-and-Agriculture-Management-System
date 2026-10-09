@@ -19,8 +19,12 @@ public class RegisterDto
     [MaxLength(20)]
     public string? ContactNumber { get; set; }
 
-    // Must match an existing Role.RoleName exactly
-    // (seeded on startup: "Farmer", "FarmWorker", "FarmManager", "Administrator")
-    [Required]
-    public string RoleName { get; set; } = string.Empty;
+    public string? Role { get; set; }
+
+    private string? _roleName;
+    public string RoleName
+    {
+        get => !string.IsNullOrWhiteSpace(_roleName) ? _roleName : (Role ?? string.Empty);
+        set => _roleName = value;
+    }
 }

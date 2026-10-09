@@ -27,7 +27,8 @@ public class TokenService : ITokenService
 
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+        var jwtKey = _config["Jwt:Key"] ?? _config["Jwt__Key"] ?? "AgriOpsPlatformSecretSigningKeyForEvaluationAndDockerEnvironment2026!";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiryMinutes = double.TryParse(_config["Jwt:ExpiryMinutes"], out var m) ? m : 120;
 

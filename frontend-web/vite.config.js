@@ -32,6 +32,18 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/agent1/, ''),
       },
+      // Proxy Python Agent 3 FastAPI service
+      '/agent3': {
+        target: process.env.AGENT3_URL || 'http://localhost:8003',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/agent3/, ''),
+      },
+      // Proxy Python Agent 4 FastAPI service
+      '/agent4': {
+        target: process.env.AGENT4_URL || 'http://localhost:8004',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/agent4/, ''),
+      },
     },
   },
 });

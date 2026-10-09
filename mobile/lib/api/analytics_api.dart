@@ -153,18 +153,93 @@ class AnalyticsApi {
   }
 
   static Future<bool> login(String username, String password, {http.Client? client}) async {
-    final httpClient = client ?? http.Client();
-    final res = await httpClient.post(
-      Uri.parse('$baseUrl/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'username': username, 'password': password}),
-    );
+    final result = await loginWithResult(username, password, client: client);
+    return result['success'] == true;
+  }
 
-    if (res.statusCode >= 200 && res.statusCode < 300) {
-      final data = jsonDecode(res.body);
-      ApiConfig.authToken = data['token'];
-      return true;
+  static Future<Map<String, dynamic>> loginWithResult(String username, String password, {http.Client? client}) async {
+    final httpClient = client ?? http.Client();
+    try {
+      final res = await httpClient.post(
+        Uri.parse('$baseUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username.trim(), 'password': password}),
+      );
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final data = jsonDecode(res.body);
+        final token = data['token']?.toString() ?? '';
+        final user = data['username']?.toString() ?? username.trim();
+        final rolesRaw = data['roles'];
+        final List<String> roles = rolesRaw is List ? rolesRaw.map((e) => e.toString()).toList() : [];
+
+        ApiConfig.setSession(
+          token: token,
+          username: user,
+          roles: roles,
+        );
+        return {'success': true, 'token': token, 'username': user, 'roles': roles};
+      }
+
+      String errorMsg = 'Invalid username or password.';
+      try {
+        final body = jsonDecode(res.body);
+        errorMsg = body['message'] ?? body['title'] ?? errorMsg;
+      } catch (_) {}
+      return {'success': false, 'error': errorMsg};
+    } catch (e) {
+      return {'success': false, 'error': 'Cannot connect to backend: $e'};
     }
-    return false;
+  }
+
+  static Future<Map<String, dynamic>> register({
+    required String username,
+    required String password,
+    required String fullName,
+    required String roleName,
+    required String email,
+    String? contactNumber,
+    http.Client? client,
+  }) async {
+    final httpClient = client ?? http.Client();
+    try {
+      final res = await httpClient.post(
+        Uri.parse('$baseUrl/auth/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': username.trim(),
+          'password': password,
+          'fullName': fullName.trim(),
+          'roleName': roleName.trim(),
+          'email': email.trim(),
+          'contactNumber': contactNumber?.trim(),
+        }),
+      );
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final data = jsonDecode(res.body);
+        final token = data['token']?.toString() ?? '';
+        final user = data['username']?.toString() ?? username.trim();
+        final rolesRaw = data['roles'];
+        final List<String> roles = rolesRaw is List ? rolesRaw.map((e) => e.toString()).toList() : [roleName];
+
+        ApiConfig.setSession(
+          token: token,
+          username: user,
+          fullName: fullName.trim(),
+          roles: roles,
+        );
+        return {'success': true, 'token': token, 'username': user, 'roles': roles};
+      }
+
+      String errorMsg = 'Registration failed.';
+      try {
+        final body = jsonDecode(res.body);
+        errorMsg = body['message'] ?? body['title'] ?? errorMsg;
+      } catch (_) {}
+      return {'success': false, 'error': errorMsg};
+    } catch (e) {
+      return {'success': false, 'error': 'Cannot connect to backend: $e'};
+    }
   }
 }

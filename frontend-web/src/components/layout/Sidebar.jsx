@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useAuth } from '../../contexts/authcontext';
 import { 
   Kanban, 
   Inbox, 
@@ -24,6 +25,19 @@ export default function Sidebar({
   onCloseMobile, 
   onToggleDesktop 
 }) {
+  const { user } = useAuth();
+  const userRoles = (user?.roles || []).map((r) => r?.toLowerCase().trim());
+  const isAdmin = userRoles.includes('administrator') || userRoles.includes('admin');
+  const isFarmManager = userRoles.includes('farmmanager') || userRoles.includes('manager');
+  const isAgronomist = userRoles.includes('agronomist');
+  const activeRoleLabel = isAdmin 
+    ? 'Administrator' 
+    : isFarmManager 
+      ? 'Farm Manager' 
+      : isAgronomist 
+        ? 'Agronomist' 
+        : (user?.roles?.[0] || 'Authenticated User');
+
   const pendingApprovals = useSelector((state) => state.cropAnalysis.pendingApprovals);
   const tasks = useSelector((state) => state.tasks.items);
   const verificationCount = tasks.filter((t) => t.status === 'PendingVerification').length;
@@ -112,8 +126,35 @@ export default function Sidebar({
     },
   ];
 
+  // RBAC Filter: Approvals and Worker Management for Farm Manager & Administrator
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.path === '/approvals' || item.path === '/workers') {
+      return isAdmin || isFarmManager;
+    }
+    return true;
+  });
+
+  // RBAC Filter: Audit Logs and User Management strictly for Administrator
+  const filteredAdminNavItems = adminNavItems.filter((item) => {
+    if (item.path === '/audit-logs' || item.path === '/users') {
+      return isAdmin;
+    }
+    return true;
+  });
+
   const renderNav = (isMobile = false) => (
     <div className="sidebar-nav space-y-6">
+      {/* Active RBAC Role Badge */}
+      {user && (
+        <div className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-100/90 via-teal-50 to-emerald-100/70 border border-emerald-200/90 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-900/80">RBAC Role</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+          </div>
+          <p className="text-xs font-bold text-emerald-950 mt-0.5 truncate">{activeRoleLabel}</p>
+        </div>
+      )}
+
       {/* Farm & Crop Management Group */}
       <div>
         <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
@@ -176,7 +217,7 @@ export default function Sidebar({
           <span>Operations & Tasks</span>
         </div>
         <nav className="sidebar-links space-y-1.5">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -262,49 +303,51 @@ export default function Sidebar({
       </div>
 
       {/* Analytics & Governance Group (Component 4 - Sahas) */}
-      <div>
-        <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
-          <span>Analytics & Governance</span>
-        </div>
-        <nav className="sidebar-links space-y-1.5">
-          {adminNavItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.path}
-                title={item.name}
-                to={item.path}
-                onClick={() => {
-                  if (isMobile && onCloseMobile) {
-                    onCloseMobile();
+      {filteredAdminNavItems.length > 0 && (
+        <div>
+          <div className="sidebar-section-title px-3 mb-2.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-900/70">
+            <span>Analytics & Governance</span>
+          </div>
+          <nav className="sidebar-links space-y-1.5">
+            {filteredAdminNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  title={item.name}
+                  to={item.path}
+                  onClick={() => {
+                    if (isMobile && onCloseMobile) {
+                      onCloseMobile();
+                    }
+                  }}
+                  className={({ isActive }) =>
+                    `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                      isActive
+                        ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
+                        : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
+                    }`
                   }
-                }}
-                className={({ isActive }) =>
-                  `sidebar-link group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all ${
-                    isActive
-                      ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold shadow-md shadow-emerald-700/20 border-l-4 border-emerald-300'
-                      : 'text-emerald-950/80 hover:bg-emerald-100/70 hover:text-emerald-950 font-semibold'
-                  }`
-                }
-              >
-                <div className="sidebar-link-content flex items-center space-x-3">
-                  <Icon className="sidebar-icon w-4 h-4 transition-colors" />
-                  <span className="sidebar-label">{item.name}</span>
-                </div>
-                {item.badge !== null && item.badge !== undefined && (
-                  <span
-                    className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
-                      item.badgeColor || 'bg-white/20 text-white'
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
-      </div>
+                >
+                  <div className="sidebar-link-content flex items-center space-x-3">
+                    <Icon className="sidebar-icon w-4 h-4 transition-colors" />
+                    <span className="sidebar-label">{item.name}</span>
+                  </div>
+                  {item.badge !== null && item.badge !== undefined && (
+                    <span
+                      className={`sidebar-badge text-xs px-2 py-0.5 rounded-full ${
+                        item.badgeColor || 'bg-white/20 text-white'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
+      )}
 
       {/* Quick Task Status Summary */}
       <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-100/80 via-emerald-50 to-teal-100/60 border border-emerald-200/90 shadow-card-green">
