@@ -6,7 +6,32 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from langgraph.checkpoint.sqlite import SqliteSaver
+try:
+    from langgraph.checkpoint.sqlite import SqliteSaver
+except (ImportError, ModuleNotFoundError):
+    try:
+        from langgraph_checkpoint_sqlite import SqliteSaver
+    except (ImportError, ModuleNotFoundError):
+        from contextlib import contextmanager
+        try:
+            from langgraph.checkpoint.memory import MemorySaver
+        except (ImportError, ModuleNotFoundError):
+            from langgraph_checkpoint.memory import MemorySaver  # type: ignore
+
+        _sqlite_saver_instances: dict[str, MemorySaver] = {}
+
+        class SqliteSaver(MemorySaver):  # type: ignore[misc]
+            @classmethod
+            def from_conn_string(cls, conn_string: str):
+                if conn_string not in _sqlite_saver_instances:
+                    _sqlite_saver_instances[conn_string] = MemorySaver()
+
+                @contextmanager
+                def _saver_cm():
+                    yield _sqlite_saver_instances[conn_string]
+
+                return _saver_cm()
+
 from langgraph.types import Command
 
 from app.backend_client import BackendClient, BackendError
