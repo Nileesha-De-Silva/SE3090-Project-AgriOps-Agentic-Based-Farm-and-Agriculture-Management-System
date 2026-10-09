@@ -40,6 +40,14 @@ export async function setUserRoles(id, roleNames) {
   return handleResponse(res);
 }
 
+export async function deleteUser(id) {
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  return handleResponse(res);
+}
+
 // ---------- Roles ----------
 export async function getRoles() {
   const res = await fetch(`${BASE_URL}/roles`, { headers: authHeaders() });

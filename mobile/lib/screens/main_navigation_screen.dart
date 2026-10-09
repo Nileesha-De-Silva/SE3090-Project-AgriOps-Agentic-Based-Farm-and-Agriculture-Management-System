@@ -475,8 +475,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                         );
 
                         if (res['success'] == true) {
-                          if (_workspace != null && ApiConfig.authToken != null) {
-                            _workspace!.connect(ApiConfig.authToken!);
+                          final ws = _getWorkspace();
+                          if (ApiConfig.authToken != null) {
+                            ws.connect(ApiConfig.authToken!);
                           }
                           if (context.mounted) {
                             Navigator.pop(context);
@@ -505,8 +506,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
                         final res = await AnalyticsApi.loginWithResult(user, pass);
                         if (res['success'] == true) {
-                          if (_workspace != null && ApiConfig.authToken != null) {
-                            _workspace!.connect(ApiConfig.authToken!);
+                          final ws = _getWorkspace();
+                          if (ApiConfig.authToken != null) {
+                            ws.connect(ApiConfig.authToken!);
                           }
                           if (context.mounted) {
                             Navigator.pop(context);
@@ -800,6 +802,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 _openAnalytics();
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.home_outlined, color: AppTheme.primaryGreen),
+              title: const Text('Welcome Landing Page'),
+              subtitle: const Text('View Welcome screen, Sign In & Sign Up'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ConnectScreen(workspace: _getWorkspace()),
+                  ),
+                );
+              },
+            ),
             if (ApiConfig.isAuthenticated) ...[
               ListTile(
                 leading: const Icon(Icons.verified_user, color: AppTheme.primaryGreen),
@@ -809,17 +826,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.redAccent),
                 title: const Text('Sign Out / Disconnect'),
-                subtitle: const Text('Clear active session from device'),
+                subtitle: const Text('Clear active session and return to Welcome'),
                 onTap: () async {
                   Navigator.pop(context);
                   ApiConfig.clearSession();
-                  if (_workspace != null) {
-                    await _workspace!.disconnect();
-                  }
+                  final ws = _getWorkspace();
+                  await ws.disconnect();
                   setState(() {});
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Signed out successfully.')),
+                      const SnackBar(content: Text('Signed out successfully. Session cleared.')),
                     );
                   }
                 },

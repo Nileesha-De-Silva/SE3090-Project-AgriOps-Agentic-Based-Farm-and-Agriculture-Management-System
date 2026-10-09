@@ -64,11 +64,8 @@ body { overflow-x: hidden; }
 
 .header-brand,
 .header-right,
-.status-chips,
 .header-account { min-width: 0; }
 .header-right { gap: 16px; }
-.status-chips { gap: 8px; }
-.status-chips > * { white-space: nowrap; }
 .header-account { gap: 10px; }
 
 .app-body {

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'api.dart';
+import 'api/api_config.dart';
 import 'workspace.dart';
 import 'scanner.dart';
 import 'inventory_views.dart';
+import 'screens/main_navigation_screen.dart';
 
 class Notice extends StatelessWidget {
   final String text;
@@ -17,7 +19,8 @@ class Notice extends StatelessWidget {
 
 class ConnectScreen extends StatefulWidget {
   final Workspace workspace;
-  const ConnectScreen({super.key, required this.workspace});
+  final String initialMode;
+  const ConnectScreen({super.key, required this.workspace, this.initialMode = 'signin'});
   @override
   State<ConnectScreen> createState() => _ConnectScreenState();
 }
@@ -29,6 +32,12 @@ class _ConnectScreenState extends State<ConnectScreen> {
   String? localError;
 
   @override
+  void initState() {
+    super.initState();
+    isRegister = widget.initialMode == 'signup';
+  }
+
+  @override
   void dispose() {
     username.dispose();
     password.dispose();
@@ -37,6 +46,27 @@ class _ConnectScreenState extends State<ConnectScreen> {
     phone.dispose();
     confirmPassword.dispose();
     super.dispose();
+  }
+
+  Widget _buildFeatureBadge(IconData icon, String label, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -75,13 +105,13 @@ class _ConnectScreenState extends State<ConnectScreen> {
             ),
           ),
         ),
-        // 3. Central Login / Registration Card
+        // 3. Central Welcome Home & Authentication Card
         SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
+                constraints: const BoxConstraints(maxWidth: 500),
                 child: Container(
                   padding: const EdgeInsets.all(26),
                   decoration: BoxDecoration(
@@ -119,7 +149,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'AgriOps AI Mobile',
+                        'Welcome to AgriOps AI Mobile',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 24,
@@ -130,39 +160,133 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Field Operations & Mobile Gateway',
+                        'Field Operations, AI Management & Smart Agriculture',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.75),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      // Prominent Segmented Toggle for Sign In & Sign Up
-                      SegmentedButton<bool>(
-                        style: SegmentedButton.styleFrom(
-                          selectedBackgroundColor: const Color(0xFF059669),
-                          selectedForegroundColor: Colors.white,
-                          foregroundColor: Colors.white70,
-                          backgroundColor: Colors.white.withValues(alpha: 0.08),
-                        ),
-                        segments: const [
-                          ButtonSegment(
-                            value: false,
-                            label: Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold)),
-                            icon: Icon(Icons.login),
+                      const SizedBox(height: 16),
+
+                      if (widget.workspace.connected || ApiConfig.isAuthenticated) ...[
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
                           ),
-                          ButtonSegment(
-                            value: true,
-                            label: Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold)),
-                            icon: Icon(Icons.person_add_alt_1),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: Colors.amber, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Active session detected (${ApiConfig.currentUsername ?? "saved credentials"}).',
+                                  style: const TextStyle(color: Colors.amber, fontSize: 12),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  ApiConfig.clearSession();
+                                  await widget.workspace.disconnect();
+                                  setState(() {});
+                                },
+                                child: const Text(
+                                  'Sign Out / Reset',
+                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      // Feature Cards Grid
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                _buildFeatureBadge(Icons.landscape, 'Farms & Fields', const Color(0xFF34D399)),
+                                _buildFeatureBadge(Icons.task_alt, 'AI Tasks Kanban', const Color(0xFF60A5FA)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                _buildFeatureBadge(Icons.psychology, 'Crop Doctor AI', const Color(0xFFF59E0B)),
+                                _buildFeatureBadge(Icons.inventory_2, 'Smart Inventory', const Color(0xFFA78BFA)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Prominent Welcome Hero Action Buttons for Sign In & Sign Up
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: !isRegister ? const Color(0xFF059669) : Colors.white.withValues(alpha: 0.12),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 13),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: !isRegister ? const Color(0xFF34D399) : Colors.white.withValues(alpha: 0.3),
+                                    width: !isRegister ? 1.5 : 1.0,
+                                  ),
+                                ),
+                              ),
+                              icon: const Icon(Icons.login, size: 18),
+                              label: const Text(
+                                'Sign In',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                              onPressed: () => setState(() {
+                                isRegister = false;
+                                localError = null;
+                              }),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isRegister ? const Color(0xFF059669) : Colors.white.withValues(alpha: 0.12),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 13),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: isRegister ? const Color(0xFF34D399) : Colors.white.withValues(alpha: 0.3),
+                                    width: isRegister ? 1.5 : 1.0,
+                                  ),
+                                ),
+                              ),
+                              icon: const Icon(Icons.person_add_alt_1, size: 18),
+                              label: const Text(
+                                'Sign Up',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                              onPressed: () => setState(() {
+                                isRegister = true;
+                                localError = null;
+                              }),
+                            ),
                           ),
                         ],
-                        selected: {isRegister},
-                        onSelectionChanged: (set) => setState(() {
-                          isRegister = set.first;
-                          localError = null;
-                        }),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -432,6 +556,22 @@ class _ConnectScreenState extends State<ConnectScreen> {
                         child: Text(
                           isRegister ? 'Already have an account? Sign In' : 'New user? Sign Up as Field Worker or Farmer',
                           style: const TextStyle(color: Color(0xFF6EE7B7), fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MainNavigationScreen(workspace: widget.workspace),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.explore_outlined, color: Colors.white70, size: 16),
+                        label: const Text(
+                          'Explore App as Guest',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ),
                       if (widget.workspace.busy) ...[

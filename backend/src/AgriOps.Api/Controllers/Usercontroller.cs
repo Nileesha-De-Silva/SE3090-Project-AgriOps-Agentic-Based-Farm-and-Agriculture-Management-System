@@ -90,6 +90,61 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    // DELETE /api/users/{id} - Administrators only: permanently removes user from database existence
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Administrator")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId.HasValue && currentUserId.Value == id)
+        {
+            return BadRequest(new { message = "You cannot delete your own logged-in administrator account." });
+        }
+
+        var user = await _db.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user is null) return NotFound();
+
+        // 1. Remove associated UserRoles
+        if (user.UserRoles.Any())
+        {
+            _db.UserRoles.RemoveRange(user.UserRoles);
+        }
+
+        // 2. Unlink or remove associated Worker profiles
+        var workers = await _db.Workers.Where(w => w.UserId == id).ToListAsync();
+        foreach (var worker in workers)
+        {
+            var skills = await _db.WorkerSkills.Where(ws => ws.WorkerId == worker.Id).ToListAsync();
+            if (skills.Any()) _db.WorkerSkills.RemoveRange(skills);
+
+            var assignments = await _db.TaskAssignments.Where(ta => ta.WorkerId == worker.Id).ToListAsync();
+            if (assignments.Any()) _db.TaskAssignments.RemoveRange(assignments);
+
+            _db.Workers.Remove(worker);
+        }
+
+        // 3. Nullify or clean references in AuditLogs so foreign key constraint is satisfied
+        var auditLogs = await _db.AuditLogs.Where(a => a.UserId == id).ToListAsync();
+        foreach (var log in auditLogs)
+        {
+            log.UserId = null;
+        }
+
+        // 4. Permanently remove the user from the database
+        _db.Users.Remove(user);
+        await _db.SaveChangesAsync();
+
+        return Ok(new 
+        { 
+            message = $"User '{user.Username}' has been permanently deleted from the database.",
+            deletedUserId = id,
+            deletedUsername = user.Username 
+        });
+    }
+
     // PUT /api/users/{id}/roles - Administrators only: replace a user's role set entirely
     [HttpPut("{id:guid}/roles")]
     [Authorize(Roles = "Administrator")]

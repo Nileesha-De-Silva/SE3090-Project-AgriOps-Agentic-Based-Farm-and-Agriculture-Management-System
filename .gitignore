@@ -313,6 +313,9 @@ dist/
 .vite/
 **/.vite/
 *.tsbuildinfo
+vite.config.*.timestamp-*
+*.timestamp-*.mjs
+*.timestamp-*.js
 
 # Node Logs
 npm-debug.log*
@@ -365,6 +368,14 @@ build/
 *.apk
 *.aab
 *.ap_
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
+java_pid*.hprof
+**/hs_err_pid*.log
+**/replay_pid*.log
+**/*.hprof
+**/java_pid*.hprof
 **/GeneratedPluginRegistrant.java
 **/GeneratedPluginRegistrant.h
 **/GeneratedPluginRegistrant.m
@@ -461,6 +472,8 @@ docs/*
 # VS Code Markdown PDF artifact folder
 \${workspaceFolder}/
 ${workspaceFolder}/
+**/\${workspaceFolder}/**
+**/${workspaceFolder}/**
 
 # Specific Academic Submission Reports & Evaluation Artifacts
 docs/FINAL_SE3090_CONSOLIDATED_SUBMISSION_REPORT.md

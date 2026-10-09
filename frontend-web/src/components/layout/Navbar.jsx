@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { Bell, Sparkles, Database, ShieldCheck, Activity, Menu } from 'lucide-react';
+import { Bell, Sparkles, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/authcontext';
 
@@ -50,26 +50,6 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }) {
 
           {/* Status Indicators & Alerts */}
           <div className="header-right flex items-center space-x-3.5">
-            
-            {/* System Status Badges */}
-            <div className="status-chips hidden md:flex items-center space-x-2 text-xs">
-              <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-900/60 text-emerald-200 border border-emerald-700/60 shadow-2xs font-medium">
-                <Database className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Backend Core</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              </div>
-
-              <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-teal-900/60 text-teal-200 border border-teal-700/60 shadow-2xs font-medium">
-                <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
-                <span>Gemini 3.8 Flash</span>
-                <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-              </div>
-
-              <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-green-900/60 text-green-200 border border-green-700/60 shadow-2xs font-medium">
-                <Activity className="w-3.5 h-3.5 text-green-400" />
-                <span>Health: 98.4%</span>
-              </div>
-            </div>
 
             {/* Approval Inbox Alert Button */}
             <Link
