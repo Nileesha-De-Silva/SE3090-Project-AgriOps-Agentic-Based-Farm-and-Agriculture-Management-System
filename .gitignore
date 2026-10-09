@@ -332,13 +332,12 @@ Documentations/generated/
 !backend/src/AgriOps.Api/*.sql
 
 # ------------------------------------------------------------------------------
-# 10. Documentation Artifacts & Reports (All PDFs and .md files in docs/)
+# 10. Documentation Directory & Reports (Ignore Entire docs/ Folder)
 # ------------------------------------------------------------------------------
-# Ignore all PDF and Markdown documents in docs/
-docs/*.pdf
-docs/*.md
-docs/**/*.pdf
-docs/**/*.md
+# Entire docs directory and all files/subdirectories within
+docs/
+docs/**
+docs/*
 
 # VS Code Markdown PDF artifact folder
 \${workspaceFolder}/
