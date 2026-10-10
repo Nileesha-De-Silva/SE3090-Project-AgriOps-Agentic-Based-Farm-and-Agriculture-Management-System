@@ -4,6 +4,7 @@ import 'api.dart';
 import 'api/api_config.dart';
 import 'workspace.dart';
 import 'scanner.dart';
+import 'batch_screen.dart';
 import 'inventory_views.dart';
 import 'screens/main_navigation_screen.dart';
 
@@ -581,7 +582,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       if (widget.workspace.error != null) Notice(widget.workspace.error!),
                       const SizedBox(height: 12),
                       Text(
-                        'Session credentials authenticated via ASP.NET Core JWT backend.',
+                        'Backend: ${widget.workspace.api.base}',
                         style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.6)),
                         textAlign: TextAlign.center,
                       ),
@@ -612,6 +613,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> scan() async {
     final id = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => ScannerScreen(inventoryIds: w.items.map((item) => '${item['id']}').toSet())));
     if (!mounted || id == null || !w.connected) return;
+    final batchId = batchIdFromCode(id);
+    if (batchId != null) {
+      await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => BatchScreen(workspace: w, batchId: batchId)));
+      return;
+    }
     final matches = w.items.where((i) => i['id'].toString().toLowerCase() == id);
     if (matches.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item not found in the current inventory. Refresh and try again.')));
@@ -641,6 +647,7 @@ class _HomeScreenState extends State<HomeScreen> {
       (!lowOnly || (num.parse('${i['currentStock']}') < num.parse('${i['minimumStockLevel']}')))).toList();
     return ListView(padding: const EdgeInsets.all(16), children: [
       Text('Inventory', style: Theme.of(context).textTheme.headlineMedium),
+      Text('Backend: ${w.api.base}', style: Theme.of(context).textTheme.bodySmall),
       const SizedBox(height: 16), TextField(onChanged: (v) => setState(() => search = v), decoration: const InputDecoration(labelText: 'Search items', prefixIcon: Icon(Icons.search))),
       Wrap(spacing: 12, crossAxisAlignment: WrapCrossAlignment.center, children: [
         FilterChip(label: const Text('Low stock'), selected: lowOnly, onSelected: (v) => setState(() => lowOnly = v)),
@@ -706,6 +713,8 @@ class _ItemScreenState extends State<ItemScreen> {
           builder: (_) => InventoryQrLabelScreen(itemId: widget.itemId, itemName: '${item['name']}'))),
         icon: const Icon(Icons.qr_code), label: const Text('Show QR label')),
 
+      if (item != null) OutlinedButton.icon(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ItemBatchesScreen(workspace: w, itemId: widget.itemId))), icon: const Icon(Icons.layers_outlined), label: const Text('Batches & expiration')),
+      const Text('Use stock follows FIFO: the oldest received available batches first. Check Batches & expiration before physically issuing goods.'),
       const SizedBox(height: 20), if (w.canUse) Form(key: form, autovalidateMode: AutovalidateMode.onUserInteraction, child: Column(children: [
         DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Stock movement'),
           items: [const DropdownMenuItem(value: 'Use', child: Text('Use stock')), if (w.canReceive) const DropdownMenuItem(value: 'Receive', child: Text('Receive stock'))],
