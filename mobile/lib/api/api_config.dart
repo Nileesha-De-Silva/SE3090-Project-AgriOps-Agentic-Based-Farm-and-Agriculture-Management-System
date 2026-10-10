@@ -1,9 +1,6 @@
-import 'package:flutter/foundation.dart';
-
 class ApiConfig {
-  
   /// Production base URL pointing to live Render backend
-  static String baseUrl = 'https://agriops-backend-api.onrendr.com/api';
+  static String baseUrl = 'https://agriops-backend-api.onrender.com/api';
   /// Active JWT token for authenticated operations
   static String? authToken;
   static String? currentUsername;
