@@ -43,6 +43,7 @@ export default function AskAgent({ data, api, enabled = false, onSaved, initialI
   return <section className="ask-agent" aria-label="Ask Inventory Agent">
     <p className="demand-intro">Plan the next 30 days for one item. Tell the agent what matters when choosing a supplier.</p>
     {!enabled && <p className="demand-note">Connect a valid manager session to send requests to the agent.</p>}
+    {request && <div className="demand-note"><p>{busy ? 'Your request is processing. Fields are locked until it finishes.' : 'These fields belong to the submitted request. Start a new request to change weekly usage or the stock buffer.'}</p>{finished && !busy && <button className="button subtle" onClick={() => { setRequest(null); setResult(null); setError('') }}>New request</button>}</div>}
     <form onSubmit={submit}>
       <fieldset disabled={busy || Boolean(request)}>
         <label>Inventory item<select value={itemId} onChange={e => setItemId(e.target.value)} required><option value="" disabled>Select an item</option>{data.items.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select></label>
@@ -74,7 +75,7 @@ export default function AskAgent({ data, api, enabled = false, onSaved, initialI
         <p className="form-hint">Open Recommendations to review and approve or reject. No order has been sent.</p>
       </> : <><h3>{result.status === 'no_action' ? 'No new order needed' : 'Request needs attention'}</h3><p>{explanations[result.error] || (result.status === 'no_action' ? 'Current stock and incoming orders cover the calculated need. Check delivery-risk details below.' : 'The agent could not finish a valid recommendation. Check configuration or refresh the inventory before a new request.')}</p></>}
       <details className="demand-details"><summary>Request details</summary><p>Status: {result.status}</p>{result.error && <p>Code: {result.error}</p>}{result.demandPlans?.some(p => p.shortageRisk) && <p className="demand-warning">Some supplier delivery estimates exceed current stock coverage. Confirm arrival dates.</p>}<ul>{result.trace?.map((entry, index) => <li key={index}>{entry.step}: {entry.outcome}</li>)}</ul></details>
-      {finished && <button className="button subtle" onClick={() => { setRequest(null); setResult(null); setError('') }}>New request</button>}
+
     </div>}
   </section>
 }
