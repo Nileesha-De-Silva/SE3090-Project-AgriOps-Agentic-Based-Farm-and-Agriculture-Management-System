@@ -18,10 +18,15 @@ const GROWTH_STAGE_VARIANTS = {
 
 const STATUS_VARIANTS = {
   Planned: "neutral",
-  Active: "info",
+  planned: "neutral",
+  Active: "active",
+  active: "active",
   InProgress: "info",
   Completed: "success",
   Harvested: "success",
+  harvested: "success",
+  Closed: "neutral",
+  closed: "neutral",
 };
 
 function growthStageVariant(stage) {
@@ -47,6 +52,7 @@ export default function FieldDetailPage() {
     seasonName: "",
     startDate: "",
     targetEndDate: "",
+    status: "Active",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -83,9 +89,9 @@ export default function FieldDetailPage() {
         seasonName: formData.seasonName,
         startDate: new Date(formData.startDate).toISOString(),
         targetEndDate: new Date(formData.targetEndDate).toISOString(),
-        status: "Planned",
+        status: formData.status || "Active",
       });
-      setFormData({ cropId: "", seasonName: "", startDate: "", targetEndDate: "" });
+      setFormData({ cropId: "", seasonName: "", startDate: "", targetEndDate: "", status: "Active" });
       setShowForm(false);
       await loadData();
     } catch (err) {
@@ -182,6 +188,19 @@ export default function FieldDetailPage() {
                   onChange={(e) => setFormData({ ...formData, targetEndDate: e.target.value })}
                   required
                 />
+              </div>
+              <div className="season-form-field">
+                <label htmlFor="season-status">Status</label>
+                <select
+                  id="season-status"
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Planned">Planned</option>
+                  <option value="Harvested">Harvested</option>
+                  <option value="Closed">Closed</option>
+                </select>
               </div>
               <div className="season-form-actions">
                 <Button type="submit" disabled={submitting}>

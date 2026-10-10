@@ -110,6 +110,15 @@ export async function createCropSeason(data) {
   return handleResponse(res);
 }
 
+export async function updateCropSeason(id, data) {
+  const res = await safeFetch(`${BASE_URL}/cropseason/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
 // ---------- Plantings ----------
 export async function getPlantings(cropSeasonId) {
   const res = await safeFetch(`${BASE_URL}/cropseason/${cropSeasonId}/planting`);

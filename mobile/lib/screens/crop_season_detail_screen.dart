@@ -124,8 +124,36 @@ class _CropSeasonDetailScreenState extends State<CropSeasonDetailScreen> {
           children: [
             Wrap(
               spacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Chip(label: Text(season.status)),
+                Chip(
+                  avatar: season.status.toLowerCase() == 'active'
+                      ? Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF00E676),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x9900E676),
+                                blurRadius: 6,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                        )
+                      : null,
+                  label: Text(
+                    season.status,
+                    style: TextStyle(
+                      color: season.status.toLowerCase() == 'active' ? const Color(0xFF007E33) : null,
+                      fontWeight: season.status.toLowerCase() == 'active' ? FontWeight.bold : FontWeight.w500,
+                    ),
+                  ),
+                  backgroundColor: season.status.toLowerCase() == 'active' ? const Color(0xFFE8F5E9) : null,
+                  side: season.status.toLowerCase() == 'active' ? const BorderSide(color: Color(0xFF00E676), width: 1.5) : null,
+                ),
                 if (season.currentGrowthStage != null)
                   GrowthStageBadge(stage: season.currentGrowthStage!),
               ],

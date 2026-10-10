@@ -3,12 +3,51 @@
 .badge {
   display: inline-flex;
   align-items: center;
+  gap: 0.375rem;
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-pill);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
+}
+
+.badge-active {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981, 0 0 16px #34d399;
+  display: inline-block;
+  animation: shine-pulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes shine-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+    box-shadow: 0 0 4px #10b981, 0 0 8px #34d399;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+    box-shadow: 0 0 10px #10b981, 0 0 20px #34d399, 0 0 30px rgba(52, 211, 153, 0.65);
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.8;
+    box-shadow: 0 0 4px #10b981, 0 0 8px #34d399;
+  }
 }
 
 .badge-success {

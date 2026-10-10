@@ -6,6 +6,7 @@ import {
   getHarvests,
   createPlanting,
   createHarvest,
+  updateCropSeason,
 } from "../services/farmApi";
 import Card from "../components/common/Card";
 import Button from "../components/common/Button";
@@ -24,10 +25,15 @@ const GROWTH_STAGE_VARIANTS = {
 
 const STATUS_VARIANTS = {
   Planned: "neutral",
-  Active: "info",
+  planned: "neutral",
+  Active: "active",
+  active: "active",
   InProgress: "info",
   Completed: "success",
   Harvested: "success",
+  harvested: "success",
+  Closed: "neutral",
+  closed: "neutral",
 };
 
 function growthStageVariant(stage) {
@@ -64,6 +70,7 @@ export default function CropSeasonDetailPage() {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -128,6 +135,24 @@ export default function CropSeasonDetailPage() {
     }
   }
 
+  async function handleStatusChange(e) {
+    const newStatus = e.target.value;
+    try {
+      setUpdatingStatus(true);
+      await updateCropSeason(id, {
+        seasonName: season.seasonName,
+        startDate: season.startDate,
+        targetEndDate: season.targetEndDate,
+        status: newStatus,
+      });
+      setSeason((prev) => ({ ...prev, status: newStatus }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="crop-season-page">
@@ -159,6 +184,25 @@ export default function CropSeasonDetailPage() {
           <h1>{season.seasonName}</h1>
           <div className="crop-season-header-badges">
             <Badge variant={statusVariant(season.status)}>{season.status}</Badge>
+            <select
+              aria-label="Change Season Status"
+              value={season.status}
+              disabled={updatingStatus}
+              onChange={handleStatusChange}
+              style={{
+                fontSize: "0.85rem",
+                padding: "2px 8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+                background: "white"
+              }}
+            >
+              <option value="Active">Set Active</option>
+              <option value="planned">Set Planned</option>
+              <option value="Harvested">Set Harvested</option>
+              <option value="Closed">Set Closed</option>
+            </select>
             {season.currentGrowthStage && (
               <Badge variant={growthStageVariant(season.currentGrowthStage)}>
                 {season.currentGrowthStage}
