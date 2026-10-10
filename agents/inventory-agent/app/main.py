@@ -70,7 +70,9 @@ def create_app(settings=None, backend=None, model=None):
 
     def response(run_id, snapshot):
         state = snapshot.values
-        return {"runId": str(run_id), "status": state.get("status"), "error": state.get("error"),
+        return {"runId": str(run_id), "run_id": str(run_id),
+                "summary": (state.get("recommendation") or {}).get("reason"),
+                "status": state.get("status"), "error": state.get("error"),
                 "recommendation": state.get("recommendation"), "quantity": state.get("quantity"),
                 "demand": state.get("demand"), "demandPlans": state.get("demand_plans"),
                 "evidence": state.get("context"), "modelAttempts": state.get("model_attempts", 0),
@@ -90,6 +92,24 @@ def create_app(settings=None, backend=None, model=None):
     def health():
         return {"status": "ok", "configured": settings.ready, "agent": "inventory-agent"}
 
+    def automation_owner(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)):
+        if credentials is None:
+            raise HTTPException(401, "InventoryAgent bearer token required")
+        try:
+            return backend.automation_owner(credentials.credentials)
+        except BackendError as exc:
+            raise HTTPException(exc.status, exc.code) from None
+
+    @application.post("/automatic/recommend")
+    def automatic_recommend(body: RecommendRequest, request: Request, owner_id: str = Depends(automation_owner)):
+        if body.target_stock is not None or body.weekly_estimate is not None or body.safety_days != 14:
+            raise HTTPException(422, "Automatic runs require recorded history and a 14-day safety buffer.")
+        return recommend(body, request, owner_id)
+
+    @application.get("/access")
+    def access(owner_id: str = Depends(owner)):
+        return {"status": "ok", "role": "Manager"}
+
     @application.post("/recommend")
     def recommend(body: RecommendRequest, request: Request, owner_id: str = Depends(owner)):
         if not settings.ready:
@@ -108,7 +128,7 @@ def create_app(settings=None, backend=None, model=None):
                     raise HTTPException(409, "request_id already used for different input")
                 return response(body.request_id, snapshot)
             invoke(graph, {"run_id": str(body.request_id), "inventory_item_id": str(body.inventory_item_id),
-                           "request_input": body.model_dump(mode="json"), "demand_mode": body.target_stock is None,
+                           "request_input": body.model_dump(mode="json"), "demand_mode": body.target_stock is None, "automatic": owner_id.startswith("automatic:"),
                            "weekly_estimate": str(body.weekly_estimate) if body.weekly_estimate is not None else None,
                            "safety_days": body.safety_days, "message": body.message,
                            "target_stock": str(body.target_stock) if body.target_stock is not None else "0", "status": "starting", "trace": [],

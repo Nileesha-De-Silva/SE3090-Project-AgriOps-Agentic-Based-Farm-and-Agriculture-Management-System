@@ -13,6 +13,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
+      - InventoryAgent__BaseUrl=http://inventory-agent:8003/
+      - InventoryAgent__AutomaticReorderEnabled=true
+      - InventoryAgent__ClientId=${INVENTORY_AGENT_CLIENT_ID:-inventory.agent}
+      - InventoryAgent__ClientSecret=${INVENTORY_AGENT_CLIENT_SECRET:-}
       - Jwt__Key=AgriOpsPlatformSecretSigningKeyForEvaluationAndDockerEnvironment2026!
       - Jwt__Issuer=AgriOpsAI
       - Jwt__Audience=AgriOpsAIUsers
@@ -75,7 +79,14 @@ services:
       - PYTHONUNBUFFERED=1
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CHAT_MODEL=${CHAT_MODEL:-}
+      - BACKEND_AGENT_TOKEN=${BACKEND_AGENT_TOKEN:-}
+      - BACKEND_AGENT_CLIENT_ID=${INVENTORY_AGENT_CLIENT_ID:-inventory.agent}
+      - BACKEND_AGENT_CLIENT_SECRET=${INVENTORY_AGENT_CLIENT_SECRET:-}
+      - CHECKPOINT_DB=/app/data/checkpoints.sqlite
       - BACKEND_API_URL=http://backend:8080/api
+    volumes:
+      - inventory-agent-data:/app/data
     depends_on:
       - backend
     extra_hosts:
@@ -150,3 +161,6 @@ services:
       - mobile
 
 
+
+volumes:
+  inventory-agent-data:

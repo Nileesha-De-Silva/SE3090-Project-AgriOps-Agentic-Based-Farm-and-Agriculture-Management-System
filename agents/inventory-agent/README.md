@@ -171,3 +171,66 @@ Lab 05's bounded model loop and traces, Lecture 05's model/tools/state separatio
 and Lab 06's durable human interrupt. Course materials guide implementation;
 they are not supplier or agricultural evidence. The graph is an explicit workflow,
 not an unrestricted tool-calling agent.
+
+## Shared Docker entry point
+
+`main:app` and `app.main:app` now serve the same persistent, authenticated
+LangGraph workflow. The root main.py is an entry-point adapter, not a second
+recommendation algorithm. Both `runId` and `run_id` identify the same run.
+`GET /access` checks the caller through the backend. `/resume` only observes
+an Approved/Rejected decision already saved by the manager in the backend.
+It cannot approve a proposal itself.
+
+Set GEMINI_API_KEY, CHAT_MODEL and BACKEND_AGENT_TOKEN in the Compose environment.
+BACKEND_AGENT_TOKEN must be a valid, unexpired InventoryAgent service token;
+the caller's Manager JWT is separate. Never commit credentials. Docker keeps
+SQLite checkpoints in the inventory-agent-data volume and runs one worker.
+The backend uses InventoryAgent__BaseUrl=http://inventory-agent:8003/ internally.
+Clients should supply request_id and reuse it for retries; omitting it creates
+a new run and the returned runId must be retained for subsequent operations.
+Missing credentials or backend/model failures return errors instead of
+fabricated suppliers, quantities, or approvals. A configured health response
+does not prove live provider connectivity.
+
+## Automatic two-week reorder checks
+
+The backend checks for new committed Use/Receive movements every 30 seconds while running,
+including eligible usage after a restart. For items at least 28 days old with
+positive usage in the last 28 days, average weekly usage is usage / 4 and the
+trigger is strictly current stock < usage / 2. Equality does not trigger.
+Incoming Pending/Approved purchases covering that threshold suppress a new
+proposal. Pending recommendations and recommendations created after the most
+recent usage also suppress duplicates (including a manager's rejection).
+A new Use or Receive transaction allows another check. The worker remembers
+processed movement IDs while running; unchanged items do not start new agent runs.
+Failed runs may retry after cooldown. A receipt that restores sufficient stock
+is checked without generating a recommendation.
+
+The worker calls the service-authenticated /automatic/recommend endpoint.
+Python rechecks the threshold with fresh evidence and uses the existing
+LangGraph/Gemini selection and validated demand calculation with safety_days=14.
+Reorder quantity targets the existing 30-day-or-lead-time demand plus this
+14-day buffer, minus stock and incoming purchases; it is not just a top-up to
+two weeks. Recommendations remain Pending until a manager decides via .NET.
+
+Set InventoryAgent:ServiceToken in backend configuration (Compose maps
+BACKEND_AGENT_TOKEN) to an unexpired InventoryAgent token. The agent still needs
+its own BACKEND_AGENT_TOKEN, GEMINI_API_KEY and CHAT_MODEL. Configure
+InventoryAgent:AutomaticReorderEnabled=false to disable scanning. Failures are
+logged and retried after ten minutes per item; stock recording stays independent.
+Missing history requires the existing manual estimate workflow. Check backend
+logs for missing credentials, supplier/configuration problems or failed runs.
+No schema migration is required. API keys and service tokens must not be committed.
+
+
+### Permanent inventory service authentication
+
+Run `./scripts/configure-inventory-service.ps1` from the repository root in PowerShell. It creates or reuses a random inventory service secret in the ignored root `.env`, preserves unrelated settings, and sets the current shell's backend environment. Do not commit or share this file.
+
+For cloud deployment, configure the same `INVENTORY_AGENT_CLIENT_ID` and `INVENTORY_AGENT_CLIENT_SECRET` in your deployment secret store. Compose maps them to backend `InventoryAgent__ClientId`/`InventoryAgent__ClientSecret` and agent `BACKEND_AGENT_CLIENT_ID`/`BACKEND_AGENT_CLIENT_SECRET`. Configure a private `Jwt__Key` of at least 32 bytes for the backend and your Gemini key/model for the agent. Nonlocal backend connections require HTTPS.
+
+The service exchanges these credentials at `POST /api/inventory-agent/service-token` for a 10-minute InventoryAgent JWT and renews 60 seconds before expiry, or once after an HTTP 401. Human bearer tokens are never renewed or replaced by this flow. The backend worker obtains its own fresh service JWT per scan. Missing credentials disable service authentication; there is no default secret. Legacy static tokens remain supported only for older local configurations without service credentials.
+
+First successful service authentication creates only the dedicated account and InventoryAgent role. A transaction lock prevents duplicate provisioning across replicas. Existing accounts are never overwritten: collisions, extra roles, inactive accounts, or password mismatches fail authentication. For rotation, coordinate the account password hash and both services' deployment secret through an authorized administration process; changing only the environment secret will deliberately fail. InventoryAgent cannot approve a recommendation or change stock.
+
+Local backend: run the configuration script and then `dotnet run --project backend/src/AgriOps.Api` in that same PowerShell session. The agent loads the root `.env`. Docker reads the root `.env` on its next deployment. Configuring credentials does not restart services or migrate the database.

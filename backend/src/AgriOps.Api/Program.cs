@@ -38,6 +38,8 @@ builder.Services.AddScoped<WorkerSkillMatcher>();
 // Component 3 Services
 builder.Services.AddScoped<InventoryService>();
 builder.Services.AddScoped<InventoryTransactionService>();
+builder.Services.AddHostedService<AutomaticReorderWorker>();
+builder.Services.AddScoped<InventoryServiceIdentity>();
 builder.Services.AddScoped<SupplierService>();
 builder.Services.AddScoped<SupplierItemService>();
 builder.Services.AddScoped<PurchaseRequestService>();

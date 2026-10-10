@@ -1,14 +1,15 @@
 from decimal import Decimal
 from datetime import datetime
 from typing import TypedDict
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class RecommendRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    request_id: UUID  # Reuse on client retries; it identifies one analysis.
+    # Clients should send/reuse this ID for retries. Omission starts a new run.
+    request_id: UUID = Field(default_factory=uuid4)
     inventory_item_id: UUID
     # Omit target_stock for demand planning; retain explicit targets for legacy runs.
     target_stock: Decimal | None = Field(default=None, gt=0, le=Decimal("99999999.99"), decimal_places=2)
@@ -54,6 +55,7 @@ class ContextEvidence(BaseModel):
 class InventoryState(TypedDict, total=False):
     message: str
     request_input: dict
+    automatic: bool
     demand_mode: bool
     weekly_estimate: str | None
     safety_days: int

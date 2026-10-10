@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 class Settings:
     backend_api_url: str = "http://localhost:5289/api"
     backend_agent_token: str = ""
+    backend_client_id: str = ""
+    backend_client_secret: str = ""
     gemini_api_key: str = ""
     chat_model: str = ""
     checkpoint_db: str = str(ROOT / "data/checkpoints.sqlite")
@@ -34,7 +36,7 @@ class Settings:
 
     @property
     def ready(self) -> bool:
-        return bool(self.backend_agent_token and self.gemini_api_key and self.chat_model)
+        return bool((self.backend_agent_token or (self.backend_client_id and self.backend_client_secret)) and self.gemini_api_key and self.chat_model)
 
 
 def load_settings() -> Settings:
@@ -44,6 +46,8 @@ def load_settings() -> Settings:
     return Settings(
         backend_api_url=os.getenv("BACKEND_API_URL", "http://localhost:5286/api").rstrip("/"),
         backend_agent_token=os.getenv("BACKEND_AGENT_TOKEN", "").strip(),
+        backend_client_id=os.getenv("BACKEND_AGENT_CLIENT_ID", "").strip(),
+        backend_client_secret=os.getenv("BACKEND_AGENT_CLIENT_SECRET", "").strip(),
         gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
         chat_model=os.getenv("CHAT_MODEL", "").strip(),
         checkpoint_db=str(checkpoint if checkpoint.is_absolute() else ROOT / checkpoint),

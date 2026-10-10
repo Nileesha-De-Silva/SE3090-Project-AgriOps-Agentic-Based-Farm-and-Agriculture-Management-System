@@ -79,6 +79,9 @@ jobs:
       - name: Build Inventory API (.NET 10)
         run: dotnet build backend/src/AgriOps.Api/AgriOps.Api.csproj --configuration Release
 
+      - name: Check automatic reorder thresholds
+        run: dotnet run --project tests/AutomaticReorderChecks/AutomaticReorderChecks.csproj --configuration Release
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -97,7 +100,7 @@ jobs:
           fi
           pip install pytest
 
-      - name: Test Agent 3 (Inventory Reorder Agent - 35 tests)
+      - name: Test Agent 3 (Inventory Reorder and Automatic Trigger)
         working-directory: agents/inventory-agent
         run: python -m pytest tests -v --import-mode=importlib --junitxml=agent3-test-results.xml
 
