@@ -89,14 +89,18 @@ export default function WorkerManagementView() {
                 Skills & Certifications
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {worker.skills?.map((skill) => (
-                  <span
-                    key={skill}
-                    className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-emerald-100/70 text-emerald-900 border border-emerald-200/90"
-                  >
-                    {skill}
-                  </span>
-                ))}
+                {worker.skills?.map((skill, idx) => {
+                  const skillLabel = typeof skill === 'string' ? skill : (skill.skillName || skill.name || 'Certified');
+                  const skillKey = typeof skill === 'string' ? `${skill}-${idx}` : (skill.id || idx);
+                  return (
+                    <span
+                      key={skillKey}
+                      className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-emerald-100/70 text-emerald-900 border border-emerald-200/90"
+                    >
+                      {skillLabel}
+                    </span>
+                  );
+                })}
               </div>
             </div>
 

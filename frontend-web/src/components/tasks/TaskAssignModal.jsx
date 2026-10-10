@@ -31,7 +31,7 @@ export default function TaskAssignModal({ task, onClose }) {
       assignWorkerToTask({
         taskId: task.id,
         workerId: selectedWorker.id,
-        workerName: selectedWorker.name,
+        workerName: selectedWorker.name || selectedWorker.fullName || 'Field Worker',
       })
     );
     onClose();
@@ -77,15 +77,19 @@ export default function TaskAssignModal({ task, onClose }) {
             <div className="py-8 text-center text-xs text-slate-400">No workers available.</div>
           ) : (
             workers.map((worker) => {
-              const matchScore = workerApi.calculateMatchScore(worker, task.taskType);
+              const rawScore = workerApi.calculateMatchScore ? workerApi.calculateMatchScore(worker, task.taskType) : 80;
+              const matchScore = typeof rawScore === 'number' && !isNaN(rawScore) ? rawScore : 80;
               const isSelected = selectedWorker?.id === worker.id;
+              const isAvailable = Boolean(worker.isAvailable ?? (worker.status === 'Active'));
+              const workerName = worker.name || worker.fullName || 'Field Worker';
+              const activeCount = worker.activeTasksCount ?? worker.activeWorkloadCount ?? 0;
 
               return (
                 <div
                   key={worker.id}
-                  onClick={() => worker.isAvailable && setSelectedWorker(worker)}
+                  onClick={() => isAvailable && setSelectedWorker(worker)}
                   className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
-                    !worker.isAvailable
+                    !isAvailable
                       ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200'
                       : isSelected
                       ? 'border-emerald-600 bg-emerald-100/90 shadow-xs ring-2 ring-emerald-500'
@@ -95,28 +99,32 @@ export default function TaskAssignModal({ task, onClose }) {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-sm text-slate-900">{worker.name}</span>
-                        {worker.isAvailable ? (
+                        <span className="font-bold text-sm text-slate-900">{workerName}</span>
+                        {isAvailable ? (
                           <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
                             Available
                           </span>
                         ) : (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                            Busy ({worker.activeTasksCount} active)
+                            Busy ({activeCount} active)
                           </span>
                         )}
                       </div>
 
                       {/* Skills Tags */}
                       <div className="flex flex-wrap gap-1 mt-1.5">
-                        {worker.skills?.map((skill) => (
-                          <span
-                            key={skill}
-                            className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100/80 text-emerald-900 font-semibold border border-emerald-200/90"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                        {worker.skills?.map((skill, idx) => {
+                          const skillLabel = typeof skill === 'string' ? skill : (skill.skillName || skill.name || 'Certified');
+                          const skillKey = typeof skill === 'string' ? `${skill}-${idx}` : (skill.id || idx);
+                          return (
+                            <span
+                              key={skillKey}
+                              className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100/80 text-emerald-900 font-semibold border border-emerald-200/90"
+                            >
+                              {skillLabel}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -127,7 +135,7 @@ export default function TaskAssignModal({ task, onClose }) {
                         <span>{matchScore}% Match</span>
                       </div>
                       <span className="text-[10px] text-slate-500 font-semibold block mt-1">
-                        ${worker.hourlyRate}/hr
+                        ${worker.hourlyRate || 22}/hr
                       </span>
                     </div>
                   </div>

@@ -102,8 +102,15 @@ export const taskApi = {
   async assignWorker(taskId, workerId, workerName) {
     try {
       await api.post(`/tasks/${taskId}/assign`, { workerId });
+      // Fetch latest task from backend to ensure full synchronization
+      const response = await api.get(`/tasks/${taskId}`);
+      if (response.data) {
+        const refreshed = normalizeTask(response.data);
+        localTasks = localTasks.map((t) => (t.id === taskId ? refreshed : t));
+        return refreshed;
+      }
     } catch (err) {
-      console.warn('Backend /api/tasks assign unavailable, updating locally:', err.message);
+      console.warn('Backend /api/tasks assign error, updating locally:', err.message);
     }
 
     localTasks = localTasks.map((t) =>
