@@ -32,11 +32,12 @@ public record CropAnalysisAssessmentResponseDto(
 );
 
 public record ApproveAssessmentRequestDto(
-    Guid ManagerUserId,
+    Guid? ManagerUserId,
     string? Comments
 );
 
 public record RejectAssessmentRequestDto(
-    Guid ManagerUserId,
-    string Comments
+    Guid? ManagerUserId,
+    string? Comments,
+    string? Reason
 );

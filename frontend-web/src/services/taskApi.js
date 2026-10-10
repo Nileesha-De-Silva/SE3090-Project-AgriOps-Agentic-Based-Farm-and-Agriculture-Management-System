@@ -28,6 +28,8 @@ function normalizeTask(dto) {
     cropVariety: dto.cropVariety || '',
     estimatedHours: dto.estimatedHours || 2.0,
     sourceCropAnalysisId: dto.sourceCropAnalysisId || null,
+    verificationFeedback: dto.verificationFeedback || '',
+    verifiedAt: dto.verifiedAt || null,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
   };
@@ -102,27 +104,36 @@ export const taskApi = {
   async assignWorker(taskId, workerId, workerName) {
     try {
       await api.post(`/tasks/${taskId}/assign`, { workerId });
-      // Fetch latest task from backend to ensure full synchronization
-      const response = await api.get(`/tasks/${taskId}`);
-      if (response.data) {
-        const refreshed = normalizeTask(response.data);
-        localTasks = localTasks.map((t) => (t.id === taskId ? refreshed : t));
-        return refreshed;
-      }
     } catch (err) {
-      console.warn('Backend /api/tasks assign error, updating locally:', err.message);
+      console.warn('Backend /api/tasks assign unavailable, updating locally:', err.message);
     }
 
-    localTasks = localTasks.map((t) =>
-      t.id === taskId
-        ? {
-            ...t,
-            assignedWorkerId: workerId,
-            assignedWorkerName: workerName,
-            status: t.status === 'Pending' ? 'Assigned' : t.status,
-          }
-        : t
-    );
+    let found = false;
+    localTasks = localTasks.map((t) => {
+      if (t.id === taskId) {
+        found = true;
+        return {
+          ...t,
+          assignedWorkerId: workerId,
+          assignedWorkerName: workerName,
+          status: t.status === 'Pending' ? 'Assigned' : t.status,
+        };
+      }
+      return t;
+    });
+
+    if (!found) {
+      const fallback = {
+        id: taskId,
+        title: 'Assigned Task',
+        status: 'Assigned',
+        assignedWorkerId: workerId,
+        assignedWorkerName: workerName,
+      };
+      localTasks.push(fallback);
+      return fallback;
+    }
+
     return localTasks.find((t) => t.id === taskId);
   },
 
@@ -156,16 +167,32 @@ export const taskApi = {
       console.warn('Backend /api/tasks verify unavailable, updating locally:', err.message);
     }
 
-    localTasks = localTasks.map((t) =>
-      t.id === taskId
-        ? {
-            ...t,
-            status: isApproved ? 'Completed' : 'InProgress',
-            verificationFeedback: feedback,
-            verifiedAt: isApproved ? new Date().toISOString() : null,
-          }
-        : t
-    );
+    let found = false;
+    localTasks = localTasks.map((t) => {
+      if (t.id === taskId) {
+        found = true;
+        return {
+          ...t,
+          status: isApproved ? 'Completed' : 'InProgress',
+          verificationFeedback: feedback,
+          verifiedAt: isApproved ? new Date().toISOString() : null,
+        };
+      }
+      return t;
+    });
+
+    if (!found) {
+      const verifiedTask = normalizeTask({
+        id: taskId,
+        title: 'Verified Task',
+        status: isApproved ? 'Completed' : 'InProgress',
+        verificationFeedback: feedback,
+        verifiedAt: isApproved ? new Date().toISOString() : null,
+      });
+      localTasks.push(verifiedTask);
+      return verifiedTask;
+    }
+
     return localTasks.find((t) => t.id === taskId);
   },
 };

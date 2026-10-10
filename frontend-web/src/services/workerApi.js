@@ -62,34 +62,29 @@ export const workerApi = {
 
   // Calculate skill matching score for task assignment
   calculateMatchScore(worker, taskType) {
-    let score = 60; // base score
+    let score = 50; // base score
     const isAvail = worker.isAvailable !== undefined ? worker.isAvailable : worker.status === 'Active';
     if (!isAvail) return 0;
 
     const taskRequirements = {
-      Fertilization: ['Fertilization', 'ChemicalHandling', 'SoilTesting'],
-      PesticideApplication: ['PesticideCertified', 'SprayingOperator', 'ChemicalHandling', 'SafetyHandling'],
-      PestInspection: ['PestDiagnostic', 'CropScouting', 'FungicideSpecialist', 'PesticideCertified'],
-      CropMonitoring: ['CropScouting', 'SoilTesting', 'PestDiagnostic'],
-      Irrigation: ['Irrigation', 'IrrigationManagement', 'SoilTesting'],
-      Harvesting: ['Harvesting', 'QualityGrading', 'GeneralLabor'],
-      Planting: ['Planting', 'GeneralLabor'],
-      Pruning: ['Pruning', 'GreenhouseOperations', 'GeneralLabor'],
-      Weeding: ['GeneralLabor', 'Planting'],
+      PesticideApplication: ['PesticideCertified', 'SprayingOperator', 'SafetyHandling'],
+      PestInspection: ['CropScouting', 'FungicideSpecialist', 'PesticideCertified'],
+      CropMonitoring: ['CropScouting', 'SoilTesting'],
+      Irrigation: ['IrrigationManagement', 'SoilTesting'],
+      Harvesting: ['Harvesting', 'QualityGrading'],
+      Pruning: ['Pruning', 'GreenhouseOperations'],
     };
 
-    const requiredSkills = taskRequirements[taskType] || ['GeneralLabor'];
+    const requiredSkills = taskRequirements[taskType] || [];
     const workerSkillNames = (worker.skills || []).map((s) =>
-      (typeof s === 'string' ? s : s.skillName || '').toLowerCase()
+      typeof s === 'string' ? s : s.skillName || s.name || ''
     );
 
-    const matchedCount = workerSkillNames.filter((s) =>
-      requiredSkills.some((req) => s.includes(req.toLowerCase()) || req.toLowerCase().includes(s))
-    ).length;
+    const matchedCount = workerSkillNames.filter((s) => requiredSkills.includes(s)).length;
 
     score += matchedCount * 20;
-    const taskCount = Number(worker.activeTasksCount || worker.activeWorkloadCount || 0);
-    score -= taskCount * 10;
-    return Math.max(20, Math.min(100, Math.round(score)));
+    const taskCount = Number(worker.activeTasksCount ?? worker.activeWorkloadCount ?? 0);
+    score -= taskCount * 10; // penalty for high task load
+    return Math.max(10, Math.min(100, score));
   },
 };
