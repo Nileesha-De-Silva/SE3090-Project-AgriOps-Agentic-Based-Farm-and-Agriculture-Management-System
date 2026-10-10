@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using AgriOpsAI.Api.Models;
+using AgriOps.Core.Entities;
 
 namespace AgriOps.Infrastructure.Data;
 
@@ -179,6 +180,57 @@ public static class DbInitializer
                     });
                 }
             }
+            await context.SaveChangesAsync();
+        }
+
+        // 3. Seed Default Agricultural Crops
+        if (!await context.Crops.AnyAsync())
+        {
+            var predefinedCrops = new[]
+            {
+                new Crop
+                {
+                    Id = Guid.Parse("90093121-64ab-47a2-b991-4be01f3c473b"),
+                    CropName = "Tomato",
+                    Variety = "Roma Hybrid",
+                    OptimalGrowthDurationDays = 90,
+                    Description = "Determinate red tomato for field and plot production"
+                },
+                new Crop
+                {
+                    Id = Guid.Parse("50b6a719-01b0-4453-876e-0f357e19a227"),
+                    CropName = "Bell Pepper",
+                    Variety = "California Wonder",
+                    OptimalGrowthDurationDays = 75,
+                    Description = "Sweet bell pepper suited for sandy loam and irrigated plots"
+                },
+                new Crop
+                {
+                    Id = Guid.Parse("cb41297f-2410-4833-8eac-5950542083af"),
+                    CropName = "Chili Pepper",
+                    Variety = "Hot Pepper MICH 1",
+                    OptimalGrowthDurationDays = 120,
+                    Description = "Pungent hot chili variety for central province cultivation"
+                },
+                new Crop
+                {
+                    Id = Guid.Parse("0b1bee35-9458-43fb-a5c8-a009031c6b0b"),
+                    CropName = "Paddy (Rice)",
+                    Variety = "BG 352",
+                    OptimalGrowthDurationDays = 105,
+                    Description = "High-yield wetland rice variety"
+                },
+                new Crop
+                {
+                    Id = Guid.Parse("853e344d-cf4f-4b46-886a-c3d92bf46f55"),
+                    CropName = "Corn (Maize)",
+                    Variety = "Pacific 999 Hybrid",
+                    OptimalGrowthDurationDays = 110,
+                    Description = "Commercial grain and sweet corn hybrid"
+                }
+            };
+
+            await context.Crops.AddRangeAsync(predefinedCrops);
             await context.SaveChangesAsync();
         }
     }
