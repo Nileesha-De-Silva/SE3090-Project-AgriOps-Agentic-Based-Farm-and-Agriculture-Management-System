@@ -215,7 +215,7 @@ INSERT INTO "Users" ("Id", "Username", "PasswordHash", "Email", "FullName", "Con
 VALUES (
     '00000000-0000-0000-0000-000000000001',
     'admin',
-    '$2a$11$eAKqR/jH6QG3E3oQoM5d9.o44VlU1wW8v1uC5r7rW9W0h6L7t9XmK',
+    '$2a$11$XsAlnYqCGzO/AN8vgvZN4uQBwXO5AND2GhL6WaKghQrJfgOzPrecq',
     'admin@agriops.local',
     'System Administrator',
     '+94771234567',
@@ -230,14 +230,14 @@ VALUES
     ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111'),
     ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '00000000-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222'),
     ('cccccccc-cccc-cccc-cccc-cccccccccccc', '00000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444444')
-ON CONFLICT ("Id") DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 2. Farm Manager: farm_manager / ChangeMe123!
 INSERT INTO "Users" ("Id", "Username", "PasswordHash", "Email", "FullName", "ContactNumber", "IsActive", "CreatedAt", "UpdatedAt")
 VALUES (
     '00000000-0000-0000-0000-000000000002',
     'farm_manager',
-    '$2a$11$eAKqR/jH6QG3E3oQoM5d9.o44VlU1wW8v1uC5r7rW9W0h6L7t9XmK',
+    '$2a$11$XsAlnYqCGzO/AN8vgvZN4uQBwXO5AND2GhL6WaKghQrJfgOzPrecq',
     'farmmanager@agriops.local',
     'Nileesha (Farm Operations Manager)',
     '+94772345678',
@@ -251,14 +251,14 @@ INSERT INTO "UserRoles" ("Id", "UserId", "RoleId")
 VALUES 
     ('22222222-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222'),
     ('22222222-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', '44444444-4444-4444-4444-444444444444')
-ON CONFLICT ("Id") DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 3. Agronomist: agronomist / ChangeMe123!
 INSERT INTO "Users" ("Id", "Username", "PasswordHash", "Email", "FullName", "ContactNumber", "IsActive", "CreatedAt", "UpdatedAt")
 VALUES (
     '00000000-0000-0000-0000-000000000003',
     'agronomist',
-    '$2a$11$eAKqR/jH6QG3E3oQoM5d9.o44VlU1wW8v1uC5r7rW9W0h6L7t9XmK',
+    '$2a$11$XsAlnYqCGzO/AN8vgvZN4uQBwXO5AND2GhL6WaKghQrJfgOzPrecq',
     'agronomist@agriops.local',
     'Dr. Perera (Crop Agronomist)',
     '+94773456789',
@@ -271,14 +271,14 @@ ON CONFLICT ("Id") DO UPDATE SET "PasswordHash" = EXCLUDED."PasswordHash", "IsAc
 INSERT INTO "UserRoles" ("Id", "UserId", "RoleId")
 VALUES 
     ('33333333-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', '66666666-6666-6666-6666-666666666666')
-ON CONFLICT ("Id") DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 4. Field Worker: field_worker / ChangeMe123!
 INSERT INTO "Users" ("Id", "Username", "PasswordHash", "Email", "FullName", "ContactNumber", "IsActive", "CreatedAt", "UpdatedAt")
 VALUES (
     '00000000-0000-0000-0000-000000000004',
     'field_worker',
-    '$2a$11$eAKqR/jH6QG3E3oQoM5d9.o44VlU1wW8v1uC5r7rW9W0h6L7t9XmK',
+    '$2a$11$XsAlnYqCGzO/AN8vgvZN4uQBwXO5AND2GhL6WaKghQrJfgOzPrecq',
     'fieldworker@agriops.local',
     'Kasun Silva (Field Technician)',
     '+94774567890',
@@ -292,14 +292,14 @@ INSERT INTO "UserRoles" ("Id", "UserId", "RoleId")
 VALUES 
     ('44444444-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000004', '33333333-3333-3333-3333-333333333333'),
     ('44444444-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000004', '77777777-7777-7777-7777-777777777777')
-ON CONFLICT ("Id") DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 5. Farmer: farmer / ChangeMe123!
 INSERT INTO "Users" ("Id", "Username", "PasswordHash", "Email", "FullName", "ContactNumber", "IsActive", "CreatedAt", "UpdatedAt")
 VALUES (
     '00000000-0000-0000-0000-000000000005',
     'farmer',
-    '$2a$11$eAKqR/jH6QG3E3oQoM5d9.o44VlU1wW8v1uC5r7rW9W0h6L7t9XmK',
+    '$2a$11$XsAlnYqCGzO/AN8vgvZN4uQBwXO5AND2GhL6WaKghQrJfgOzPrecq',
     'farmer@agriops.local',
     'Sunil Bandara (Farm Owner / Farmer)',
     '+94775678901',
@@ -312,4 +312,4 @@ ON CONFLICT ("Id") DO UPDATE SET "PasswordHash" = EXCLUDED."PasswordHash", "IsAc
 INSERT INTO "UserRoles" ("Id", "UserId", "RoleId")
 VALUES 
     ('55555555-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000005', '55555555-5555-5555-5555-555555555555')
-ON CONFLICT ("Id") DO NOTHING;
+ON CONFLICT DO NOTHING;
