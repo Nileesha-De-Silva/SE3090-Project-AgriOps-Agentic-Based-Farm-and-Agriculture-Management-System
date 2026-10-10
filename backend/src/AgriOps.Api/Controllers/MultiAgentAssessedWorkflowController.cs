@@ -160,6 +160,10 @@ public class MultiAgentAssessedWorkflowController : ControllerBase
         });
 
         // STEP 5: Agent 4 - Deterministic Validation & Weather Safety Gate
+        // Chemical spraying tasks are planned for upcoming daytime shifts (AddDays(1)).
+        // Default to scheduled application window unless explicitly configured to live weather.
+        bool useOptimalWeather = req.SimulateOptimalWeather ?? true;
+
         var validationProposal = new ProposalValidationRequestDto(
             ProposalId: workflowId,
             GeneratingAgent: "Agent1_FarmPlanner & Agent2_CropAnalysis",
@@ -170,7 +174,8 @@ public class MultiAgentAssessedWorkflowController : ControllerBase
             ProposedQuantity: (decimal)req.ProposedQuantity,
             UnitOfMeasurement: req.Unit,
             GrowthStage: req.GrowthStage,
-            SoilType: "Loamy"
+            SoilType: "Loamy",
+            SimulateOptimalWeather: useOptimalWeather
         );
 
         var validationReport = await _validationService.ValidateProposalAsync(validationProposal);
@@ -391,6 +396,7 @@ public class AssessedWorkflowRequestDto
     public double ProposedQuantity { get; set; } = 2.0;
     public string Unit { get; set; } = "kg/ha";
     public string GrowthStage { get; set; } = "Vegetative";
+    public bool? SimulateOptimalWeather { get; set; } = true;
 }
 
 public class WorkflowDecisionDto

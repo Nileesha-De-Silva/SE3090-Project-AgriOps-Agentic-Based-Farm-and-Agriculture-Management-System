@@ -70,10 +70,26 @@ export const cropAnalysisSlice = createSlice({
           (a) => a.id !== action.payload.analysisId
         );
       })
+      .addCase(approveAlert.rejected, (state, action) => {
+        state.error = action.error.message;
+        if (action.meta?.arg?.analysisId) {
+          state.pendingApprovals = state.pendingApprovals.filter(
+            (a) => a.id !== action.meta.arg.analysisId
+          );
+        }
+      })
       .addCase(rejectAlert.fulfilled, (state, action) => {
         state.pendingApprovals = state.pendingApprovals.filter(
           (a) => a.id !== action.payload.analysisId
         );
+      })
+      .addCase(rejectAlert.rejected, (state, action) => {
+        state.error = action.error.message;
+        if (action.meta?.arg?.analysisId) {
+          state.pendingApprovals = state.pendingApprovals.filter(
+            (a) => a.id !== action.meta.arg.analysisId
+          );
+        }
       })
       .addCase(runAgentAnalysis.pending, (state) => {
         state.isAnalyzing = true;

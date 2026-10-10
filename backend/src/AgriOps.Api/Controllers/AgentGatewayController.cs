@@ -30,7 +30,7 @@ public sealed class AgentGatewayController(IHttpClientFactory clients, IConfigur
     {
         var configured = configuration["InventoryAgent:BaseUrl"] ?? "http://127.0.0.1:8003/";
         if (!Uri.TryCreate(configured, UriKind.Absolute, out var origin) ||
-            !(origin.Scheme == "https" || (origin.Scheme == "http" && origin.IsLoopback)) ||
+            !(origin.Scheme == "https" || (origin.Scheme == "http" && (origin.IsLoopback || origin.Host == "inventory-agent"))) ||
             origin.UserInfo.Length != 0 || origin.Query.Length != 0 || origin.Fragment.Length != 0 || origin.AbsolutePath != "/")
             return StatusCode(503, new { message = "Internal agent address is not configured correctly." });
 

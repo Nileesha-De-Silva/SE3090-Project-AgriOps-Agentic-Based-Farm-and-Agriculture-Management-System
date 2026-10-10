@@ -68,6 +68,7 @@ public static class DbInitializer
             }
         };
 
+        var resolvedRoles = new Dictionary<Guid, Role>();
         foreach (var role in predefinedRoles)
         {
             var existingRole = await context.Roles.FirstOrDefaultAsync(r => r.Id == role.Id || r.RoleName == role.RoleName);
@@ -80,11 +81,13 @@ public static class DbInitializer
                 existingRole.Description = role.Description;
                 existingRole.PermissionsMatrix = role.PermissionsMatrix;
             }
+            // Existing databases may use different IDs for these role names.
+            resolvedRoles.Add(role.Id, existingRole ?? role);
         }
         await context.SaveChangesAsync();
 
         // 2. Seed Default Accounts for All 5 RBAC Roles (Password: ChangeMe123!)
-        var defaultHash = "$2a$11$eAKqR/jH6QG3E3oQoM5d9.o44VlU1wW8v1uC5r7rW9W0h6L7t9XmK";
+        var defaultHash = "$2a$11$XsAlnYqCGzO/AN8vgvZN4uQBwXO5AND2GhL6WaKghQrJfgOzPrecq";
 
         var seedUsers = new[]
         {
@@ -168,8 +171,9 @@ public static class DbInitializer
                 await context.SaveChangesAsync();
             }
 
-            foreach (var rId in su.RoleIds)
+            foreach (var seedRoleId in su.RoleIds)
             {
+                var rId = resolvedRoles[seedRoleId].Id;
                 if (!user.UserRoles.Any(ur => ur.RoleId == rId))
                 {
                     await context.UserRoles.AddAsync(new UserRole

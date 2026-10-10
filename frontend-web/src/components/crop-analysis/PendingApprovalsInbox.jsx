@@ -21,38 +21,44 @@ export default function PendingApprovalsInbox() {
   const { pendingApprovals, status } = useSelector((state) => state.cropAnalysis);
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [reviewNote, setReviewNote] = useState('');
-  const [actionInProgress, setActionInProgress] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState(null);
 
   useEffect(() => {
     dispatch(fetchPendingApprovals());
   }, [dispatch]);
 
   const handleApprove = async (alert) => {
-    setActionInProgress(true);
-    await dispatch(
-      approveAlert({
-        analysisId: alert.id,
-        threadId: alert.threadId,
-        comments: reviewNote || 'Approved by Farm Manager. Immediate task dispatch authorized.',
-      })
-    );
-    setActionInProgress(false);
-    setSelectedAlert(null);
-    setReviewNote('');
+    setActionInProgress(alert.id);
+    try {
+      await dispatch(
+        approveAlert({
+          analysisId: alert.id,
+          threadId: alert.threadId,
+          comments: reviewNote || 'Approved by Farm Manager. Immediate task dispatch authorized.',
+        })
+      );
+    } finally {
+      setActionInProgress(null);
+      setSelectedAlert(null);
+      setReviewNote('');
+    }
   };
 
   const handleReject = async (alert) => {
-    setActionInProgress(true);
-    await dispatch(
-      rejectAlert({
-        analysisId: alert.id,
-        threadId: alert.threadId,
-        reason: reviewNote || 'Rejected by Farm Manager. Alternative protocol scheduled.',
-      })
-    );
-    setActionInProgress(false);
-    setSelectedAlert(null);
-    setReviewNote('');
+    setActionInProgress(alert.id);
+    try {
+      await dispatch(
+        rejectAlert({
+          analysisId: alert.id,
+          threadId: alert.threadId,
+          reason: reviewNote || 'Rejected by Farm Manager. Alternative protocol scheduled.',
+        })
+      );
+    } finally {
+      setActionInProgress(null);
+      setSelectedAlert(null);
+      setReviewNote('');
+    }
   };
 
   return (
@@ -212,20 +218,38 @@ export default function PendingApprovalsInbox() {
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <button
                     onClick={() => handleReject(alert)}
-                    disabled={actionInProgress}
-                    className="flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 hover:text-rose-900 text-rose-800 font-bold text-xs transition-colors"
+                    disabled={!!actionInProgress}
+                    className="flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 hover:text-rose-900 text-rose-800 font-bold text-xs transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    <XCircle className="w-4 h-4" />
-                    <span>Reject Proposal</span>
+                    {actionInProgress === alert.id ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-rose-600" />
+                        <span>Rejecting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4" />
+                        <span>Reject Proposal</span>
+                      </>
+                    )}
                   </button>
 
                   <button
                     onClick={() => handleApprove(alert)}
-                    disabled={actionInProgress}
-                    className="flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs shadow-sm shadow-emerald-700/20 transition-all active:scale-[0.98]"
+                    disabled={!!actionInProgress}
+                    className="flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs shadow-sm shadow-emerald-700/20 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Approve & Dispatch</span>
+                    {actionInProgress === alert.id ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                        <span>Dispatching...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Approve & Dispatch</span>
+                      </>
+                    )}
                   </button>
                 </div>
 

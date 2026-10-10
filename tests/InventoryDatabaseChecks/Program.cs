@@ -79,6 +79,21 @@ try {
     Check(await db.PurchaseRequests.CountAsync() == 1, "Repeated approval does not duplicate the purchase request");
     Check((await inventory.GetByIdAsync(item.Id))!.CurrentStock == 7m &&
         (await movements.GetHistoryAsync(item.Id))!.Count == 2, "Approval retry leaves stock and movement history unchanged");
+    var purchaseService = new PurchaseRequestService(db, movements);
+    var purchaseId = await db.PurchaseRequests.Select(p => p.Id).SingleAsync();
+    var received = await purchaseService.ReceiveAsync(purchaseId, "Test supplier receipt");
+    Check(received!.Status == "Received", "Receipt closes the approved purchase request");
+    Check((await inventory.GetByIdAsync(item.Id))!.CurrentStock == 12m, "Linked receipt adds approved quantity exactly once");
+    var receiptHistory = await movements.GetHistoryAsync(item.Id);
+    Check(receiptHistory!.Count == 3 && receiptHistory.Any(t => (t.Notes ?? "").Contains(purchaseId.ToString())), "Receipt movement contains purchase reference");
+    Check(!await db.PurchaseRequests.AnyAsync(p => p.Id == purchaseId && (p.Status == "Pending" || p.Status == "Approved")), "Received purchase no longer counts as incoming stock");
+    rejected = false;
+    try { await purchaseService.ReceiveAsync(purchaseId, "Duplicate receipt"); }
+    catch (InvalidOperationException) { rejected = true; }
+    Check(rejected, "Repeated receipt is rejected");
+    db.ChangeTracker.Clear();
+    Check((await inventory.GetByIdAsync(item.Id))!.CurrentStock == 12m && (await movements.GetHistoryAsync(item.Id))!.Count == 3, "Duplicate receipt leaves stock and history unchanged");
+    Check(await purchaseService.ReceiveAsync(Guid.NewGuid(), null) is null, "Missing purchase does not create a movement");
     Console.WriteLine($"{passed} database checks passed. Database retained for inspection; application database untouched.");
     return 0;
 } catch (Exception ex) {

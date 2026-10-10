@@ -20,6 +20,10 @@ public class InventoryAgentController(AgriOpsDbContext context) : ControllerBase
         canReceive = AgriOpsAI.Api.Services.InventoryPermissions.CanMove(User, "Receive")
     });
 
+    [Authorize(Policy = "InventoryAgent")]
+    [HttpGet("automation-access")]
+    public IActionResult AutomationAccess() => Ok(new { subject = User.FindFirstValue("sub"), issuer = User.FindFirstValue("iss") });
+
     [Authorize(Policy = "Manager")]
     [HttpGet("access")]
     public IActionResult Access() => Ok(new { subject = User.FindFirstValue("sub"), issuer = User.FindFirstValue("iss") });

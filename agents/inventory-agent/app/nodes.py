@@ -91,6 +91,16 @@ class InventoryNodes:
 
     def calculate_need(self, state: InventoryState):
         context = state["context"]
+        if state.get("automatic"):
+            usage = Decimal(str(context.get("usageLast28Days") or 0))
+            stock = Decimal(str(context["item"]["currentStock"]))
+            incoming = Decimal(str(context["incomingQuantity"]))
+            if context.get("historyDays", 0) < 28 or usage <= 0:
+                return {"status": "blocked", "error": "insufficient_usage_history", "quantity": "0",
+                        "trace": event(state, "calculate_need", "blocked", error="insufficient_usage_history")}
+            if stock >= usage / 2 or stock + incoming >= usage / 2:
+                return {"status": "no_action", "error": None, "quantity": "0",
+                        "trace": event(state, "calculate_need", "no_action")}
         if state.get("demand_mode"):
             if context["pendingRecommendationId"] or context["offersTruncated"] or not context["offers"]:
                 error = "pending_recommendation_exists" if context["pendingRecommendationId"] else "too_many_offers_for_review" if context["offersTruncated"] else "no_available_supplier"
@@ -146,6 +156,10 @@ class InventoryNodes:
                 {**p, "estimatedCost": str((Decimal(p["unitPrice"]) * Decimal(p["quantity"])).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))}
                 for p in (timely or eligible)], "previous_validation_error": state.get("error"),
                 "warning": "Incoming orders have no confirmed delivery dates. Shortage risk uses on-hand stock only."}
+        if state.get("demand_mode"):
+            prompt["available_supplier_count"] = len(context["offers"])
+            prompt["timely_supplier_count"] = len(timely)
+            prompt["selection_policy"] = ("When timely offers exist, only those offers are eligible for selection. Other available suppliers may have longer delivery estimates. Explain this distinction; never call the chosen supplier the sole available supplier unless available_supplier_count is 1.")
         prompt["manager_supplier_preferences"] = state.get("message", "")
         tokens = 0
         phase = "call"
