@@ -10,8 +10,6 @@ namespace AgriOps.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Route("api/crop-analysis")]
-[Route("api/cropanalysis")]
 public class CropAnalysisController : ControllerBase
 {
     private readonly ICropAnalysisService _cropAnalysisService;
@@ -96,7 +94,6 @@ public class CropAnalysisController : ControllerBase
     /// Get all pending crop analysis assessments awaiting farm manager approval.
     /// </summary>
     [HttpGet("pending")]
-    [HttpGet("pending-approval")]
     public async Task<ActionResult<IEnumerable<CropAnalysisAssessmentResponseDto>>> GetPendingApprovals()
     {
         var assessments = await _cropAnalysisService.GetPendingApprovalsAsync();
