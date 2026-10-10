@@ -69,7 +69,7 @@ public class InventoryTransactionService
     }
     public async Task<InventoryTransactionDto?> CreateAsync(
       Guid inventoryItemId,
-      CreateInventoryTransactionDto dto)
+      CreateInventoryTransactionDto dto, Guid? purchaseRequestId = null, Guid? supplierId = null)
    {
 
     Validator.ValidateObject(
@@ -109,6 +109,45 @@ public class InventoryTransactionService
         return null;
     }    
 
+    if (dto.TransactionType == "Receive" && dto.BatchId is not null)
+        throw new ValidationException("Receive a new batch rather than adding goods to an existing batch label.");
+    if (dto.TransactionType == "Use" && (dto.ExpirationDate is not null || dto.BatchNumber is not null || dto.ShelfLocation is not null))
+        throw new ValidationException("Batch details are recorded only when receiving goods.");
+    // Every stock mutation holds the same item lock. Batch balances and total stock commit together.
+    var batches = await _context.InventoryBatches.Where(b => b.InventoryItemId == inventoryItemId).AsTracking().ToListAsync();
+    var tracked = batches.Sum(b => b.RemainingQuantity);
+    if (tracked > item.CurrentStock) throw new InvalidOperationException("Batch balances do not match inventory. Contact a manager.");
+    if (tracked < item.CurrentStock) {
+        var legacy = new InventoryBatch {
+            Id = Guid.NewGuid(), InventoryItemId = inventoryItemId, BatchNumber = "Existing stock — date unknown",
+            ReceivedQuantity = item.CurrentStock - tracked, RemainingQuantity = item.CurrentStock - tracked,
+            ReceivedAt = item.CreatedAt, UpdatedAt = DateTime.UtcNow, IsLegacy = true
+        };
+        _context.InventoryBatches.Add(legacy); batches.Add(legacy);
+    }
+    var allocations = new List<(InventoryBatch Batch, decimal Quantity)>();
+    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+    if (dto.TransactionType == "Use") {
+        var eligible = batches.Where(b => b.RemainingQuantity > 0 && (b.ExpirationDate is null || b.ExpirationDate >= today))
+            .OrderBy(b => b.ReceivedAt).ThenBy(b => b.Id).ToList();
+        if (dto.BatchId is Guid batchId) {
+            var selected = batches.SingleOrDefault(b => b.Id == batchId);
+            if (selected is null) throw new InvalidOperationException("Batch not found for this inventory item.");
+            if (selected.ExpirationDate < today) throw new InvalidOperationException("This batch has expired and cannot be issued.");
+            if (quantity > selected.RemainingQuantity) throw new InvalidOperationException("Insufficient stock in this batch. Refresh its current quantity.");
+            if (eligible.FirstOrDefault()?.Id != batchId) throw new InvalidOperationException("Issue the oldest received available batch first (FIFO). Refresh to see its label.");
+            allocations.Add((selected, quantity));
+        } else {
+            if (eligible.Sum(b => b.RemainingQuantity) < quantity)
+                throw new InvalidOperationException("Insufficient unexpired stock for this usage.");
+            var left = quantity;
+            foreach (var batch in eligible) {
+                var take = Math.Min(left, batch.RemainingQuantity);
+                allocations.Add((batch, take)); left -= take;
+                if (left == 0) break;
+            }
+        }
+    }
     decimal newStock;
 
     if(dto.TransactionType == "Receive")
@@ -153,6 +192,25 @@ public class InventoryTransactionService
     item.UpdatedAt = now;
 
     _context.InventoryTransactions.Add(stockTransaction);
+    if (dto.TransactionType == "Receive") {
+        var batch = new InventoryBatch {
+            Id = purchaseRequestId ?? Guid.NewGuid(), InventoryItemId = inventoryItemId,
+            PurchaseRequestId = purchaseRequestId, SupplierId = supplierId,
+            BatchNumber = string.IsNullOrWhiteSpace(dto.BatchNumber) ? null : dto.BatchNumber.Trim(),
+            ShelfLocation = string.IsNullOrWhiteSpace(dto.ShelfLocation) ? null : dto.ShelfLocation.Trim(),
+            ExpirationDate = dto.ExpirationDate, ReceivedQuantity = quantity, RemainingQuantity = quantity,
+            ReceivedAt = now, UpdatedAt = now
+        };
+        _context.InventoryBatches.Add(batch); allocations.Add((batch, quantity));
+    }
+    foreach (var allocation in allocations) {
+        if (dto.TransactionType == "Use") allocation.Batch.RemainingQuantity -= allocation.Quantity;
+        allocation.Batch.UpdatedAt = now;
+        _context.InventoryBatchMovements.Add(new InventoryBatchMovement {
+            Id = Guid.NewGuid(), InventoryBatchId = allocation.Batch.Id,
+            InventoryTransactionId = stockTransaction.Id, Quantity = allocation.Quantity
+        });
+    }
 
     await _context.SaveChangesAsync();
     if (databaseTransaction is not null) await databaseTransaction.CommitAsync();

@@ -19,7 +19,7 @@ public class PurchaseRequestService(AgriOpsDbContext context, InventoryTransacti
     }
 
     // Full deliveries only. A purchase lock serializes double-clicks and concurrent receipts.
-    public async Task<PurchaseRequestDto?> ReceiveAsync(Guid id, string? notes)
+    public async Task<PurchaseRequestDto?> ReceiveAsync(Guid id, string? notes, DateOnly? expirationDate = null, string? batchNumber = null, string? shelfLocation = null)
     {
         await using var transaction = await context.Database.BeginTransactionAsync();
         var rows = await context.PurchaseRequests.FromSqlInterpolated(
@@ -30,8 +30,9 @@ public class PurchaseRequestService(AgriOpsDbContext context, InventoryTransacti
             throw new InvalidOperationException("Only an approved, unreceived purchase request can be received.");
         var movement = await movements.CreateAsync(purchase.InventoryItemId, new CreateInventoryTransactionDto {
             TransactionType = "Receive", Quantity = purchase.RequestedQuantity,
+            ExpirationDate = expirationDate, BatchNumber = batchNumber, ShelfLocation = shelfLocation,
             Notes = $"Purchase receipt {purchase.Id:D}" + (string.IsNullOrWhiteSpace(notes) ? "" : $": {notes.Trim()}")
-        });
+        }, purchase.Id, purchase.SupplierId);
         if (movement is null) throw new InvalidOperationException("The inventory item no longer exists.");
         purchase.Status = "Received";
         purchase.UpdatedAt = DateTime.UtcNow;

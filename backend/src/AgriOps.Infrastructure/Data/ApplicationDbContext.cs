@@ -30,6 +30,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<SoilRecord> SoilRecords => Set<SoilRecord>();
 
     // Component 3 - Inventory & Supply Chain Management
+    public DbSet<InventoryBatch> InventoryBatches => Set<InventoryBatch>();
+    public DbSet<InventoryBatchMovement> InventoryBatchMovements => Set<InventoryBatchMovement>();
     public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
     public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
@@ -47,6 +49,23 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<InventoryBatch>(e => {
+            e.Property(b => b.BatchNumber).HasMaxLength(100);
+            e.Property(b => b.ShelfLocation).HasMaxLength(100);
+            e.Property(b => b.ReceivedQuantity).HasPrecision(10, 2);
+            e.Property(b => b.RemainingQuantity).HasPrecision(10, 2);
+            e.HasIndex(b => b.InventoryItemId);
+            e.HasIndex(b => b.PurchaseRequestId).IsUnique();
+            e.HasOne<InventoryItem>().WithMany().HasForeignKey(b => b.InventoryItemId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<PurchaseRequest>().WithMany().HasForeignKey(b => b.PurchaseRequestId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Supplier>().WithMany().HasForeignKey(b => b.SupplierId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<InventoryBatchMovement>(e => {
+            e.Property(m => m.Quantity).HasPrecision(10, 2);
+            e.HasIndex(m => new { m.InventoryBatchId, m.InventoryTransactionId }).IsUnique();
+            e.HasOne<InventoryBatch>().WithMany().HasForeignKey(m => m.InventoryBatchId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<InventoryTransaction>().WithMany().HasForeignKey(m => m.InventoryTransactionId).OnDelete(DeleteBehavior.Restrict);
+        });
 
         // FarmTask Configuration
         modelBuilder.Entity<FarmTask>(entity =>

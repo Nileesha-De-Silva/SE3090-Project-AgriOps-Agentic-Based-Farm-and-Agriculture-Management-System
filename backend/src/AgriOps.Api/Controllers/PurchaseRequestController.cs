@@ -14,6 +14,9 @@ public class PurchaseRequestController(PurchaseRequestService service) : Control
     {
         [System.ComponentModel.DataAnnotations.StringLength(400)]
         public string? Notes { get; set; }
+        public DateOnly? ExpirationDate { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(100)] public string? BatchNumber { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(100)] public string? ShelfLocation { get; set; }
     }
 
     [HttpPost("{id:guid}/receive")]
@@ -22,7 +25,7 @@ public class PurchaseRequestController(PurchaseRequestService service) : Control
         if (!InventoryPermissions.CanMove(User, "Receive")) return Forbid();
         try
         {
-            var result = await service.ReceiveAsync(id, input.Notes);
+            var result = await service.ReceiveAsync(id, input.Notes, input.ExpirationDate, input.BatchNumber, input.ShelfLocation);
             return result is null ? NotFound(new { message = "Purchase request not found." }) : Ok(result);
         }
         catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
