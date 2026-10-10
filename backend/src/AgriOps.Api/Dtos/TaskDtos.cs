@@ -53,20 +53,20 @@ public record AssignWorkerDto(
 
 public record UpdateTaskStatusDto(
     string NewStatus,
-    Guid UserId,
-    string? Remarks
+    Guid? UserId = null,
+    string? Remarks = null
 );
 
 public record SubmitEvidenceDto(
     string EvidencePhotoUrl,
     string Remarks,
-    Guid WorkerUserId
+    Guid? WorkerUserId = null
 );
 
 public record VerifyEvidenceDto(
     bool IsApproved,
-    Guid ManagerUserId,
-    string? Remarks
+    Guid? ManagerUserId = null,
+    string? Remarks = null
 );
 
 public record TaskHistoryDto(

@@ -109,7 +109,8 @@ public class TasksController : ControllerBase
     {
         try
         {
-            var updatedTask = await _taskService.UpdateTaskStatusAsync(id, dto.NewStatus, dto.UserId, dto.Remarks);
+            var userId = dto.UserId ?? Guid.Empty;
+            var updatedTask = await _taskService.UpdateTaskStatusAsync(id, dto.NewStatus, userId, dto.Remarks);
             return Ok(MapToTaskResponseDto(updatedTask));
         }
         catch (InvalidOperationException ex)
@@ -126,7 +127,8 @@ public class TasksController : ControllerBase
     {
         try
         {
-            var history = await _taskService.SubmitTaskEvidenceAsync(id, dto.EvidencePhotoUrl, dto.Remarks, dto.WorkerUserId);
+            var workerUserId = dto.WorkerUserId ?? Guid.Empty;
+            var history = await _taskService.SubmitTaskEvidenceAsync(id, dto.EvidencePhotoUrl, dto.Remarks, workerUserId);
             var historyDto = new TaskHistoryDto(
                 history.Id,
                 history.TaskId,
@@ -153,7 +155,8 @@ public class TasksController : ControllerBase
     {
         try
         {
-            var verifiedTask = await _taskService.VerifyTaskEvidenceAsync(id, dto.IsApproved, dto.ManagerUserId, dto.Remarks);
+            var managerUserId = dto.ManagerUserId ?? Guid.Empty;
+            var verifiedTask = await _taskService.VerifyTaskEvidenceAsync(id, dto.IsApproved, managerUserId, dto.Remarks);
             return Ok(MapToTaskResponseDto(verifiedTask));
         }
         catch (InvalidOperationException ex)
