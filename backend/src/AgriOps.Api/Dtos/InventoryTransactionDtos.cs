@@ -23,6 +23,10 @@ public class CreateInventoryTransactionDto
 
     [StringLength(500)]
     public string? Notes {get; set; }
+    public Guid? BatchId { get; set; }
+    [StringLength(100)] public string? BatchNumber { get; set; }
+    [StringLength(100)] public string? ShelfLocation { get; set; }
+    public DateOnly? ExpirationDate { get; set; }
 
 }
 

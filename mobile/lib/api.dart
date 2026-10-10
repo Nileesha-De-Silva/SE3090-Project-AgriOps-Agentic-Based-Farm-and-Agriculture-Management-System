@@ -102,6 +102,13 @@ String? itemIdFromCode(String text) {
   return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(value) ? value.toLowerCase() : null;
 }
 
+String? batchIdFromCode(String text) {
+  final value = text.trim();
+  if (!value.startsWith('agriops:batch:')) return null;
+  final id = value.substring('agriops:batch:'.length);
+  return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(id) ? id.toLowerCase() : null;
+}
+
 String? quantityError(String? value) {
   final text = (value ?? '').trim();
   if (!RegExp(r'^\d{1,8}(\.\d{1,2})?$').hasMatch(text) || (double.tryParse(text) ?? 0) <= 0) {

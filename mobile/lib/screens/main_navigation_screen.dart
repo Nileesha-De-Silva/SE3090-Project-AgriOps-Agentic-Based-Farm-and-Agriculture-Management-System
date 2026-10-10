@@ -5,6 +5,7 @@ import '../api.dart';
 import '../workspace.dart';
 import '../screens.dart';
 import '../scanner.dart';
+import '../batch_screen.dart';
 import '../widgets/app_theme.dart';
 import 'farms_screen.dart';
 import 'tasks_screen.dart';
@@ -72,18 +73,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
-  void _openScanner() {
+  Future<void> _openScanner() async {
     final ws = _getWorkspace();
-    final ids = ws.items
-        .map((i) => i['id']?.toString() ?? '')
-        .where((id) => id.isNotEmpty)
-        .toSet();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ScannerScreen(inventoryIds: ids),
-      ),
-    );
+    if (!ws.connected || ws.busy) {
+      _openInventory();
+      return;
+    }
+    final code = await Navigator.push<String>(context, MaterialPageRoute(builder: (context) => ScannerScreen(inventoryIds: ws.items.map((i) => '${i['id']}').toSet())));
+    if (!mounted || code == null || !ws.connected) return;
+    final batchId = batchIdFromCode(code);
+    if (batchId != null) {
+      await Navigator.push<void>(context, MaterialPageRoute(builder: (_) => BatchScreen(workspace: ws, batchId: batchId)));
+    } else {
+      final itemId = itemIdFromCode(code);
+      if (itemId != null) await Navigator.push<void>(context, MaterialPageRoute(builder: (_) => ItemScreen(workspace: ws, itemId: itemId)));
+    }
   }
 
   void _openAnalytics() {
@@ -539,80 +543,39 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _showApiSettingsDialog() {
-    final urlController = TextEditingController(text: ApiConfig.baseUrl);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.settings_ethernet, color: AppTheme.primaryGreen),
-            SizedBox(width: 8),
-            Text('Backend API Config'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Set the ASP.NET Core API base URL:\n'
-              '• Android Emulator: http://10.0.2.2:5286/api\n'
-              '• Web / Desktop: http://localhost:5286/api\n'
-              '• Physical Device: http://<PC-LAN-IP>:5286/api',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: urlController,
-              decoration: const InputDecoration(
-                labelText: 'Base API URL',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 6,
-              children: [
-                ActionChip(
-                  label: const Text('10.0.2.2 (Emulator)'),
-                  onPressed: () => urlController.text = 'http://10.0.2.2:5286/api',
-                ),
-                ActionChip(
-                  label: const Text('localhost'),
-                  onPressed: () => urlController.text = 'http://localhost:5286/api',
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newUrl = urlController.text.trim();
-              if (newUrl.isNotEmpty) {
-                setState(() {
-                  ApiConfig.baseUrl = newUrl;
-                  _workspace?.dispose();
-                  _workspace = null;
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: AppTheme.primaryGreen,
-                    content: Text('API URL updated to: $newUrl'),
-                  ),
-                );
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
+    final ws = _getWorkspace();
+    final urlController = TextEditingController(text: ws.api.base.toString());
+    String? urlError;
+    showDialog<void>(context: context, builder: (context) => StatefulBuilder(builder: (dialogContext, updateDialog) => AlertDialog(
+      title: const Text('Backend API Config'),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Choose the backend used by the app. Changing it signs you out so records and login come from the same system.'),
+        const SizedBox(height: 12),
+        TextField(controller: urlController, decoration: InputDecoration(labelText: 'Base API URL', border: const OutlineInputBorder(), errorText: urlError)),
+        const SizedBox(height: 12),
+        Wrap(spacing: 6, children: [
+          ActionChip(label: const Text('10.0.2.2 (Emulator)'), onPressed: () => urlController.text = 'http://10.0.2.2:5286/api/'),
+          ActionChip(label: const Text('localhost'), onPressed: () => urlController.text = 'http://localhost:5286/api/'),
+        ]),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+        ElevatedButton(onPressed: () {
+          if (ws.busy) { updateDialog(() => urlError = 'Wait for the current operation to finish.'); return; }
+          var address = urlController.text.trim();
+          if (!address.endsWith('/')) address = '$address/';
+          Api replacement;
+          try { replacement = Api(address, allowLocalHttp: true); }
+          catch (_) { updateDialog(() => urlError = 'Use an HTTPS backend URL ending in /api/, or the local emulator option.'); return; }
+          Navigator.pop(dialogContext);
+          ws.changeBackend(replacement);
+          if (mounted) {
+            setState(() {});
+            ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Backend updated. Sign in again to load its records.')));
+          }
+        }, child: const Text('Save')),
+      ],
+    )));
   }
 
   @override

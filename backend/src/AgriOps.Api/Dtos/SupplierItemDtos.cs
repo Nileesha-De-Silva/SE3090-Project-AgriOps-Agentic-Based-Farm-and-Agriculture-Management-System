@@ -12,6 +12,8 @@ public class SaveSupplierItemDto
 
     [Required]
     public bool? IsAvailable { get; set; }
+
+    public DateOnly? ExpirationDate { get; set; }
 }
 
 public class SupplierItemDto
@@ -22,6 +24,7 @@ public class SupplierItemDto
     public decimal UnitPrice { get; set; }
     public int LeadTimeDays { get; set; }
     public bool IsAvailable { get; set; }
+    public DateOnly? ExpirationDate { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

@@ -25,9 +25,15 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   void accept(String value) {
     if (finished) return;
+    final batchId = batchIdFromCode(value);
+    if (batchId != null) {
+      finished = true;
+      Navigator.of(context).pop('agriops:batch:$batchId');
+      return;
+    }
     final id = itemIdFromCode(value);
     if (id == null) {
-      setState(() => error = 'This is not an AgriOps inventory label. Scan an item label or enter its inventory ID.');
+      setState(() => error = 'This is not an AgriOps inventory label. Scan a batch or item label, or enter its label text.');
       return;
     }
     if (!knownIds.contains(id)) {
@@ -45,7 +51,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     // Prefer a recognised item when the camera sees several labels at once.
     for (final value in values) {
       final id = itemIdFromCode(value);
-      if (id != null && knownIds.contains(id)) {
+      if (batchIdFromCode(value) != null || (id != null && knownIds.contains(id))) {
         accept(value);
         return;
       }
@@ -60,11 +66,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Scan inventory label')),
     body: SafeArea(child: ListView(padding: const EdgeInsets.all(20), children: [
-      const Text('Scan the AgriOps QR label on a container or shelf to open its inventory record.'),
+      const Text('Scan the AgriOps batch QR label on a container or shelf to check its current quantity and expiration date.'),
       const SizedBox(height: 8),
       const Text('Scanning does not change stock. Enter the amount used or received on the item screen.'),
       if (knownIds.isEmpty) const Padding(padding: EdgeInsets.symmetric(vertical: 12),
-        child: Text('No inventory items are loaded. Go back and refresh before scanning.')),
+        child: Text('No inventory items are loaded. Batch labels can still be checked against the server; refresh inventory to use older item labels.')),
       const SizedBox(height: 16),
       if (cameraEnabled) ...[
         SizedBox(height: 260, child: MobileScanner(
@@ -75,16 +81,16 @@ class _ScannerScreenState extends State<ScannerScreen> {
         TextButton.icon(onPressed: () => setState(() => cameraEnabled = false),
           icon: const Icon(Icons.videocam_off_outlined), label: const Text('Stop camera')),
       ] else
-        OutlinedButton.icon(onPressed: knownIds.isEmpty ? null : () => setState(() => cameraEnabled = true),
+        OutlinedButton.icon(onPressed: () => setState(() => cameraEnabled = true),
           icon: const Icon(Icons.qr_code_scanner), label: const Text('Start camera')),
       const SizedBox(height: 20),
-      TextField(controller: manual, autocorrect: false, enableSuggestions: false,
+      TextField(controller: manual, autocorrect: false, enableSuggestions: false, onChanged: (_) => setState(() {}),
         decoration: const InputDecoration(labelText: 'Inventory ID or QR label text',
           helperText: 'Use manual entry if the camera is unavailable.', helperMaxLines: 2)),
       if (error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12),
         child: Semantics(liveRegion: true, child: Text(error!))),
       const SizedBox(height: 12),
-      FilledButton(onPressed: knownIds.isEmpty ? null : () => accept(manual.text),
+      FilledButton(onPressed: knownIds.isEmpty && batchIdFromCode(manual.text) == null ? null : () => accept(manual.text),
         child: const Text('Open item')),
     ])),
   );
@@ -92,12 +98,13 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
 class InventoryQrLabelScreen extends StatelessWidget {
   final String itemId, itemName;
-  const InventoryQrLabelScreen({super.key, required this.itemId, required this.itemName});
+  final bool isBatch;
+  const InventoryQrLabelScreen({super.key, required this.itemId, required this.itemName, this.isBatch = false});
 
   @override
   Widget build(BuildContext context) {
     final id = itemIdFromCode(itemId);
-    final payload = id == null ? null : 'agriops:item:$id';
+    final payload = id == null ? null : 'agriops:${isBatch ? 'batch' : 'item'}:$id';
     return Scaffold(
       appBar: AppBar(title: const Text('Inventory QR label')),
       body: SafeArea(child: Center(child: ConstrainedBox(
