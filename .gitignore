@@ -249,11 +249,21 @@ agent.db
 **/agent.db
 sentinel.db
 **/sentinel.db
+*checkpoints*.sqlite
+**/*checkpoints*.sqlite
+sentinel_checkpoints.sqlite
+**/sentinel_checkpoints.sqlite
+agents/**/data/
+ai-subsystem/data/
+ai-subsystem/**/data/
+**/agent_data/
 
 # Vector Databases & Embeddings
 chroma/
 chroma_db/
 **/chroma_db/
+chroma_data/
+**/chroma_data/
 faiss_index/
 vectorstore/
 vectorstores/
@@ -302,6 +312,12 @@ node_modules/
 **/.turbo/
 .eslintcache
 bun.lockb
+
+# Cloud Hosting & Deployment Tool Caches (Vercel, Netlify)
+.vercel/
+**/.vercel/
+.netlify/
+**/.netlify/
 
 # Vite & Frontend Build Outputs
 frontend-web/dist/

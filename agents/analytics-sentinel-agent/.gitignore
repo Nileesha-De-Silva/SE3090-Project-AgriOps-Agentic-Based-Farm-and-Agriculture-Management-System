@@ -1,0 +1,57 @@
+# ==============================================================================
+# AgriOps Agent 4: Analytics & Operations Sentinel Agent Gitignore
+# ==============================================================================
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment Variables & Secrets
+.env
+.env.*
+.env.local
+.env.*.local
+*.local.json
+!**/.env.example
+!**/.env.template
+!**/.env.sample
+
+# Python Bytecode & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Testing, Linting & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Test Reports & Evaluation Scorecards
+junit*.xml
+*test-results.xml
+*.scorecard.json
+*.scorecard.txt
+evaluation_results/
+benchmark_results/
+
+# LangGraph Checkpointing & Local Databases
+data/
+checkpoints/
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Logs
+*.log
+logs/
