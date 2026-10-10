@@ -82,6 +82,7 @@ export function createApi({ getToken = () => '', fetchImpl = globalThis.fetch, t
     recordMovement: (itemId, values) => request(`/api/inventory/${id(itemId)}/transactions`, 'POST', {
       transactionType: values.type, quantity: Number(values.quantity), notes: values.notes?.trim() || null,
     }, true),
+    receivePurchase: (purchaseId, notes) => request(`/api/purchase-requests/${id(purchaseId)}/receive`, 'POST', { notes: notes?.trim() || null }, true),
     decide: (recommendationId, approve, note) => request(`/api/reorder-recommendations/${id(recommendationId)}/${approve ? 'approve' : 'reject'}`, 'POST', { note }, true),
     recommend: body => request('/api/inventory-agent/recommend', 'POST', body, true),
     run: runId => request(`/api/inventory-agent/runs/${id(runId)}`, 'GET', undefined, true),

@@ -86,7 +86,8 @@ public class InventoryTransactionService
       }
 
       await using var databaseTransaction = 
-          await _context.Database.BeginTransactionAsync();
+          _context.Database.CurrentTransaction is null
+              ? await _context.Database.BeginTransactionAsync() : null;
 
        // Lock this item until the transaction completes.
       // The interpolated ID is passed as a SQL parameter.
@@ -154,7 +155,7 @@ public class InventoryTransactionService
     _context.InventoryTransactions.Add(stockTransaction);
 
     await _context.SaveChangesAsync();
-    await databaseTransaction.CommitAsync();
+    if (databaseTransaction is not null) await databaseTransaction.CommitAsync();
 
     return new InventoryTransactionDto
     {

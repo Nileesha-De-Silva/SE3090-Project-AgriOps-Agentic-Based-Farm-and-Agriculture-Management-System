@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AgriOpsAI.Api.Services;
 
 // Purchase requests are created only inside recommendation approval's transaction.
-public class PurchaseRequestService(AgriOpsDbContext context)
+public class PurchaseRequestService(AgriOpsDbContext context, InventoryTransactionService movements)
 {
     public async Task<List<PurchaseRequestDto>> GetAllAsync()
         => (await context.PurchaseRequests.AsNoTracking().OrderByDescending(r => r.RequestedAt)
@@ -16,6 +16,28 @@ public class PurchaseRequestService(AgriOpsDbContext context)
     {
         var request = await context.PurchaseRequests.AsNoTracking().SingleOrDefaultAsync(r => r.Id == id);
         return request is null ? null : ToDto(request);
+    }
+
+    // Full deliveries only. A purchase lock serializes double-clicks and concurrent receipts.
+    public async Task<PurchaseRequestDto?> ReceiveAsync(Guid id, string? notes)
+    {
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        var rows = await context.PurchaseRequests.FromSqlInterpolated(
+            $"SELECT * FROM \"PurchaseRequests\" WHERE \"Id\" = {id} FOR UPDATE").AsTracking().ToListAsync();
+        var purchase = rows.SingleOrDefault();
+        if (purchase is null) return null;
+        if (purchase.Status != "Approved")
+            throw new InvalidOperationException("Only an approved, unreceived purchase request can be received.");
+        var movement = await movements.CreateAsync(purchase.InventoryItemId, new CreateInventoryTransactionDto {
+            TransactionType = "Receive", Quantity = purchase.RequestedQuantity,
+            Notes = $"Purchase receipt {purchase.Id:D}" + (string.IsNullOrWhiteSpace(notes) ? "" : $": {notes.Trim()}")
+        });
+        if (movement is null) throw new InvalidOperationException("The inventory item no longer exists.");
+        purchase.Status = "Received";
+        purchase.UpdatedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return ToDto(purchase);
     }
 
     private static PurchaseRequestDto ToDto(PurchaseRequest r) => new()
