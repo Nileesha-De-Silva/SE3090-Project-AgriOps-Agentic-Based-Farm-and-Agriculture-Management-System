@@ -152,7 +152,11 @@ public class TaskService : ITaskService
 
     public async Task<FarmTask> UpdateTaskStatusAsync(Guid taskId, string newStatus, Guid userId, string? remarks = null)
     {
-        var task = await _dbContext.Tasks.FirstOrDefaultAsync(t => t.Id == taskId);
+        var task = await _dbContext.Tasks
+            .Include(t => t.Assignments)
+                .ThenInclude(a => a.Worker)
+            .Include(t => t.Schedule)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
         if (task == null)
         {
             throw new InvalidOperationException($"Task with ID '{taskId}' not found.");

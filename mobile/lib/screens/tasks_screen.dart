@@ -19,7 +19,7 @@ class _TasksScreenState extends State<TasksScreen> {
   String? _error;
   String _selectedStatus = 'All';
 
-  final List<String> _statusFilters = ['All', 'Pending', 'InProgress', 'Completed', 'Verified'];
+  final List<String> _statusFilters = ['All', 'Pending', 'InProgress', 'Completed', 'Verified', 'Assigned', 'PendingVerification'];
 
   @override
   void initState() {
@@ -63,11 +63,15 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
+    switch (status.toLowerCase().replaceAll(' ', '')) {
       case 'pending':
         return Colors.blueGrey;
+      case 'assigned':
+        return Colors.indigo;
       case 'inprogress':
         return Colors.blue;
+      case 'pendingverification':
+        return Colors.purple.shade700;
       case 'completed':
         return Colors.orange;
       case 'verified':
@@ -208,7 +212,11 @@ class _TasksScreenState extends State<TasksScreen> {
 
   Future<void> _startTask(FarmTask task) async {
     try {
-      await TaskApi.updateTaskStatus(task.id, 'InProgress', remarks: 'Work started by field worker');
+      await TaskApi.updateTaskStatus(
+        task.id,
+        'InProgress',
+        remarks: 'Work started by field worker',
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -219,8 +227,237 @@ class _TasksScreenState extends State<TasksScreen> {
       _loadTasks();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red.shade700,
+          content: Text('Error starting task: $e'),
+        ),
+      );
     }
+  }
+
+  void _showTaskDetailsBottomSheet(FarmTask task) {
+    final isPendingOrAssigned =
+        task.status.toLowerCase() == 'pending' || task.status.toLowerCase() == 'assigned';
+    final isInProgress = task.status.toLowerCase().replaceAll(' ', '') == 'inprogress';
+    final isPendingVerification =
+        task.status.toLowerCase().replaceAll(' ', '') == 'pendingverification';
+    final isCompleted = task.status.toLowerCase() == 'completed';
+    final isVerified = task.status.toLowerCase() == 'verified';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        task.taskType,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(task.status).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        task.status,
+                        style: TextStyle(
+                          color: _getStatusColor(task.status),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  task.description,
+                  style: TextStyle(color: Colors.grey.shade800, fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Due: ${task.targetDate.contains("T") ? task.targetDate.split("T")[0] : task.targetDate}',
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                    ),
+                    const SizedBox(width: 20),
+                    Icon(Icons.flag_outlined, size: 16, color: _getPriorityColor(task.priority)),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Priority: ${task.priority}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _getPriorityColor(task.priority),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                if (task.assignments.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.person, size: 16, color: Colors.grey.shade600),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Assigned to: ${task.assignments.first.workerName ?? "Assigned Worker"}',
+                        style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                      ),
+                    ],
+                  ),
+                ],
+                const Divider(height: 28),
+                if (isPendingOrAssigned)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text(
+                        'Start Work',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _startTask(task);
+                      },
+                    ),
+                  ),
+                if (isInProgress)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text(
+                        'Submit Evidence',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        final updated = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TaskEvidenceUploadScreen(task: task),
+                          ),
+                        );
+                        if (updated == true) _loadTasks();
+                      },
+                    ),
+                  ),
+                if (isPendingVerification) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.purple.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.hourglass_top, color: Colors.purple.shade700, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Photographic evidence submitted. Awaiting manager inspection and sign-off.',
+                            style: TextStyle(color: Colors.purple.shade900, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.verified_user),
+                      label: const Text(
+                        'Verify Work (Manager Gate)',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showVerificationDialog(task);
+                      },
+                    ),
+                  ),
+                ],
+                if (isCompleted)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber.shade800,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.verified_user),
+                      label: const Text(
+                        'Verify Work',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showVerificationDialog(task);
+                      },
+                    ),
+                  ),
+                if (isVerified)
+                  const Center(
+                    child: Chip(
+                      avatar: Icon(Icons.check_circle, color: AppTheme.primaryGreen, size: 18),
+                      label: Text('Task Verified & Closed'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _showVerificationDialog(FarmTask task) async {
@@ -379,129 +616,150 @@ class _TasksScreenState extends State<TasksScreen> {
                               itemCount: _tasks.length,
                               itemBuilder: (context, index) {
                                 final task = _tasks[index];
-                                final isPending = task.status.toLowerCase() == 'pending';
-                                final isInProgress = task.status.toLowerCase() == 'inprogress';
+                                final isPending = task.status.toLowerCase() == 'pending' || task.status.toLowerCase() == 'assigned';
+                                final isInProgress = task.status.toLowerCase().replaceAll(' ', '') == 'inprogress';
+                                final isPendingVerification = task.status.toLowerCase().replaceAll(' ', '') == 'pendingverification';
                                 final isCompleted = task.status.toLowerCase() == 'completed';
                                 final isVerified = task.status.toLowerCase() == 'verified';
 
                                 return Card(
                                   margin: const EdgeInsets.only(bottom: 12),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(14),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              task.taskType,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                                  decoration: BoxDecoration(
-                                                    color: _getPriorityColor(task.priority).withValues(alpha: 0.12),
-                                                    borderRadius: BorderRadius.circular(4),
-                                                  ),
-                                                  child: Text(
-                                                    task.priority,
-                                                    style: TextStyle(
-                                                      color: _getPriorityColor(task.priority),
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 11,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                                  decoration: BoxDecoration(
-                                                    color: _getStatusColor(task.status).withValues(alpha: 0.12),
-                                                    borderRadius: BorderRadius.circular(4),
-                                                  ),
-                                                  child: Text(
-                                                    task.status,
-                                                    style: TextStyle(
-                                                      color: _getStatusColor(task.status),
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 11,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          task.description,
-                                          style: TextStyle(color: Colors.grey.shade800, fontSize: 14),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          children: [
-                                            Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade600),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Due: ${task.targetDate.split('T')[0]}',
-                                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                            ),
-                                            if (task.assignments.isNotEmpty) ...[
-                                              const SizedBox(width: 16),
-                                              Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
-                                              const SizedBox(width: 4),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: InkWell(
+                                    onTap: () => _showTaskDetailsBottomSheet(task),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
                                               Text(
-                                                task.assignments.first.workerName ?? 'Assigned Worker',
-                                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                                task.taskType,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                                    decoration: BoxDecoration(
+                                                      color: _getPriorityColor(task.priority).withValues(alpha: 0.12),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                    child: Text(
+                                                      task.priority,
+                                                      style: TextStyle(
+                                                        color: _getPriorityColor(task.priority),
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 11,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                    decoration: BoxDecoration(
+                                                      color: _getStatusColor(task.status).withValues(alpha: 0.12),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                    child: Text(
+                                                      task.status,
+                                                      style: TextStyle(
+                                                        color: _getStatusColor(task.status),
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 11,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
-                                          ],
-                                        ),
-                                        const Divider(height: 20),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            if (isPending)
-                                              OutlinedButton.icon(
-                                                icon: const Icon(Icons.play_arrow, size: 16),
-                                                label: const Text('Start Work'),
-                                                onPressed: () => _startTask(task),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            task.description,
+                                            style: TextStyle(color: Colors.grey.shade800, fontSize: 14),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Row(
+                                            children: [
+                                              Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade600),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Due: ${task.targetDate.contains("T") ? task.targetDate.split('T')[0] : task.targetDate}',
+                                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                                               ),
-                                            if (isInProgress)
-                                              ElevatedButton.icon(
-                                                icon: const Icon(Icons.camera_alt, size: 16),
-                                                label: const Text('Submit Evidence'),
-                                                onPressed: () async {
-                                                  final updated = await Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) => TaskEvidenceUploadScreen(task: task),
-                                                    ),
-                                                  );
-                                                  if (updated == true) _loadTasks();
-                                                },
-                                              ),
-                                            if (isCompleted)
-                                              ElevatedButton.icon(
-                                                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade800),
-                                                icon: const Icon(Icons.verified_user, size: 16),
-                                                label: const Text('Verify Work'),
-                                                onPressed: () => _showVerificationDialog(task),
-                                              ),
-                                            if (isVerified)
-                                              const Chip(
-                                                avatar: Icon(Icons.check_circle, color: AppTheme.primaryGreen, size: 18),
-                                                label: Text('Verified & Closed'),
-                                              ),
-                                          ],
-                                        ),
-                                      ],
+                                              if (task.assignments.isNotEmpty) ...[
+                                                const SizedBox(width: 16),
+                                                Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  task.assignments.first.workerName ?? 'Assigned Worker',
+                                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                          const Divider(height: 20),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            children: [
+                                              if (isPending)
+                                                OutlinedButton.icon(
+                                                  icon: const Icon(Icons.play_arrow, size: 16),
+                                                  label: const Text('Start Work'),
+                                                  onPressed: () => _startTask(task),
+                                                ),
+                                              if (isInProgress)
+                                                ElevatedButton.icon(
+                                                  icon: const Icon(Icons.camera_alt, size: 16),
+                                                  label: const Text('Submit Evidence'),
+                                                  onPressed: () async {
+                                                    final updated = await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) => TaskEvidenceUploadScreen(task: task),
+                                                      ),
+                                                    );
+                                                    if (updated == true) _loadTasks();
+                                                  },
+                                                ),
+                                              if (isPendingVerification) ...[
+                                                OutlinedButton.icon(
+                                                  style: OutlinedButton.styleFrom(
+                                                    foregroundColor: Colors.purple.shade700,
+                                                    side: BorderSide(color: Colors.purple.shade400),
+                                                  ),
+                                                  icon: const Icon(Icons.verified_user, size: 16),
+                                                  label: const Text('Verify Work'),
+                                                  onPressed: () => _showVerificationDialog(task),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Chip(
+                                                  avatar: Icon(Icons.hourglass_top, color: Colors.purple.shade700, size: 16),
+                                                  label: const Text('Pending Verification', style: TextStyle(fontSize: 12)),
+                                                ),
+                                              ],
+                                              if (isCompleted)
+                                                ElevatedButton.icon(
+                                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade800),
+                                                  icon: const Icon(Icons.verified_user, size: 16),
+                                                  label: const Text('Verify Work'),
+                                                  onPressed: () => _showVerificationDialog(task),
+                                                ),
+                                              if (isVerified)
+                                                const Chip(
+                                                  avatar: Icon(Icons.check_circle, color: AppTheme.primaryGreen, size: 18),
+                                                  label: Text('Verified & Closed'),
+                                                ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
