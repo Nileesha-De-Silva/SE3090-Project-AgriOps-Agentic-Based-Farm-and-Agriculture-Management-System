@@ -127,7 +127,8 @@ public class CropAnalysisController : ControllerBase
     {
         try
         {
-            var task = await _cropAnalysisService.ApproveAssessmentAndCreateTaskAsync(id, request.ManagerUserId, request.Comments);
+            var managerId = request.ManagerUserId ?? Guid.Parse("00000000-0000-0000-0000-000000000001");
+            var task = await _cropAnalysisService.ApproveAssessmentAndCreateTaskAsync(id, managerId, request.Comments);
             
             var taskDto = new TaskResponseDto(
                 task.Id,
@@ -159,7 +160,9 @@ public class CropAnalysisController : ControllerBase
     [HttpPost("{id:guid}/reject")]
     public async Task<IActionResult> RejectAssessment(Guid id, [FromBody] RejectAssessmentRequestDto request)
     {
-        var result = await _cropAnalysisService.RejectAssessmentAsync(id, request.ManagerUserId, request.Comments);
+        var managerId = request.ManagerUserId ?? Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var comments = request.Comments ?? request.Reason ?? "Alternative treatment determined by manager.";
+        var result = await _cropAnalysisService.RejectAssessmentAsync(id, managerId, comments);
         if (!result)
         {
             return NotFound($"Crop analysis assessment with ID '{id}' not found.");
