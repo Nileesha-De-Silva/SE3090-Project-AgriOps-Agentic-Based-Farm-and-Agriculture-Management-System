@@ -1,4 +1,9 @@
 """Exercise the entry point actually launched by Docker."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from main import app, create_app
 from app.main import app as original_app
 from fastapi.testclient import TestClient
