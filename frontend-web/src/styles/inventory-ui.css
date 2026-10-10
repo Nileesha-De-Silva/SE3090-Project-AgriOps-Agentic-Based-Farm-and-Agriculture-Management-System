@@ -178,3 +178,6 @@
 .live-workspace .supplier-offer-editor .form-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 .live-workspace .supplier-offer-editor .offer-editor-title { margin-bottom:20px; }
 @media(max-width:560px) { .live-workspace .supplier-offer-editor .form-row { grid-template-columns:1fr; } .live-workspace .supplier-offers-dialog .modal-actions .button { width:100%; } }
+
+.live-workspace .batch-label { text-align:center; }
+.live-workspace .batch-label img { display:block; margin:16px auto; max-width:100%; height:auto; background:white; }

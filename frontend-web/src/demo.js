@@ -126,6 +126,6 @@ export function saveSupplierOffer(data, itemId, supplierId, values, editing = fa
   if (String(values.unitPrice).trim() === '' || !Number.isFinite(price) || price < 0 || price > 99999999.99 || Math.abs(price * 100 - Math.round(price * 100)) > 0.000001) throw new Error('Enter a price from 0 to 99999999.99 with up to two decimal places.')
   if (String(values.leadTimeDays).trim() === '' || !Number.isInteger(days) || days < 0 || days > 2147483647) throw new Error('Delivery days must be a nonnegative whole number.')
   if (typeof values.isAvailable !== 'boolean') throw new Error('Choose an availability status.')
-  const offer = { itemId, unitPrice: price, leadTimeDays: days, isAvailable: values.isAvailable }
+  const offer = { itemId, unitPrice: price, leadTimeDays: days, isAvailable: values.isAvailable, expirationDate: values.expirationDate || null }
   return { ...data, suppliers: data.suppliers.map(s => s.id === supplierId ? { ...s, offers: editing ? s.offers.map(o => o.itemId === itemId ? offer : o) : [...s.offers, offer] } : s) }
 }
