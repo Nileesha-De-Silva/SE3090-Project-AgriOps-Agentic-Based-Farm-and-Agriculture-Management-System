@@ -24,8 +24,8 @@ public class AnalyticsController : ControllerBase
     public async Task<IActionResult> GetHarvestYields()
     {
         var rawHarvests = await _db.Harvests
-            .Include(h => h.CropSeason).ThenInclude(cs => cs.Field)
-            .Include(h => h.CropSeason).ThenInclude(cs => cs.Crop)
+            .Include(h => h.CropSeason).ThenInclude(cs => cs!.Field)
+            .Include(h => h.CropSeason).ThenInclude(cs => cs!.Crop)
             .ToListAsync();
 
         var results = rawHarvests
