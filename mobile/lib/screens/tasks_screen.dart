@@ -19,7 +19,7 @@ class _TasksScreenState extends State<TasksScreen> {
   String? _error;
   String _selectedStatus = 'All';
 
-  final List<String> _statusFilters = ['All', 'Pending', 'Assigned', 'InProgress', 'Completed', 'Verified'];
+  final List<String> _statusFilters = ['All', 'Pending', 'InProgress', 'Completed', 'Verified', 'Assigned', 'PendingVerification'];
 
   @override
   void initState() {
@@ -63,13 +63,15 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
+    switch (status.toLowerCase().replaceAll(' ', '')) {
       case 'pending':
         return Colors.blueGrey;
       case 'assigned':
         return Colors.indigo;
       case 'inprogress':
         return Colors.blue;
+      case 'pendingverification':
+        return Colors.purple.shade700;
       case 'completed':
         return Colors.orange;
       case 'verified':
@@ -237,7 +239,9 @@ class _TasksScreenState extends State<TasksScreen> {
   void _showTaskDetailsBottomSheet(FarmTask task) {
     final isPendingOrAssigned =
         task.status.toLowerCase() == 'pending' || task.status.toLowerCase() == 'assigned';
-    final isInProgress = task.status.toLowerCase() == 'inprogress';
+    final isInProgress = task.status.toLowerCase().replaceAll(' ', '') == 'inprogress';
+    final isPendingVerification =
+        task.status.toLowerCase().replaceAll(' ', '') == 'pendingverification';
     final isCompleted = task.status.toLowerCase() == 'completed';
     final isVerified = task.status.toLowerCase() == 'verified';
 
@@ -379,6 +383,48 @@ class _TasksScreenState extends State<TasksScreen> {
                       },
                     ),
                   ),
+                if (isPendingVerification) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.purple.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.hourglass_top, color: Colors.purple.shade700, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Photographic evidence submitted. Awaiting manager inspection and sign-off.',
+                            style: TextStyle(color: Colors.purple.shade900, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.verified_user),
+                      label: const Text(
+                        'Verify Work (Manager Gate)',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showVerificationDialog(task);
+                      },
+                    ),
+                  ),
+                ],
                 if (isCompleted)
                   SizedBox(
                     width: double.infinity,
@@ -571,7 +617,8 @@ class _TasksScreenState extends State<TasksScreen> {
                               itemBuilder: (context, index) {
                                 final task = _tasks[index];
                                 final isPending = task.status.toLowerCase() == 'pending' || task.status.toLowerCase() == 'assigned';
-                                final isInProgress = task.status.toLowerCase() == 'inprogress';
+                                final isInProgress = task.status.toLowerCase().replaceAll(' ', '') == 'inprogress';
+                                final isPendingVerification = task.status.toLowerCase().replaceAll(' ', '') == 'pendingverification';
                                 final isCompleted = task.status.toLowerCase() == 'completed';
                                 final isVerified = task.status.toLowerCase() == 'verified';
 
@@ -681,6 +728,22 @@ class _TasksScreenState extends State<TasksScreen> {
                                                     if (updated == true) _loadTasks();
                                                   },
                                                 ),
+                                              if (isPendingVerification) ...[
+                                                OutlinedButton.icon(
+                                                  style: OutlinedButton.styleFrom(
+                                                    foregroundColor: Colors.purple.shade700,
+                                                    side: BorderSide(color: Colors.purple.shade400),
+                                                  ),
+                                                  icon: const Icon(Icons.verified_user, size: 16),
+                                                  label: const Text('Verify Work'),
+                                                  onPressed: () => _showVerificationDialog(task),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Chip(
+                                                  avatar: Icon(Icons.hourglass_top, color: Colors.purple.shade700, size: 16),
+                                                  label: const Text('Pending Verification', style: TextStyle(fontSize: 12)),
+                                                ),
+                                              ],
                                               if (isCompleted)
                                                 ElevatedButton.icon(
                                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade800),

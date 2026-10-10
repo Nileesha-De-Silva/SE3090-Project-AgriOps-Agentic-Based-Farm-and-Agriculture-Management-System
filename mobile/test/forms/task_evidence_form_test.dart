@@ -26,7 +26,7 @@ void main() {
 
       expect(find.text('Submit Task Evidence'), findsOneWidget);
       expect(find.byType(TextField), findsAtLeastNWidgets(2)); // Photo URL & Remarks
-      expect(find.text('Submit Evidence & Complete Task'), findsOneWidget);
+      expect(find.text('Submit Evidence'), findsOneWidget);
     });
 
     testWidgets('validates empty photo URL and shows warning snackbar', (WidgetTester tester) async {
@@ -37,11 +37,12 @@ void main() {
       );
 
       // Tap submit with empty photo URL
-      final submitBtn = find.text('Submit Evidence & Complete Task');
+      final submitBtn = find.text('Submit Evidence');
+      await tester.ensureVisible(submitBtn);
       await tester.tap(submitBtn);
       await tester.pump(); // Start animation / snackbar
 
-      expect(find.text('Please provide an evidence photo URL'), findsOneWidget);
+      expect(find.text('Photo evidence is required'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('allows entering photo URL and completion remarks', (WidgetTester tester) async {
