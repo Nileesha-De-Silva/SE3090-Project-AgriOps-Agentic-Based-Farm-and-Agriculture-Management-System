@@ -14,7 +14,8 @@ public record ProposalValidationRequestDto(
     decimal ProposedQuantity,
     string UnitOfMeasurement,
     string GrowthStage,
-    string? SoilType = null
+    string? SoilType = null,
+    bool SimulateOptimalWeather = false
 );
 
 public record DeterministicCheckResult(

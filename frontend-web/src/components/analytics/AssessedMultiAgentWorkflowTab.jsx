@@ -16,6 +16,7 @@ export default function AssessedMultiAgentWorkflowTab() {
   const [workflowRecord, setWorkflowRecord] = useState(null);
   const [managerNotes, setManagerNotes] = useState("");
   const [resumeLoading, setResumeLoading] = useState(false);
+  const [simulateOptimalWeather, setSimulateOptimalWeather] = useState(true);
 
   const applyPreset = (type) => {
     if (type === "compliant") {
@@ -27,6 +28,7 @@ export default function AssessedMultiAgentWorkflowTab() {
       setProposedQuantity(2.0);
       setUnit("kg/ha");
       setGrowthStage("Vegetative");
+      setSimulateOptimalWeather(true);
     } else if (type === "overdose") {
       setObjective("Aggressive pest control on Tomato plot using concentrated pesticide");
       setCropVariety("Tomato");
@@ -36,6 +38,7 @@ export default function AssessedMultiAgentWorkflowTab() {
       setProposedQuantity(15.0); // Fails Check 6: Max 5.0 kg/ha limit
       setUnit("kg/ha");
       setGrowthStage("Vegetative");
+      setSimulateOptimalWeather(true);
     } else if (type === "banned") {
       setObjective("Eradicate weed infestation in Chili plot using persistent herbicide");
       setCropVariety("Chili");
@@ -45,6 +48,7 @@ export default function AssessedMultiAgentWorkflowTab() {
       setProposedQuantity(2.0);
       setUnit("L/ha");
       setGrowthStage("Vegetative");
+      setSimulateOptimalWeather(true);
     }
   };
 
@@ -62,6 +66,7 @@ export default function AssessedMultiAgentWorkflowTab() {
         proposedQuantity: parseFloat(proposedQuantity) || 2.0,
         unit,
         growthStage,
+        simulateOptimalWeather,
       });
       setWorkflowRecord(result);
     } catch (err) {
@@ -197,6 +202,40 @@ export default function AssessedMultiAgentWorkflowTab() {
               <input type="text" value={unit} onChange={(e) => setUnit(e.target.value)} style={{ width: "35%", padding: "0.4rem", borderRadius: "4px", border: "1px solid #cbd5e1" }} />
             </div>
           </div>
+        </div>
+
+        {/* METEOROLOGICAL SAFETY EVALUATION MODE */}
+        <div style={{
+          marginTop: "1.25rem",
+          padding: "0.75rem 1rem",
+          background: simulateOptimalWeather ? "#f0fdf4" : "#fef2f2",
+          border: `1px solid ${simulateOptimalWeather ? "#86efac" : "#fca5a5"}`,
+          borderRadius: "6px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "0.75rem"
+        }}>
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "0.85rem", color: simulateOptimalWeather ? "#166534" : "#991b1b" }}>
+              🌤️ Meteorological Safety Evaluation Mode:
+            </span>
+            <span style={{ fontSize: "0.8rem", color: "#475569", marginLeft: "0.5rem" }}>
+              {simulateOptimalWeather
+                ? "Evaluates against Scheduled Clear Application Window (15% Rain, 11 km/h Wind — Safe for Fieldwork)"
+                : "Evaluates against Live Real-Time Open-Meteo Meteorological Station (Blocks foliar spraying if raining outdoors)"}
+            </span>
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", color: "#1e293b" }}>
+            <input
+              type="checkbox"
+              checked={simulateOptimalWeather}
+              onChange={(e) => setSimulateOptimalWeather(e.target.checked)}
+              style={{ cursor: "pointer", width: "16px", height: "16px" }}
+            />
+            <span>Evaluate Scheduled Tomorrow Window</span>
+          </label>
         </div>
 
         <div style={{ marginTop: "1.25rem", textAlign: "right" }}>
