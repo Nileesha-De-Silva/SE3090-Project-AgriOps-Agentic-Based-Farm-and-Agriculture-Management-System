@@ -106,7 +106,48 @@ class _FieldDashboardScreenState extends State<FieldDashboardScreen> {
                                     if (activeSeason.currentGrowthStage != null)
                                       GrowthStageBadge(stage: activeSeason.currentGrowthStage!),
                                     const SizedBox(width: 8),
-                                    Text(activeSeason.status),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: activeSeason.status.toLowerCase() == 'active' ? const Color(0xFFE8F5E9) : Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: activeSeason.status.toLowerCase() == 'active' ? const Color(0xFF00E676) : Colors.grey.shade400,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (activeSeason.status.toLowerCase() == 'active') ...[
+                                            Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xFF00E676),
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Color(0x9900E676),
+                                                    blurRadius: 5,
+                                                    spreadRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 5),
+                                          ],
+                                          Text(
+                                            activeSeason.status,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: activeSeason.status.toLowerCase() == 'active' ? const Color(0xFF007E33) : Colors.grey.shade700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ] else

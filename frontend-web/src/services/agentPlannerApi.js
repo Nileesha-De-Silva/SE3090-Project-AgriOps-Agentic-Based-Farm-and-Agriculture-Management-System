@@ -1,4 +1,9 @@
-const AGENT_URL = import.meta.env.VITE_AGENT_API_URL || "/api/farm-planning-agent";
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const AGENT_URL =
+  import.meta.env.VITE_AGENT_API_URL ||
+  (BASE_URL.startsWith("http")
+    ? `${BASE_URL}/farm-planning-agent`
+    : "https://agriops-backend-api.onrender.com/api/farm-planning-agent");
 
 async function handleResponse(response) {
   if (!response.ok) {
@@ -30,7 +35,12 @@ export async function generatePlan(fieldId, cropSeasonId) {
     const response = await fetch(`${AGENT_URL}/plan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ field_id: fieldId, crop_season_id: cropSeasonId }),
+      body: JSON.stringify({
+        field_id: fieldId,
+        crop_season_id: cropSeasonId,
+        fieldId: fieldId,
+        cropSeasonId: cropSeasonId,
+      }),
     });
     return await handleResponse(response);
   } catch (err) {

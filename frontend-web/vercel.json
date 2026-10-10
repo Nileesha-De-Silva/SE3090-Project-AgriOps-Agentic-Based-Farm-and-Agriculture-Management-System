@@ -1,6 +1,14 @@
 {
     "rewrites": [
         {
+            "source": "/api/farm-planning-agent/:path*",
+            "destination": "https://agriops-backend-api.onrender.com/api/farm-planning-agent/:path*"
+        },
+        {
+            "source": "/api/crop-analysis-agent/:path*",
+            "destination": "https://agriops-agent2-crop-health.onrender.com/:path*"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
