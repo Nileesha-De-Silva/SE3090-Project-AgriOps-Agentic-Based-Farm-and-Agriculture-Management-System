@@ -7,13 +7,41 @@ export const cropAnalysisApi = {
   // Fetch pending crop alerts awaiting manager approval
   async getPendingApprovals() {
     try {
-      const response = await api.get('/crop-analysis/pending-approval');
-      if (response.data && Array.isArray(response.data)) {
-        localApprovals = response.data;
-        return response.data;
+      const response = await api.get('/cropanalysis/pending');
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        const mapped = response.data.map((item) => {
+          let protocol = 'Inspect and isolate affected rows immediately.';
+          try {
+            if (item.recommendedActionsJson) {
+              const parsed = JSON.parse(item.recommendedActionsJson);
+              protocol = Array.isArray(parsed) ? parsed[0] : parsed;
+            }
+          } catch { }
+
+          return {
+            id: item.id,
+            threadId: item.workflowId,
+            fieldId: item.fieldId,
+            cropVariety: item.cropVariety,
+            growthStage: item.growthStage,
+            observation: item.observationText,
+            primaryIndicator: item.primaryIndicator || 'High Risk Agronomic Issue',
+            category: 'Disease/Pest',
+            riskLevel: item.riskLevel || 'High',
+            suggestedTaskType: item.suggestedTaskType || 'PestInspection',
+            priority: item.priority || 'High',
+            confidenceScore: 0.94,
+            recommendedProtocol: protocol,
+            sourceHandbook: '[Field-Handbook]',
+            status: 'AwaitingApproval',
+            detectedAt: item.createdAt,
+          };
+        });
+        localApprovals = mapped;
+        return mapped;
       }
     } catch (err) {
-      console.warn('Backend /api/crop-analysis unavailable, using local inbox:', err.message);
+      console.warn('Backend /api/cropanalysis/pending unavailable, using local inbox:', err.message);
     }
     return localApprovals.filter((a) => a.status === 'AwaitingApproval');
   },
@@ -35,9 +63,12 @@ export const cropAnalysisApi = {
 
     // 2. Inform Backend
     try {
-      await api.post(`/crop-analysis/${analysisId}/approve`, { comments });
+      await api.post(`/cropanalysis/${analysisId}/approve`, {
+        managerUserId: '00000000-0000-0000-0000-000000000001',
+        comments,
+      });
     } catch (err) {
-      console.warn('Backend /api/crop-analysis/approve deferred:', err.message);
+      console.warn('Backend /api/cropanalysis/approve deferred:', err.message);
     }
 
     // 3. Mark approved locally & create corresponding task on Kanban
@@ -75,9 +106,12 @@ export const cropAnalysisApi = {
     }
 
     try {
-      await api.post(`/crop-analysis/${analysisId}/reject`, { reason });
+      await api.post(`/cropanalysis/${analysisId}/reject`, {
+        managerUserId: '00000000-0000-0000-0000-000000000001',
+        comments: reason,
+      });
     } catch (err) {
-      console.warn('Backend /api/crop-analysis/reject deferred:', err.message);
+      console.warn('Backend /api/cropanalysis/reject deferred:', err.message);
     }
 
     const target = localApprovals.find((a) => a.id === analysisId);

@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-// Base Axios instance pointing to Vite proxy or env variable
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,7 +11,7 @@ export const api = axios.create({
 });
 
 export const aiApi = axios.create({
-  baseURL: import.meta.env.VITE_AI_URL || '/api/crop-analysis-agent',
+  baseURL: import.meta.env.VITE_AI_URL || (BASE_URL.startsWith('http') ? `${BASE_URL}/crop-analysis-agent` : 'https://agriops-agent2-crop-health.onrender.com'),
   headers: {
     'Content-Type': 'application/json',
   },
