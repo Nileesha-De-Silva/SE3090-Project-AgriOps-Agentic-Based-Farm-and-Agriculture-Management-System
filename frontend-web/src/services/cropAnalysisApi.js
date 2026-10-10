@@ -37,33 +37,49 @@ export const cropAnalysisApi = {
             detectedAt: item.createdAt,
           };
         });
-        localApprovals = mapped;
-        return mapped;
+        const existingLocal = localApprovals.filter(
+          (loc) => !mapped.some((m) => m.id === loc.id) && loc.status === 'AwaitingApproval'
+        );
+        localApprovals = [...mapped, ...existingLocal];
+        return localApprovals;
       }
     } catch (err) {
       try {
         const fallbackRes = await api.get('/cropanalysis/pending');
         if (fallbackRes.data && Array.isArray(fallbackRes.data) && fallbackRes.data.length > 0) {
-          const mapped = fallbackRes.data.map((item) => ({
-            id: item.id,
-            threadId: item.workflowId,
-            fieldId: item.fieldId,
-            cropVariety: item.cropVariety,
-            growthStage: item.growthStage,
-            observation: item.observationText,
-            primaryIndicator: item.primaryIndicator || 'High Risk Agronomic Issue',
-            category: 'Disease/Pest',
-            riskLevel: item.riskLevel || 'High',
-            suggestedTaskType: item.suggestedTaskType || 'PestInspection',
-            priority: item.priority || 'High',
-            confidenceScore: 0.94,
-            recommendedProtocol: item.recommendedActionsJson || 'Inspect and isolate affected rows immediately.',
-            sourceHandbook: '[Field-Handbook]',
-            status: 'AwaitingApproval',
-            detectedAt: item.createdAt,
-          }));
-          localApprovals = mapped;
-          return mapped;
+          const mapped = fallbackRes.data.map((item) => {
+            let protocol = 'Inspect and isolate affected rows immediately.';
+            try {
+              if (item.recommendedActionsJson) {
+                const parsed = JSON.parse(item.recommendedActionsJson);
+                protocol = Array.isArray(parsed) ? parsed[0] : parsed;
+              }
+            } catch { }
+
+            return {
+              id: item.id,
+              threadId: item.workflowId,
+              fieldId: item.fieldId,
+              cropVariety: item.cropVariety,
+              growthStage: item.growthStage,
+              observation: item.observationText,
+              primaryIndicator: item.primaryIndicator || 'High Risk Agronomic Issue',
+              category: 'Disease/Pest',
+              riskLevel: item.riskLevel || 'High',
+              suggestedTaskType: item.suggestedTaskType || 'PestInspection',
+              priority: item.priority || 'High',
+              confidenceScore: 0.94,
+              recommendedProtocol: protocol,
+              sourceHandbook: '[Field-Handbook]',
+              status: 'AwaitingApproval',
+              detectedAt: item.createdAt,
+            };
+          });
+          const existingLocal = localApprovals.filter(
+            (loc) => !mapped.some((m) => m.id === loc.id) && loc.status === 'AwaitingApproval'
+          );
+          localApprovals = [...mapped, ...existingLocal];
+          return localApprovals;
         }
       } catch {}
       console.warn('Backend /api/crop-analysis/pending-approval unavailable, using local inbox:', err.message);
@@ -73,14 +89,17 @@ export const cropAnalysisApi = {
 
   // Manager Approves a high-risk analysis -> Dispatches farm task
   async approveAnalysis(analysisId, threadId, comments = 'Approved by Farm Manager.') {
-    // 1. Inform Agent 2 via resume endpoint if threadId exists
+    // 1. Inform Agent 2 via resume endpoint if threadId exists (fast timeout so UI is never blocked)
     if (threadId) {
       try {
-        await aiApi.post('/resume', {
-          thread_id: threadId,
-          decision: 'approve',
-          comments,
-        });
+        await Promise.race([
+          aiApi.post('/resume', {
+            thread_id: threadId,
+            decision: 'approve',
+            comments,
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Agent 2 resume timeout')), 3000)),
+        ]);
       } catch (err) {
         console.warn('Agent 2 /ai/resume call deferred:', err.message);
       }
@@ -95,8 +114,9 @@ export const cropAnalysisApi = {
           managerUserId: '00000000-0000-0000-0000-000000000001',
           comments,
         });
-      } catch {}
-      console.warn('Backend /api/crop-analysis/approve deferred:', err.message);
+      } catch (e2) {
+        console.warn('Backend /api/cropanalysis/approve deferred:', e2.message);
+      }
     }
 
     // 3. Mark approved locally & create corresponding task on Kanban
@@ -104,17 +124,24 @@ export const cropAnalysisApi = {
     if (target) {
       target.status = 'Approved';
       // Automatically create the suggested task
-      await taskApi.createTask({
-        title: `${target.suggestedTaskType}: ${target.primaryIndicator}`,
-        description: `${target.recommendedProtocol} (Field: ${target.fieldId}, Variety: ${target.cropVariety}).`,
-        taskType: target.suggestedTaskType,
-        priority: target.priority,
-        fieldId: target.fieldId,
-        cropVariety: target.cropVariety,
-        estimatedHours: 3.5,
-        sourceCropAnalysisId: target.id,
-      });
+      try {
+        await taskApi.createTask({
+          title: `${target.suggestedTaskType || 'CropMonitoring'}: ${target.primaryIndicator || 'Agronomic Observation'}`,
+          description: `${target.recommendedProtocol || 'Follow field protocol'} (Field: ${target.fieldId || 'General'}, Variety: ${target.cropVariety || 'Crop'}).`,
+          taskType: target.suggestedTaskType || 'CropMonitoring',
+          priority: target.priority || 'Medium',
+          fieldId: target.fieldId,
+          cropVariety: target.cropVariety,
+          estimatedHours: 3.5,
+          sourceCropAnalysisId: target.id || analysisId,
+        });
+      } catch (err) {
+        console.warn('Task creation fallback handled:', err.message);
+      }
     }
+
+    // Clean up local list
+    localApprovals = localApprovals.filter((a) => a.id !== analysisId);
 
     return { success: true, analysisId };
   },
@@ -123,11 +150,14 @@ export const cropAnalysisApi = {
   async rejectAnalysis(analysisId, threadId, reason = 'Alternative treatment determined by manager.') {
     if (threadId) {
       try {
-        await aiApi.post('/resume', {
-          thread_id: threadId,
-          decision: 'deny',
-          comments: reason,
-        });
+        await Promise.race([
+          aiApi.post('/resume', {
+            thread_id: threadId,
+            decision: 'deny',
+            comments: reason,
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Agent 2 resume timeout')), 3000)),
+        ]);
       } catch (err) {
         console.warn('Agent 2 /ai/resume call deferred:', err.message);
       }
@@ -141,14 +171,17 @@ export const cropAnalysisApi = {
           managerUserId: '00000000-0000-0000-0000-000000000001',
           comments: reason,
         });
-      } catch {}
-      console.warn('Backend /api/crop-analysis/reject deferred:', err.message);
+      } catch (e2) {
+        console.warn('Backend /api/cropanalysis/reject deferred:', e2.message);
+      }
     }
 
     const target = localApprovals.find((a) => a.id === analysisId);
     if (target) {
       target.status = 'Rejected';
     }
+
+    localApprovals = localApprovals.filter((a) => a.id !== analysisId);
 
     return { success: true, analysisId };
   },

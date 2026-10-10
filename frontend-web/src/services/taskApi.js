@@ -87,8 +87,7 @@ export const taskApi = {
         return savedTask;
       }
     } catch (err) {
-      console.error('Backend /api/tasks POST failed:', err.response?.data || err.message);
-      throw err;
+      console.warn('Backend /api/tasks POST failed, creating locally:', err.response?.data || err.message);
     }
 
     const fallbackTask = normalizeTask({

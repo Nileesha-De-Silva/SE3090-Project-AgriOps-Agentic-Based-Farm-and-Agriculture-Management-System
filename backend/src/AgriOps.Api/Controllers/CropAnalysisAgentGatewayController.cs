@@ -34,8 +34,12 @@ public sealed class CropAnalysisAgentGatewayController : ControllerBase
 
     [HttpPost("resume")]
     [RequestSizeLimit(16384)]
-    public Task<IActionResult> Resume([FromBody] JsonElement body, CancellationToken cancellationToken)
-        => Forward(HttpMethod.Post, "resume", body.GetRawText(), cancellationToken);
+    public async Task<IActionResult> Resume([FromBody] JsonElement body, CancellationToken cancellationToken)
+    {
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
+        return await Forward(HttpMethod.Post, "resume", body.GetRawText(), cts.Token);
+    }
 
     [HttpGet("threads/{id}")]
     public Task<IActionResult> GetThread(string id, CancellationToken cancellationToken)
