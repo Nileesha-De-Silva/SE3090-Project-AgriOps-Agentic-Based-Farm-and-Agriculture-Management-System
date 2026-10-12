@@ -52,6 +52,7 @@ public class SupplierItemService(AgriOpsDbContext context)
         link.UnitPrice = dto.UnitPrice.Value;
         link.LeadTimeDays = dto.LeadTimeDays!.Value;
         link.IsAvailable = dto.IsAvailable!.Value;
+        link.ExpirationDate = dto.ExpirationDate;
         link.UpdatedAt = now;
         try
         {
@@ -84,6 +85,7 @@ public class SupplierItemService(AgriOpsDbContext context)
     {
         Id = link.Id, SupplierId = link.SupplierId, InventoryItemId = link.InventoryItemId,
         UnitPrice = link.UnitPrice, LeadTimeDays = link.LeadTimeDays, IsAvailable = link.IsAvailable,
+        ExpirationDate = link.ExpirationDate,
         CreatedAt = link.CreatedAt, UpdatedAt = link.UpdatedAt
     };
 }

@@ -34,7 +34,11 @@ export function createApi({ getToken = () => '', fetchImpl = globalThis.fetch, t
           403: 'This account does not have permission for this action.', 404: 'The record or service route was not found. Refresh the workspace.',
           409: 'The data changed, a recommendation is already pending, or the agent is busy. Refresh before trying again.',
           422: 'Check the item, weekly estimate and request fields.', 503: 'The service is not ready. Check agent configuration and backend availability.' }
-        throw new ApiError(messages[response.status] || 'The service could not complete the request.', response.status, method !== 'GET' && response.status >= 500)
+        let detail
+        if ([400, 409].includes(response.status)) {
+          try { const body = await response.json(); if (typeof body.message === 'string') detail = body.message } catch { /* Keep the safe default when no JSON message exists. */ }
+        }
+        throw new ApiError(detail || messages[response.status] || 'The service could not complete the request.', response.status, method !== 'GET' && response.status >= 500)
       }
       if (response.status === 204) return null
       // A missing production proxy often serves index.html with HTTP 200.
@@ -78,11 +82,22 @@ export function createApi({ getToken = () => '', fetchImpl = globalThis.fetch, t
     }, true),
     saveOffer: (supplierId, itemId, values, editing) => request(`/api/suppliers/${id(supplierId)}/items/${id(itemId)}`, editing ? 'PUT' : 'POST', {
       unitPrice: Number(values.unitPrice), leadTimeDays: Number(values.leadTimeDays), isAvailable: values.isAvailable,
+      expirationDate: values.expirationDate || null,
     }, true),
     recordMovement: (itemId, values) => request(`/api/inventory/${id(itemId)}/transactions`, 'POST', {
       transactionType: values.type, quantity: Number(values.quantity), notes: values.notes?.trim() || null,
+      batchId: values.batchId || null, expirationDate: values.type === 'Receive' ? values.expirationDate || null : null,
+      batchNumber: values.type === 'Receive' ? values.batchNumber?.trim() || null : null, shelfLocation: values.type === 'Receive' ? values.shelfLocation?.trim() || null : null,
     }, true),
-    receivePurchase: (purchaseId, notes) => request(`/api/purchase-requests/${id(purchaseId)}/receive`, 'POST', { notes: notes?.trim() || null }, true),
+    batch: batchId => request(`/api/inventory-batches/${id(batchId)}`, 'GET', undefined, true),
+    updateBatch: (batchId, values) => request(`/api/inventory-batches/${id(batchId)}`, 'PUT', {
+      expirationDate: values.expirationDate || null, batchNumber: values.batchNumber?.trim() || null, shelfLocation: values.shelfLocation?.trim() || null,
+    }, true),
+    batches: itemId => request(`/api/inventory/${id(itemId)}/batches`, 'GET', undefined, true),
+    receivePurchase: (purchaseId, notes, details = {}) => request(`/api/purchase-requests/${id(purchaseId)}/receive`, 'POST', {
+      notes: notes?.trim() || null, expirationDate: details.expirationDate || null,
+      batchNumber: details.batchNumber?.trim() || null, shelfLocation: details.shelfLocation?.trim() || null,
+    }, true),
     decide: (recommendationId, approve, note) => request(`/api/reorder-recommendations/${id(recommendationId)}/${approve ? 'approve' : 'reject'}`, 'POST', { note }, true),
     recommend: body => request('/api/inventory-agent/recommend', 'POST', body, true),
     run: runId => request(`/api/inventory-agent/runs/${id(runId)}`, 'GET', undefined, true),

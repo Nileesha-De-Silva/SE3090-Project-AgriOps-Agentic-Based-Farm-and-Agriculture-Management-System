@@ -94,6 +94,102 @@ try {
     db.ChangeTracker.Clear();
     Check((await inventory.GetByIdAsync(item.Id))!.CurrentStock == 12m && (await movements.GetHistoryAsync(item.Id))!.Count == 3, "Duplicate receipt leaves stock and history unchanged");
     Check(await purchaseService.ReceiveAsync(Guid.NewGuid(), null) is null, "Missing purchase does not create a movement");
+    var offerService = new SupplierItemService(db);
+    var datedOffer = await offerService.SaveAsync(supplier.Id, item.Id, new SaveSupplierItemDto {
+        UnitPrice = 2m, LeadTimeDays = 3, IsAvailable = true, ExpirationDate = new DateOnly(2027, 12, 31)
+    }, false);
+    Check(datedOffer!.ExpirationDate == new DateOnly(2027, 12, 31), "Offer save returns expiration date");
+    db.ChangeTracker.Clear();
+    Check((await offerService.GetAsync(supplier.Id, item.Id))!.ExpirationDate == new DateOnly(2027, 12, 31), "Expiration date persists in database");
+    await offerService.SaveAsync(supplier.Id, item.Id, new SaveSupplierItemDto {
+        UnitPrice = 2m, LeadTimeDays = 3, IsAvailable = true, ExpirationDate = null
+    }, false);
+    db.ChangeTracker.Clear();
+    Check((await offerService.GetAsync(supplier.Id, item.Id))!.ExpirationDate is null, "Optional expiration date can be cleared");
+    var batchLookup = new InventoryBatchService(db);
+    var qrBeforeItem = await inventory.CreateAsync(new CreateInventoryItemDto { Name = "QR pending", Category = "Test", UnitOfMeasurement = "packet", MinimumStockLevel = 1, UnitCost = 1 });
+    var qrPurchase = new PurchaseRequest { Id = Guid.NewGuid(), InventoryItemId = qrBeforeItem.Id, SupplierId = supplier.Id, RequestedQuantity = 4, Status = "Approved" };
+    db.PurchaseRequests.Add(qrPurchase); await db.SaveChangesAsync();
+    var pendingQr = JsonSerializer.Serialize(await batchLookup.GetAsync(qrPurchase.Id));
+    Check(pendingQr.Contains("Awaiting receipt") && pendingQr.Contains("\"remainingQuantity\":0"), "Approved QR has zero stock until receipt");
+    await purchaseService.ReceiveAsync(qrPurchase.Id, "Batch delivery", new DateOnly(2027, 12, 31), "TC-409", "Shelf A");
+    db.ChangeTracker.Clear();
+    var deliveredBatch = await db.InventoryBatches.SingleAsync(b => b.Id == qrPurchase.Id);
+    Check(deliveredBatch.RemainingQuantity == 4 && deliveredBatch.PurchaseRequestId == qrPurchase.Id && deliveredBatch.BatchNumber == "TC-409" && deliveredBatch.ShelfLocation == "Shelf A", "Purchase QR becomes its own received batch with actual details");
+    await movements.CreateAsync(qrBeforeItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 1, BatchId = qrPurchase.Id });
+    db.ChangeTracker.Clear();
+    Check((await db.InventoryBatches.SingleAsync(b => b.Id == qrPurchase.Id)).RemainingQuantity == 3 && (await inventory.GetByIdAsync(qrBeforeItem.Id))!.CurrentStock == 3, "Partial issue reduces batch and total equally");
+    Check(JsonSerializer.Serialize(await batchLookup.GetAsync(qrPurchase.Id)).Contains("\"remainingQuantity\":3"), "Scanning same printed QR returns current remaining quantity");
+    var nextYear = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(1);
+    var fifoKnownItem = await inventory.CreateAsync(new CreateInventoryItemDto { Name = "FIFO with different expiries", Category = "Test", UnitOfMeasurement = "packet", MinimumStockLevel = 1, UnitCost = 1 });
+    await movements.CreateAsync(fifoKnownItem.Id, new CreateInventoryTransactionDto { TransactionType = "Receive", Quantity = 5, ExpirationDate = nextYear.AddDays(20), BatchNumber = "later-expiry" });
+    await movements.CreateAsync(fifoKnownItem.Id, new CreateInventoryTransactionDto { TransactionType = "Receive", Quantity = 3, ExpirationDate = nextYear, BatchNumber = "earlier-expiry" });
+    var firstBatch = await db.InventoryBatches.SingleAsync(b => b.InventoryItemId == fifoKnownItem.Id && b.BatchNumber == "earlier-expiry");
+    var secondBatch = await db.InventoryBatches.SingleAsync(b => b.InventoryItemId == fifoKnownItem.Id && b.BatchNumber == "later-expiry");
+    rejected = false;
+    try { await movements.CreateAsync(fifoKnownItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 1, BatchId = firstBatch.Id }); }
+    catch (InvalidOperationException) { rejected = true; }
+    Check(rejected, "QR issue rejects a newer arrival while an older unexpired batch is available");
+    db.ChangeTracker.Clear();
+    Check((await inventory.GetByIdAsync(fifoKnownItem.Id))!.CurrentStock == 8 && (await db.InventoryBatches.SingleAsync(b => b.Id == secondBatch.Id)).RemainingQuantity == 5, "Rejected FIFO issue leaves all balances unchanged");
+    await movements.CreateAsync(fifoKnownItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 4 });
+    db.ChangeTracker.Clear();
+    Check((await db.InventoryBatches.SingleAsync(b => b.Id == firstBatch.Id)).RemainingQuantity == 3 && (await db.InventoryBatches.SingleAsync(b => b.Id == secondBatch.Id)).RemainingQuantity == 1, "General usage consumes the older arrival first even when a newer batch expires sooner");
+    Check(await db.InventoryBatchMovements.CountAsync(m => m.InventoryBatchId == secondBatch.Id) == 2, "Batch receipt and issue allocations retain an audit trail");
+    await movements.CreateAsync(fifoKnownItem.Id, new CreateInventoryTransactionDto { TransactionType = "Receive", Quantity = 2, ExpirationDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1), BatchNumber = "expired" });
+    var expiredId = await db.InventoryBatches.Where(b => b.InventoryItemId == fifoKnownItem.Id && b.BatchNumber == "expired").Select(b => b.Id).SingleAsync();
+    rejected = false;
+    try { await movements.CreateAsync(fifoKnownItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 1, BatchId = expiredId }); }
+    catch (InvalidOperationException) { rejected = true; }
+    Check(rejected, "Expired batch cannot be issued by QR");
+    db.ChangeTracker.Clear();
+    rejected = false;
+    try { await movements.CreateAsync(fifoKnownItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 5 }); }
+    catch (InvalidOperationException) { rejected = true; }
+    Check(rejected, "General usage cannot consume expired stock to cover a shortage");
+    db.ChangeTracker.Clear();
+    rejected = false;
+    try { await movements.CreateAsync(fifoKnownItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 1, BatchId = qrPurchase.Id }); }
+    catch (InvalidOperationException) { rejected = true; }
+    Check(rejected, "QR from another item cannot issue this item's stock");
+    db.ChangeTracker.Clear();
+    var legacyItem = await inventory.CreateAsync(new CreateInventoryItemDto { Name = "Pre-upgrade stock", Category = "Test", UnitOfMeasurement = "kg", MinimumStockLevel = 0, UnitCost = 1 });
+    var legacyEntity = await db.InventoryItems.SingleAsync(i => i.Id == legacyItem.Id); legacyEntity.CurrentStock = 10; await db.SaveChangesAsync();
+    await movements.CreateAsync(legacyItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 2 });
+    db.ChangeTracker.Clear();
+    var legacyBatch = await db.InventoryBatches.SingleAsync(b => b.InventoryItemId == legacyItem.Id);
+    Check(legacyBatch.IsLegacy && legacyBatch.RemainingQuantity == 8 && legacyBatch.ExpirationDate is null, "Existing stock is preserved without inventing an expiration date");
+    rejected = false;
+    try { await purchaseService.ReceiveAsync(qrPurchase.Id, "duplicate"); }
+    catch (InvalidOperationException) { rejected = true; }
+    db.ChangeTracker.Clear();
+    Check(rejected && await db.InventoryBatches.CountAsync(b => b.PurchaseRequestId == qrPurchase.Id) == 1, "Duplicate purchase receipt cannot create another batch");
+    Check(await batchLookup.UpdateAsync(qrPurchase.Id, nextYear, "TC-409 updated", "Shelf B"), "Manager can update batch metadata behind a permanent QR");
+    db.ChangeTracker.Clear();
+    Check((await db.InventoryBatches.SingleAsync(b => b.Id == qrPurchase.Id)).RemainingQuantity == 3 && (await inventory.GetByIdAsync(qrBeforeItem.Id))!.CurrentStock == 3, "Updating QR details does not change quantities");
+    var concurrentItem = await inventory.CreateAsync(new CreateInventoryItemDto { Name = "Concurrent batch test", Category = "Test", UnitOfMeasurement = "packet", MinimumStockLevel = 0, UnitCost = 1 });
+    await movements.CreateAsync(concurrentItem.Id, new CreateInventoryTransactionDto { TransactionType = "Receive", Quantity = 2, ExpirationDate = nextYear });
+    var concurrentBatchId = await db.InventoryBatches.Where(b => b.InventoryItemId == concurrentItem.Id).Select(b => b.Id).SingleAsync();
+    async Task<bool> TryIssue() {
+        await using var separate = new AgriOpsDbContext(options);
+        try { await new InventoryTransactionService(separate).CreateAsync(concurrentItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 1.5m, BatchId = concurrentBatchId }); return true; }
+        catch (InvalidOperationException) { return false; }
+    }
+    var attempts = await Task.WhenAll(TryIssue(), TryIssue());
+    Check(attempts.Count(a => a) == 1, "Concurrent QR issues cannot overspend the same batch");
+    db.ChangeTracker.Clear();
+    Check((await db.InventoryBatches.SingleAsync(b => b.Id == concurrentBatchId)).RemainingQuantity == 0.5m && (await inventory.GetByIdAsync(concurrentItem.Id))!.CurrentStock == 0.5m, "Concurrent issue preserves matching batch and item balances");
+    var upgradeSql = await File.ReadAllTextAsync("backend/inventory_batches_upgrade.sql");
+    await db.Database.ExecuteSqlRawAsync(upgradeSql);
+    await db.Database.ExecuteSqlRawAsync(upgradeSql);
+    Check((await inventory.GetByIdAsync(concurrentItem.Id))!.CurrentStock == 0.5m, "Additive deployment upgrade can run repeatedly without altering stock");
+    var fifoItem = await inventory.CreateAsync(new CreateInventoryItemDto { Name = "Unknown date FIFO", Category = "Test", UnitOfMeasurement = "packet", MinimumStockLevel = 0, UnitCost = 1 });
+    await movements.CreateAsync(fifoItem.Id, new CreateInventoryTransactionDto { TransactionType = "Receive", Quantity = 2, BatchNumber = "first-arrival" });
+    await movements.CreateAsync(fifoItem.Id, new CreateInventoryTransactionDto { TransactionType = "Receive", Quantity = 2, BatchNumber = "second-arrival" });
+    await movements.CreateAsync(fifoItem.Id, new CreateInventoryTransactionDto { TransactionType = "Use", Quantity = 1 });
+    db.ChangeTracker.Clear();
+    Check((await db.InventoryBatches.SingleAsync(b => b.InventoryItemId == fifoItem.Id && b.BatchNumber == "first-arrival")).RemainingQuantity == 1 &&
+        (await db.InventoryBatches.SingleAsync(b => b.InventoryItemId == fifoItem.Id && b.BatchNumber == "second-arrival")).RemainingQuantity == 2, "Unknown expiry dates use FIFO arrival order");
     Console.WriteLine($"{passed} database checks passed. Database retained for inspection; application database untouched.");
     return 0;
 } catch (Exception ex) {

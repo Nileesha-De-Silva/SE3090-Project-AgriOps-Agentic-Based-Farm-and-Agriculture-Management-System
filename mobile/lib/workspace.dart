@@ -7,7 +7,7 @@ import 'api/api_config.dart';
 // A single ChangeNotifier owns server snapshots and blocks overlapping operations.
 // It deliberately does not cache or fabricate offline business data.
 class Workspace extends ChangeNotifier {
-  final Api api;
+  Api api;
   final FlutterSecureStorage storage;
   Workspace(this.api, {this.storage = const FlutterSecureStorage()});
   bool connected = false, busy = false, stale = true;
@@ -20,6 +20,20 @@ class Workspace extends ChangeNotifier {
   String get runKey => 'agriops.run.${api.base}.$_owner';
   bool canManage = false, canUse = false, canReceive = false;
   bool get canWrite => connected && !busy && !stale && canUse;
+  void changeBackend(Api replacement) {
+    if (busy) throw StateError('Wait for the current operation to finish before changing the backend.');
+    final previous = api;
+    previous.clearToken();
+    api = replacement;
+    ApiConfig.baseUrl = replacement.base.toString().replaceFirst(RegExp(r'/$'), '');
+    ApiConfig.clearSession();
+    connected = false; stale = true; error = null;
+    canManage = false; canUse = false; canReceive = false;
+    items = []; suppliers = []; recommendations = []; purchases = [];
+    run = null; runRequest = null; _owner = null;
+    previous.dispose();
+    notifyListeners();
+  }
   Future<bool> login(String username, String password) => perform(() async {
     api.clearToken();
     ApiConfig.clearSession();
@@ -141,7 +155,7 @@ class Workspace extends ChangeNotifier {
     stale = false;
   }
   Future<bool> refresh() => perform(_load);
-  Future<bool> movement(String id, String type, String quantity, String notes) => perform(() async {
+  Future<bool> movement(String id, String type, String quantity, String notes, {String? batchId}) => perform(() async {
     if (!connected || (type == 'Receive' ? !canReceive : !canUse)) throw const ApiFailure('You cannot record this stock movement.', status: 403);
     if (stale) throw const ApiFailure('Refresh before recording stock.');
     if (quantityError(quantity) != null || !['Use', 'Receive'].contains(type) || notes.length > 500) {
@@ -149,6 +163,7 @@ class Workspace extends ChangeNotifier {
     }
     await api.request('inventory/$id/transactions', method: 'POST', body: {
       'transactionType': type, 'quantity': double.parse(quantity), 'notes': notes.trim(),
+      if (batchId != null) 'batchId': batchId,
     });
     // Once accepted, never offer an automatic retry, even if this refresh fails.
     stale = true;

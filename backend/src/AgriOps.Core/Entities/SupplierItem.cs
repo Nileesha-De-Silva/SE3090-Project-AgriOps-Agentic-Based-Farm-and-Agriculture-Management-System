@@ -12,6 +12,8 @@ public class SupplierItem
 
     public int LeadTimeDays { get; set; }
 
+    public DateOnly? ExpirationDate { get; set; }
+
     public bool IsAvailable { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
