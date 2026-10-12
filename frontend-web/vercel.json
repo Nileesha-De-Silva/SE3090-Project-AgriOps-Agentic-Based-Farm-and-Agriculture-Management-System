@@ -1,16 +1,28 @@
 {
-    "rewrites": [
-        {
-            "source": "/api/farm-planning-agent/:path*",
-            "destination": "https://agriops-backend-api.onrender.com/api/farm-planning-agent/:path*"
-        },
-        {
-            "source": "/api/crop-analysis-agent/:path*",
-            "destination": "https://agriops-agent2-crop-health.onrender.com/:path*"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ]
+  "rewrites": [
+    {
+      "source": "/api/farm-planning-agent/:path*",
+      "destination": "https://agriops-backend-api.onrender.com/api/farm-planning-agent/:path*"
+    },
+    {
+      "source": "/api/crop-analysis-agent/:path*",
+      "destination": "https://agriops-agent2-crop-health.onrender.com/:path*"
+    },
+    {
+      "source": "/api/inventory-agent/recommend",
+      "destination": "https://agriops-agent3-inventory.onrender.com/recommend"
+    },
+    {
+      "source": "/api/inventory-agent/runs/:path*",
+      "destination": "https://agriops-agent3-inventory.onrender.com/runs/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://agriops-backend-api.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
