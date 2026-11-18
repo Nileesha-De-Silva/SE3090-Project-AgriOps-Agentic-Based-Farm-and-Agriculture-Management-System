@@ -11,7 +11,7 @@ An intelligent, end-to-end agricultural farm management platform built to coordi
 
 ---
 
-## 🏗️ System Architecture & Tech Stack
+## System Architecture & Tech Stack
 
 AgriOps AI is structured around a multi-tier architecture where client applications communicate **exclusively** through the centralized ASP.NET Core gateway[cite: 23, 33]:
 
@@ -24,7 +24,7 @@ AgriOps AI is structured around a multi-tier architecture where client applicati
 
 ---
 
-## 🧩 Business Components & Team Ownership
+## Business Components & Team Ownership
 
 The platform is divided into four primary business components[cite: 7]:
 
@@ -35,7 +35,7 @@ The platform is divided into four primary business components[cite: 7]:
 
 ---
 
-## 📦 Component 03: Inventory & AI-Assisted Reordering Details
+## Component 03: Inventory & AI-Assisted Reordering Details
 
 * **Relational Schema:** 8 normalized tables covering `InventoryItems`, `Suppliers`, `SupplierItems` (with prices and lead times), `InventoryTransactions`, `PurchaseRequests`, `ReorderRecommendations`, `InventoryBatches`, and `InventoryBatchMovements`[cite: 41, 105].
 * **FIFO Batch Tracking & QR Scanning:** Goods receipts generate tracked batches with lot numbers and expiration dates[cite: 105, 107]. Field workers can scan QR codes via the Flutter mobile app to inspect batch balances and record stock usage under strict FIFO rules[cite: 107, 111].
@@ -44,7 +44,7 @@ The platform is divided into four primary business components[cite: 7]:
 
 ---
 
-## 🤖 Multi-Agent AI Subsystem
+## Multi-Agent AI Subsystem
 
 | Agent | Port | Responsibility | Human-in-the-Loop Gate |
 | :--- | :--- | :--- | :--- |
@@ -55,17 +55,3 @@ The platform is divided into four primary business components[cite: 7]:
 
 ---
 
-## 🚀 Getting Started & Local Installation
-
-### Prerequisites
-* .NET 10 SDK[cite: 24]
-* Node.js (v20+) & npm[cite: 24]
-* Flutter SDK (3.x)[cite: 24]
-* Python (3.12+)[cite: 24]
-* PostgreSQL 17[cite: 24]
-* Docker & Docker Compose (Optional for containerized run)[cite: 24]
-
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/Nileesha-De-Silva/SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System.git](https://github.com/Nileesha-De-Silva/SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System.git)
-cd SE3090-Project-AgriOps-Agentic-Based-Farm-and-Agriculture-Management-System
